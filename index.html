@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Таро — IT-предсказания</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <canvas id="flow-bg" aria-hidden="true"></canvas>
+
+    <!-- Welcome -->
+    <div id="welcome-screen" class="screen active">
+      <div class="topbar">
+        <div class="emblem" aria-hidden="true">
+          <svg width="56" height="56" viewBox="0 0 86 86" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="g_logo" x1="0" x2="1"><stop offset="0" stop-color="#00a2e1"/><stop offset="1" stop-color="#008cc7"/></linearGradient></defs>
+            <circle cx="43" cy="43" r="40" fill="url(#g_logo)"/>
+            <path d="M22 54 L43 22 L64 54 Z" fill="rgba(255,255,255,0.95)"/>
+          </svg>
+        </div>
+        <div class="controls">
+          <button id="autoplay-welcome" class="btn small">Автопоказ</button>
+        </div>
+      </div>
+
+      <div class="welcome-content">
+        <h1>Раскройте тайну вашего энергетического будущего</h1>
+        <p>Нажмите «Выбрать карту». На экране выбора — лента карт, движущаяся справа налево.</p>
+        <div class="welcome-actions">
+          <button id="start-btn" class="btn">Выбрать карту</button>
+        </div>
+      </div>
+
+      <div id="attract-overlay" class="attract-overlay hidden" aria-hidden="true">
+        <div id="attract-card" class="attract-card">
+          <div class="card-inner">
+            <div class="card-front"><img src="images/back.jpg" alt="рубашка"></div>
+            <div class="card-back"><img id="attract-image" src="" alt=""></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selection / tape -->
+    <div id="selection-screen" class="screen">
+      <div class="topbar">
+        <div class="emblem" aria-hidden="true">
+          <svg width="46" height="46" viewBox="0 0 86 86" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="g_logo2" x1="0" x2="1"><stop offset="0" stop-color="#00a2e1"/><stop offset="1" stop-color="#008cc7"/></linearGradient></defs>
+            <circle cx="43" cy="43" r="40" fill="url(#g_logo2)"/>
+            <path d="M22 54 L43 22 L64 54 Z" fill="rgba(255,255,255,0.95)"/>
+          </svg>
+        </div>
+        <div class="controls">
+          <button id="back-btn" class="btn-ghost small">Назад</button>
+        </div>
+      </div>
+
+      <div class="tape-viewport">
+        <div id="tape" class="tape"></div>
+      </div>
+
+      <!-- detail panel (text-only) -->
+      <aside id="detail-panel" class="detail-panel hidden" aria-hidden="true">
+        <button id="close-detail" class="btn-ghost small">✕</button>
+        <div class="detail-content-only">
+          <h3 id="detail-title"></h3>
+          <div class="meaning-section"><h4>Общее значение</h4><p id="detail-general"></p></div>
+          <div class="meaning-section"><h4>Для проекта</h4><p id="detail-project"></p></div>
+          <div class="meaning-section"><h4>Для карьеры</h4><p id="detail-career"></p></div>
+          <div class="meaning-section"><h4>Ключевые слова</h4><p id="detail-keywords"></p></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

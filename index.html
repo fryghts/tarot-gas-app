@@ -2,51 +2,38 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Цифровой Оракул: IT-Таро</title>
     <style>
         /* --- ОБЩИЕ СТИЛИ --- */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Orbitron:wght@400;700&display=swap');
 
         :root {
             --font-main: 'Inter', sans-serif;
             --font-title: 'Orbitron', sans-serif;
-            --safe-area-inset-top: env(safe-area-inset-top);
-            --safe-area-inset-bottom: env(safe-area-inset-bottom);
+            --anim-speed: 1; /* 1 = normal speed */
         }
 
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: var(--font-main);
             overflow: hidden;
             transition: background-color 0.5s;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            overscroll-behavior: none;
-            -webkit-font-smoothing: antialiased;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
         }
 
         .app-container {
             width: 100vw;
             height: 100vh;
-            height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
             perspective: 2000px;
             position: relative;
             z-index: 1;
-            padding-top: var(--safe-area-inset-top);
-            padding-bottom: var(--safe-area-inset-bottom);
         }
 
         #particles-js {
@@ -56,7 +43,7 @@
             top: 0;
             left: 0;
             z-index: 0;
-            transition: opacity 0.5s;
+            transition: opacity calc(0.5s * var(--anim-speed));
         }
 
         .animated-gradient-bg {
@@ -68,8 +55,8 @@
             z-index: -1;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s;
-            animation: gradient-animation 20s ease infinite;
+            transition: opacity calc(0.5s * var(--anim-speed));
+            animation: gradient-animation calc(20s * var(--anim-speed)) ease infinite;
         }
         
         .animated-gradient-bg.active {
@@ -78,6 +65,7 @@
 
         @keyframes gradient-animation {
             0% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
             100% { transform: rotate(360deg); }
         }
 
@@ -91,69 +79,26 @@
             align-items: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.8s;
+            transition: opacity calc(0.8s * var(--anim-speed));
             padding: 1rem;
             text-align: center;
         }
 
-        .screen.active { 
-            opacity: 1; 
-            pointer-events: auto; 
-        }
+        .screen.active { opacity: 1; pointer-events: auto; }
 
-        .title { 
-            font-family: var(--font-title); 
-            font-size: clamp(2rem, 7vw, 4rem); 
-            font-weight: 900; 
-            margin-bottom: 1rem;
-            letter-spacing: -0.02em;
-        }
-
-        .subtitle { 
-            font-size: clamp(0.95rem, 2.5vw, 1.15rem); 
-            max-width: 600px; 
-            margin-bottom: 2rem; 
-            line-height: 1.5; 
-            opacity: 0.9;
-        }
-
-        .action-button { 
-            font-family: var(--font-title); 
-            padding: 1rem 2rem; 
-            border-radius: 50px; 
-            border: none; 
-            font-size: 1.1rem; 
-            font-weight: 700;
-            cursor: pointer; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .action-button:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 8px 30px rgba(0,0,0,0.4); 
-        }
-
-        .action-button:active {
-            transform: translateY(0);
-        }
-
-        .action-button:disabled { 
-            opacity: 0.5; 
-            cursor: not-allowed; 
-        }
+        .title { font-family: var(--font-title); font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 700; margin-bottom: 1rem; }
+        .subtitle { font-size: clamp(1rem, 3vw, 1.25rem); max-width: 600px; margin-bottom: 2rem; line-height: 1.6; }
+        .action-button { font-family: var(--font-title); padding: 1rem 2.5rem; border-radius: 50px; border: none; font-size: 1.2rem; cursor: pointer; transition: all calc(0.3s * var(--anim-speed)); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .action-button:hover { transform: translateY(-3px); box-shadow: 0 6px 25px rgba(0,0,0,0.4); }
+        .action-button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         #logo-container {
             position: absolute;
             top: 2rem;
             left: 50%;
             transform: translateX(-50%);
-            width: 120px;
-            opacity: 0.9;
+            width: 150px;
         }
-
         #logo-container svg {
             width: 100%;
             height: auto;
@@ -161,551 +106,176 @@
 
         /* --- ТЕМЫ --- */
         .theme-gazprom-classic {
-            --bg-color: #011d3a;
-            --primary-color: #0078d7;
-            --secondary-color: #ffffff;
-            --text-color: #e0f7ff;
-            --highlight-color: #00aaff;
-            --card-back-bg: linear-gradient(145deg, #002f5c, #004b8f);
-            --card-border: #00aaff;
-            --gradient: radial-gradient(ellipse at top, #00aaff, transparent),
-                       radial-gradient(ellipse at bottom, #002f5c, transparent);
+            --bg-color: #011d3a; --primary-color: #0078d7; --secondary-color: #ffffff; --text-color: #e0f7ff; --highlight-color: #00aaff;
+            --card-back-bg: linear-gradient(145deg, #002f5c, #004b8f); --card-border: #00aaff;
+            --gradient: radial-gradient(ellipse at top, #00aaff, transparent), radial-gradient(ellipse at bottom, #002f5c, transparent);
+        }
+        .theme-gazprom-dark {
+            --bg-color: #000814; --primary-color: #005f9e; --secondary-color: #ccdeeb; --text-color: #a9c7e0; --highlight-color: #3399ff;
+            --card-back-bg: linear-gradient(145deg, #001a33, #002b52); --card-border: #0078d7;
+            --gradient: radial-gradient(ellipse at top, #3399ff, transparent), radial-gradient(ellipse at bottom, #001a33, transparent);
+        }
+        .theme-gazprom-light {
+            --bg-color: #e6f2ff; --primary-color: #005a9e; --secondary-color: #002d4f; --text-color: #004375; --highlight-color: #0078d7;
+            --card-back-bg: linear-gradient(145deg, #cce5ff, #a3d1ff); --card-border: #005a9e;
+            --gradient: radial-gradient(ellipse at top, #a3d1ff, transparent), radial-gradient(ellipse at bottom, #e6f2ff, transparent);
         }
 
-        body { 
-            background-color: var(--bg-color); 
-            color: var(--text-color); 
-        }
-
-        .animated-gradient-bg { 
-            background: var(--gradient); 
-        }
-
-        .title { 
-            color: var(--secondary-color); 
-            text-shadow: 0 0 20px var(--primary-color);
-        }
-
-        .subtitle { 
-            color: var(--text-color); 
-        }
-
-        .action-button { 
-            background: linear-gradient(135deg, var(--primary-color), var(--highlight-color));
-            color: var(--bg-color); 
-        }
-
-        .action-button:hover { 
-            background: linear-gradient(135deg, var(--highlight-color), var(--primary-color));
-        }
-
-        #logo-container svg path { 
-            fill: var(--primary-color); 
-        }
+        body { background-color: var(--bg-color); color: var(--text-color); }
+        .animated-gradient-bg { background: var(--gradient); }
+        .title { color: var(--secondary-color); text-shadow: 0 0 15px var(--primary-color);}
+        .subtitle { color: var(--text-color); }
+        .action-button { background-color: var(--primary-color); color: var(--bg-color) !important; }
+        .action-button:hover { background-color: var(--highlight-color); }
+        #logo-container svg path { fill: var(--primary-color); }
 
         /* --- ЭКРАН ТАСОВАНИЯ --- */
-        #shuffle-screen { 
-            justify-content: center; 
-        }
+        #shuffle-screen { justify-content: center; }
+        #shuffle-screen .subtitle { position: absolute; top: 15%; width: 100%;}
+        #shuffle-screen .action-button { position: absolute; bottom: 5rem; }
+        #card-stack-container { position: relative; width: 120px; height: 192px; transform-style: preserve-3d; }
+        .shuffle-card { position: absolute; width: 100%; height: 100%; border-radius: 10px; background: var(--card-back-bg); border: 2px solid var(--card-border); box-shadow: 0 0 15px rgba(0,0,0,0.5); cursor: grab; user-select: none; will-change: transform; }
 
-        #shuffle-screen .subtitle { 
-            position: absolute; 
-            top: 20%; 
-            width: 90%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
-        }
-
-        #shuffle-screen .action-button { 
-            position: absolute; 
-            bottom: 10%; 
-        }
-
-        #card-stack-container { 
-            position: relative; 
-            width: 200px; 
-            height: 320px; 
-            transform-style: preserve-3d;
-        }
-
-        .shuffle-card { 
-            position: absolute; 
-            width: 100px; 
-            height: 160px;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            border-radius: 10px; 
-            background: var(--card-back-bg); 
-            border: 2px solid var(--card-border); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            backface-visibility: hidden;
-            transform-style: preserve-3d;
-        }
-
-        /* Мобильная версия колоды */
+        /* --- ЭКРАН ВЫБОРА (DRAG & DROP) --- */
+        #choice-screen { flex-direction: row; justify-content: space-between; align-items: stretch; padding: 1rem; gap: 1rem; }
+        #card-selection-area { flex-grow: 1; position: relative; }
+        #spread-slots-sidebar { flex-shrink: 0; width: 180px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 10px; z-index: 10; }
+        .card-slot { width: 120px; height: 192px; border: 2px dashed var(--primary-color); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary-color); transition: background-color calc(0.3s * var(--anim-speed)), transform calc(0.3s * var(--anim-speed)); }
+        .card-slot.drag-over { background-color: rgba(255,255,255,0.1); border-style: solid; transform: scale(1.05); }
+        .card-slot .slot-label { font-family: var(--font-title); }
+        .tarot-card { width: 80px; height: 128px; position: absolute; cursor: grab; transform-style: preserve-3d; border-radius: 8px; transition: opacity calc(0.3s * var(--anim-speed)), transform calc(0.3s * var(--anim-speed)); box-shadow: 0 5px 15px rgba(0,0,0,0.3); touch-action: none; }
+        .tarot-card.is-dragging { opacity: 0.8; z-index: 1000; }
+        .tarot-card.is-dropped { opacity: 0.3; pointer-events: none; }
+        .card-slot .tarot-card { width: 100%; height: 100%; cursor: default; position: relative; box-shadow: none; }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; background-size: cover; background-position: center; }
+        .card-back { background: var(--card-back-bg); border: 2px solid var(--card-border); }
+        .card-front { transform: rotateY(180deg); }
+        
         @media (max-width: 768px) {
-            #card-stack-container {
-                width: 100vw;
-                height: 200px;
-            }
-            
-            .shuffle-card {
-                width: 70px;
-                height: 112px;
-            }
-        }
-
-        /* --- ЭКРАН ВЫБОРА --- */
-        #choice-screen { 
-            flex-direction: column;
-            justify-content: space-between; 
-            padding: 1rem; 
-            gap: 1rem; 
-        }
-
-        #card-selection-area { 
-            flex-grow: 1; 
-            position: relative;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        #spread-slots-sidebar { 
-            width: 100%;
-            display: flex; 
-            justify-content: center;
-            align-items: center; 
-            padding: 1rem;
-            gap: 1rem;
-            background: rgba(0,0,0,0.2); 
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .card-slot { 
-            width: 90px; 
-            height: 144px; 
-            border: 2px dashed var(--primary-color); 
-            border-radius: 10px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            color: var(--primary-color); 
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .card-slot.drag-over { 
-            background-color: rgba(0, 120, 215, 0.2); 
-            border-style: solid;
-            border-width: 3px;
-            transform: scale(1.05); 
-            box-shadow: 0 0 20px var(--highlight-color);
-        }
-
-        .card-slot .slot-label { 
-            font-family: var(--font-title); 
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .card-slot.filled .slot-label {
-            display: none;
-        }
-
-        /* Подсказка для перетаскивания */
-        .drag-hint {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--primary-color);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            animation: fadeInOut 3s forwards;
-            z-index: 100;
-        }
-
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-            20% { opacity: 1; transform: translateX(-50%) translateY(0); }
-            80% { opacity: 1; transform: translateX(-50%) translateY(0); }
-            100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-        }
-
-        .tarot-card { 
-            width: 70px; 
-            height: 112px; 
-            position: absolute; 
-            cursor: grab; 
-            transform-style: preserve-3d; 
-            border-radius: 8px; 
-            transition: opacity 0.3s, transform 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
-            touch-action: none;
-        }
-
-        .tarot-card:active {
-            cursor: grabbing;
-        }
-
-        .tarot-card.is-dragging { 
-            opacity: 0.9; 
-            z-index: 1000;
-            transform: scale(1.1) rotate(0deg) !important;
-        }
-
-        .tarot-card.is-dropped { 
-            opacity: 0.3; 
-            pointer-events: none; 
-        }
-
-        .card-slot .tarot-card { 
-            width: 100%; 
-            height: 100%; 
-            cursor: default; 
-            position: relative; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .card-face { 
-            position: absolute; 
-            width: 100%; 
-            height: 100%; 
-            backface-visibility: hidden; 
-            border-radius: 8px; 
-            background-size: cover; 
-            background-position: center; 
-        }
-
-        .card-back { 
-            background: var(--card-back-bg); 
-            border: 2px solid var(--card-border); 
-        }
-
-        .card-front { 
-            transform: rotateY(180deg); 
+            #choice-screen { flex-direction: column-reverse; padding: 0.5rem; gap: 0.5rem; }
+            #card-selection-area { flex-grow: 1; width: 100%; height: calc(100% - 140px); }
+            #spread-slots-sidebar { width: 100%; flex-direction: row; height: 130px; padding: 0.5rem; gap: 0.5rem; justify-content: center; }
+            .card-slot { width: 80px; height: 112px; flex-shrink: 0; }
+            .card-slot .slot-label { font-size: 0.8rem; }
         }
 
         /* --- МОДАЛЬНОЕ ОКНО --- */
-        .modal-overlay { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0, 0, 0, 0.8); 
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 100; 
-            opacity: 0; 
-            pointer-events: none; 
-            transition: opacity 0.5s;
-        }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity calc(0.5s * var(--anim-speed)); }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content { background: rgba(10, 20, 40, 0.9); border: 1px solid var(--primary-color); border-radius: 16px; padding: 1rem; width: 95%; max-width: 1200px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 0 40px var(--primary-color); transform: scale(0.9); transition: transform calc(0.5s * var(--anim-speed)); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .close-button { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-color); font-size: 2rem; cursor: pointer; opacity: 0.7; transition: opacity 0.3s, transform 0.3s; z-index: 10; }
+        .close-button:hover { opacity: 1; transform: rotate(90deg); }
+        
+        .modal-spread-container { display: flex; flex-direction: column; gap: 1rem; }
+        .modal-card-display { display: flex; flex-direction: column; md:flex-row; gap: 1.5rem; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 10px; border-left: 4px solid var(--primary-color); }
+        .modal-card-display img { width: 120px; height: 192px; flex-shrink: 0; border-radius: 8px; border: 2px solid var(--card-border); }
+        .card-details h4 { font-family: var(--font-title); color: var(--highlight-color); font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .card-details h5 { font-weight: bold; margin-top: 1rem; margin-bottom: 0.25rem; color: var(--secondary-color); }
+        .card-details p { font-size: 0.9rem; opacity: 0.9; line-height: 1.5; }
+        .keywords-container { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+        .keyword { background: rgba(0,0,0,0.3); border: 1px solid var(--primary-color); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; }
 
-        .modal-overlay.active { 
-            opacity: 1; 
-            pointer-events: auto; 
-        }
+        /* --- СЕКЦИЯ GEMINI --- */
+        .gemini-section { margin-top: 2rem; padding: 1.5rem; border-top: 1px solid var(--primary-color); background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .gemini-section h3 { font-family: var(--font-title); color: var(--highlight-color); margin-bottom: 0.5rem; }
+        .gemini-input-group { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        #gemini-prompt { flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--primary-color); border-radius: 8px; padding: 0.75rem; color: var(--text-color); font-size: 1rem; }
+        #gemini-submit { background: var(--primary-color); color: var(--bg-color); border: none; border-radius: 8px; padding: 0.75rem 1.5rem; cursor: pointer; transition: background-color 0.3s; }
+        #gemini-submit:hover { background-color: var(--highlight-color); }
+        #gemini-response-container { margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px; min-height: 50px; }
+        #gemini-response { white-space: pre-wrap; line-height: 1.6; }
+        .loader { border: 4px solid rgba(255,255,255,0.2); border-left-color: var(--primary-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .modal-content { 
-            background: linear-gradient(135deg, rgba(1, 29, 58, 0.95), rgba(0, 47, 92, 0.95));
-            border: 1px solid var(--primary-color); 
-            border-radius: 20px; 
-            padding: 1.5rem; 
-            width: 95%; 
-            max-width: 1200px; 
-            max-height: 90vh; 
-            overflow-y: auto; 
-            position: relative; 
-            box-shadow: 0 0 50px var(--primary-color);
-            transform: scale(0.9); 
-            transition: transform 0.5s;
-        }
-
-        .modal-overlay.active .modal-content { 
-            transform: scale(1); 
-        }
-
-        .close-button { 
-            position: sticky;
-            top: 0;
-            right: 0;
-            float: right;
-            background: var(--primary-color); 
-            border: none; 
-            color: white; 
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 1.5rem; 
-            cursor: pointer; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            z-index: 10;
-            margin-left: auto;
-            margin-bottom: 1rem;
-        }
-
-        .close-button:hover { 
-            background: var(--highlight-color);
-            transform: rotate(90deg); 
-        }
-
-        /* Карусель для мобильных */
-        .modal-spread-container { 
-            display: flex; 
-            gap: 1.5rem;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            padding-bottom: 1rem;
-        }
-
-        .modal-spread-container::-webkit-scrollbar {
-            display: none;
-        }
-
-        .modal-card-display { 
-            flex: 0 0 auto;
-            width: 100%;
-            max-width: 400px;
-            scroll-snap-align: center;
-            background: rgba(0,0,0,0.3); 
-            padding: 1.5rem; 
-            border-radius: 15px; 
-            border-left: 4px solid var(--primary-color);
-            backdrop-filter: blur(5px);
-        }
-
-        @media (min-width: 769px) {
-            .modal-spread-container {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: 1.5rem;
-                overflow-x: visible;
-            }
-            
-            .modal-card-display {
-                width: auto;
-                max-width: none;
-            }
-        }
-
-        .modal-card-display img { 
-            width: 100px; 
-            height: 160px; 
-            margin: 0 auto 1rem;
-            display: block;
-            border-radius: 10px; 
-            border: 3px solid var(--card-border);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .card-details h4 { 
-            font-family: var(--font-title); 
-            color: var(--highlight-color); 
-            font-size: 1.3rem; 
-            margin-bottom: 0.5rem;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .card-details h5 { 
-            font-weight: 600; 
-            margin-top: 1rem; 
-            margin-bottom: 0.5rem; 
-            color: var(--secondary-color);
-            font-size: 0.95rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .card-details p { 
-            font-size: 0.9rem; 
-            opacity: 0.9; 
-            line-height: 1.6;
-        }
-
-        .keywords-container { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 0.5rem; 
-            margin-top: 1rem;
-            justify-content: center;
-        }
-
-        .keyword { 
-            background: linear-gradient(135deg, rgba(0,120,215,0.3), rgba(0,170,255,0.3)); 
-            border: 1px solid var(--primary-color); 
-            padding: 0.3rem 0.8rem; 
-            border-radius: 20px; 
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        /* Индикаторы карусели */
-        .carousel-indicators {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            padding: 0.5rem;
-        }
-
-        @media (min-width: 769px) {
-            .carousel-indicators {
-                display: none;
-            }
-        }
-
-        .indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.3);
-            transition: all 0.3s;
-        }
-
-        .indicator.active {
-            width: 24px;
-            border-radius: 4px;
-            background: var(--primary-color);
-        }
-
-        /* --- СЕКЦИЯ AI --- */
-        .ai-section { 
-            margin-top: 2rem; 
-            padding: 1.5rem; 
-            border-top: 2px solid var(--primary-color); 
-            background: rgba(0,0,0,0.2); 
-            border-radius: 15px;
-            backdrop-filter: blur(5px);
-        }
-
-        .ai-section h3 { 
-            font-family: var(--font-title); 
-            color: var(--highlight-color); 
-            margin-bottom: 0.75rem;
-            text-align: center;
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .ai-section p {
-            text-align: center;
-            opacity: 0.8;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-        }
-
-        .ai-input-group { 
-            display: flex; 
-            gap: 0.5rem; 
-            margin-top: 1rem;
-        }
-
-        #ai-prompt { 
-            flex-grow: 1; 
-            background: rgba(0,0,0,0.3); 
-            border: 1px solid var(--primary-color); 
-            border-radius: 25px; 
-            padding: 0.75rem 1rem; 
-            color: var(--text-color); 
-            font-size: 0.95rem;
-            font-family: var(--font-main);
-        }
-
-        #ai-prompt::placeholder {
-            opacity: 0.5;
-        }
-
-        #ai-submit { 
-            background: linear-gradient(135deg, var(--primary-color), var(--highlight-color));
-            color: white; 
-            border: none; 
-            border-radius: 25px; 
-            padding: 0.75rem 1.5rem; 
-            cursor: pointer; 
-            transition: all 0.3s;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            white-space: nowrap;
-        }
-
-        #ai-submit:hover { 
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0,120,215,0.5);
-        }
-
-        #ai-response-container { 
-            margin-top: 1rem; 
-            padding: 1rem; 
-            background: rgba(0,0,0,0.2); 
-            border-radius: 10px; 
-            min-height: 50px;
-        }
-
-        #ai-response { 
-            white-space: pre-wrap; 
-            line-height: 1.6;
-            font-size: 0.95rem;
-        }
-
-        .loader { 
-            border: 3px solid rgba(255,255,255,0.2); 
-            border-left-color: var(--primary-color); 
-            border-radius: 50%; 
-            width: 30px; 
-            height: 30px; 
-            animation: spin 1s linear infinite; 
-            margin: auto; 
-        }
-
-        @keyframes spin { 
-            to { transform: rotate(360deg); } 
-        }
+        /* --- DEV PANEL --- */
+        #dev-panel { position: fixed; bottom: 20px; left: 20px; z-index: 200; }
+        #dev-panel-toggle { width: 50px; height: 50px; background: rgba(0,0,0,0.5); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 1px solid white; }
+        #dev-panel-toggle svg { width: 24px; height: 24px; }
+        #dev-panel-content { position: absolute; bottom: 60px; left: 0; background: rgba(0,0,0,0.8); border: 1px solid white; border-radius: 8px; padding: 1rem; width: 250px; display: none; flex-direction: column; gap: 1rem; }
+        #dev-panel-content.active { display: flex; }
+        .dev-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .dev-group label { font-size: 0.9rem; display: flex; justify-content: space-between;}
+        #dev-panel select, #dev-panel input, #dev-panel button { width: 100%; padding: 0.5rem; background: #333; color: white; border: 1px solid #555; border-radius: 4px; }
+        #dev-panel button { cursor: pointer; background: var(--primary-color); }
     </style>
 </head>
 <body class="theme-gazprom-classic">
 
     <div id="particles-js"></div>
     <div class="animated-gradient-bg"></div>
-    
     <div class="app-container">
         
         <div id="start-screen" class="screen active">
             <div id="logo-container">
-                <svg viewBox="0 0 283.465 156.969">
-                    <path d="M85.011,39.222C82.404,27.804,75.867,18.517,74.965,17c-1.421,2.132-6.637,10.329-9.288,19.429c-2.894,10.139-3.318,19.138-2.32,28c0.992,8.864,4.737,17.957,4.737,17.957c1.99,4.776,4.974,9.887,6.917,12.4c2.842-3.695,9.384-14.718,11.422-29.126C87.568,57.654,87.617,50.643,85.011,39.222z M74.965,91.946c-1.279-2.416-3.27-7.007-3.46-14.106c-0.048-6.869,2.702-12.748,3.506-13.977c0.713,1.229,3.081,6.349,3.363,13.36C78.566,84.087,76.292,89.483,74.965,91.946z"/>
-                    <path d="M79.392,97.447H59.561v13.31c0.017-0.019,0.032-0.038,0.049-0.055c4.673-4.672,12.25-4.672,16.923,0c4.672,4.673,4.672,12.25,0,16.921c-0.02,0.021-0.042,0.037-0.06,0.057c0,0,0,0.003-0.002,0.004c-0.023,0.023-0.048,0.041-0.07,0.063c-4.659,4.628-10.75,6.943-16.84,6.943c-6.116,0-12.234-2.332-16.901-7c-8.224-8.223-9.197-20.948-2.929-30.242c0.846-1.255,1.821-2.448,2.929-3.559c4.667-4.665,10.786-6.995,16.901-6.995V54.904c-23.507,0-42.562,19.056-42.562,42.543c0,23.506,19.055,42.561,42.562,42.561c12.256,0,23.296-5.184,31.063-13.469V97.447H79.392z"/>
+                <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                     width="283.465px" height="156.969px" viewBox="0 0 283.465 156.969" enable-background="new 0 0 283.465 156.969"
+                     xml:space="preserve">
+                <g>
+                    <g>
+                        <path d="M85.011,39.222C82.404,27.804,75.867,18.517,74.965,17c-1.421,2.132-6.637,10.329-9.288,19.429
+                            c-2.894,10.139-3.318,19.138-2.32,28c0.992,8.864,4.737,17.957,4.737,17.957c1.99,4.776,4.974,9.887,6.917,12.4
+                            c2.842-3.695,9.384-14.718,11.422-29.126C87.568,57.654,87.617,50.643,85.011,39.222z M74.965,91.946
+                            c-1.279-2.416-3.27-7.007-3.46-14.106c-0.048-6.869,2.702-12.748,3.506-13.977c0.713,1.229,3.081,6.349,3.363,13.36
+                            C78.566,84.087,76.292,89.483,74.965,91.946z M84.253,58.604c-0.097,4.355-0.618,8.952-1.281,11.701
+                            c0.239-4.737-0.33-11.418-1.421-16.631c-1.09-5.213-4.171-13.93-6.634-17.958c-2.274,3.837-5.072,11.373-6.539,17.91
+                            c-1.473,6.542-1.518,14.452-1.518,16.825c-0.388-2.001-1.369-9.131-1.09-16.304c0.228-5.914,1.611-11.988,2.371-14.783
+                            c2.888-9.335,6.161-15.302,6.776-16.25c0.615,0.949,4.737,8.293,6.873,16.016C83.918,46.85,84.346,54.244,84.253,58.604z"/>
+                        <path d="M79.392,97.447H59.561v13.31c0.017-0.019,0.032-0.038,0.049-0.055c4.673-4.672,12.25-4.672,16.923,0
+                            c4.672,4.673,4.672,12.25,0,16.921c-0.02,0.021-0.042,0.037-0.06,0.057c0,0,0,0.003-0.002,0.004
+                            c-0.023,0.023-0.048,0.041-0.07,0.063c-4.659,4.628-10.75,6.943-16.84,6.943c-6.116,0-12.234-2.332-16.901-7
+                            c-8.224-8.223-9.197-20.948-2.929-30.242c0.846-1.255,1.821-2.448,2.929-3.559c4.667-4.665,10.786-6.995,16.901-6.995V54.904
+                            c-23.507,0-42.562,19.056-42.562,42.543c0,23.506,19.055,42.561,42.562,42.561c12.256,0,23.296-5.184,31.063-13.469V97.447H79.392
+                            z"/>
+                    </g>
+                    <g>
+                        <path d="M95.663,54.904h16.225v5.275h-7.718v37.258h-8.507V54.904z"/>
+                        <path d="M121.072,81.458l1.458-21.282h0.488l1.456,21.282H121.072z M111.655,97.438h8.323l0.79-11.304h4.013
+                            l0.79,11.304h8.326l-4.438-42.533h-13.367L111.655,97.438z"/>
+                        <path d="M145.078,82.548v8.01c0,1.094,0.849,1.398,1.335,1.398c0.793,0,1.338-0.668,1.338-1.398v-9.892
+                            c0-1.337-0.244-2.793-3.404-2.793h-3.462v-4.679h3.584c2.43,0,3.282-0.548,3.282-3.161v-8.458c0-0.728-0.545-1.396-1.338-1.396
+                            c-0.486,0-1.335,0.303-1.335,1.396v6.938h-8.506v-6.015c0-2.979,0.364-7.595,6.317-7.595h7.053c5.958,0,6.32,4.616,6.32,7.595
+                            v6.806c0,4.618-3.22,5.895-5.771,5.771v0.427c5.711-0.123,5.771,4.252,5.771,5.771v8.569c0,2.976-0.362,7.595-6.32,7.595h-7.053
+                            c-5.954,0-6.317-4.619-6.317-7.595v-7.294H145.078z"/>
+                        <path d="M160.733,54.904h19.691v42.533h-8.504V60.18h-2.677v37.258h-8.51V54.904z"/>
+                        <path d="M193.903,78.299V60.18h1.096c0.911,0,1.579,0.789,1.579,2.123v13.869c0,1.337-0.668,2.128-1.579,2.128
+                            H193.903z M185.396,97.438h8.507V82.976h4.86c5.957,0,6.321-4.619,6.321-7.595V62.499c0-2.979-0.364-7.595-6.321-7.595h-13.367
+                            V97.438z"/>
+                        <path d="M220.398,90.559c0,0.73-0.545,1.398-1.335,1.398c-0.489,0-1.339-0.305-1.339-1.398V61.576
+                            c0-1.093,0.85-1.396,1.339-1.396c0.79,0,1.335,0.668,1.335,1.396V90.559z M209.217,89.843c0,2.976,0.366,7.595,6.32,7.595h7.049
+                            c5.953,0,6.32-4.619,6.32-7.595V62.499c0-2.979-0.367-7.595-6.32-7.595h-7.049c-5.955,0-6.32,4.616-6.32,7.595V89.843z"/>
+                        <path d="M255.406,54.904h11.059v42.533h-8.508V70.764h-0.303l-4.375,26.673h-6.807L242.1,70.764h-0.307v26.673
+                            h-8.506V54.904h11.058l5.53,29.895L255.406,54.904z"/>
+                    </g>
+                    <g>
+                        <path d="M106.657,126.496h-1.054v4.486h0.956c1.594,0,2.06-0.611,2.06-2.205
+                            C108.619,127.305,108.153,126.496,106.657,126.496z"/>
+                        <path d="M108.521,121.347c0-1.03-0.466-1.643-1.667-1.643h-1.25v3.629h1.25
+                            C108.055,123.333,108.521,122.745,108.521,121.347z"/>
+                        <polygon points="232.522,119.705 231.418,127.451 233.675,127.451 232.547,119.705 		"/>
+                        <path d="M95.663,110.644v29.325h170.794v-29.325H95.663z M107.417,134.146h-5.909v-17.605h6.767
+                            c2.06,0,4.34,1.251,4.34,4.414c0,2.401-1.471,3.53-2.403,3.727c1.643,0.687,2.574,1.814,2.574,4.265
+                            C112.786,132.232,111.021,134.146,107.417,134.146z M138.528,134.146h-4.241v-7.479h-2.771v7.479h-4.242v-17.605h4.242v6.792
+                            h2.771v-6.792h4.241V134.146z M164.271,134.146h-4.045v-4.096c0-1.889,0.589-4.756,0.785-6.62h-0.025l-3.653,10.715h-4.118
+                            v-17.605h4.045v4.365c0,1.936-0.54,4.755-0.638,6.693h0.024l3.58-11.058h4.045V134.146z M190.012,134.146h-4.046v-4.096
+                            c0-1.889,0.589-4.756,0.785-6.62h-0.024l-3.653,10.715h-4.119v-17.605H183v4.365c0,1.936-0.54,4.755-0.638,6.693h0.024
+                            l3.58-11.058h4.046V134.146z M214.552,119.876h-5.615v14.27h-4.241v-17.605h9.856V119.876z M234.876,134.146l-0.638-3.531h-3.236
+                            l-0.539,3.531h-4.217l3.824-17.605h5.075l3.898,17.605H234.876z M255.592,134.563c-2.623,0-5.565-1.152-5.565-5.689h3.897
+                            c0,1.963,0.564,2.525,1.496,2.525c1.104,0,1.545-0.563,1.545-2.525c0-1.641-0.516-2.305-1.863-2.305h-0.613v-3.163h1.006
+                            c0.613,0,1.274-0.686,1.274-1.936c0-1.323-0.417-2.157-1.422-2.157c-1.079,0-1.423,0.784-1.423,2.598h-3.897
+                            c0-3.652,2.28-5.761,5.32-5.761c3.358,0,5.246,2.182,5.246,4.658c0,2.182-0.71,3.286-2.5,4.07h0.048
+                            c1.791,0.663,3.065,1.397,3.065,4.559C261.206,132.92,258.95,134.563,255.592,134.563z"/>
+                    </g>
+                </g>
                 </svg>
             </div>
             <h1 class="title">Цифровой Оракул</h1>
-            <p class="subtitle">Какой баг ждёт тебя в следующем спринте? Узнай свою IT-судьбу на картах Таро.</p>
+            <p class="subtitle">Какой баг ждет тебя в следующем спринте? Узнай свою IT-судьбу.</p>
             <button id="start-btn" class="action-button">Начать сеанс</button>
         </div>
 
         <div id="shuffle-screen" class="screen">
-            <p class="subtitle">Сосредоточьтесь на вопросе и коснитесь колоды</p>
+            <p class="subtitle">Сосредоточьтесь на вопросе и перемешайте колоду движением курсора.</p>
             <div id="card-stack-container"></div>
             <button id="deal-btn" class="action-button">Сделать расклад</button>
         </div>
@@ -713,35 +283,72 @@
         <div id="choice-screen" class="screen">
             <div id="card-selection-area"></div>
             <div id="spread-slots-sidebar">
-                <div class="card-slot" data-slot-id="0">
-                    <span class="slot-label">Вызов</span>
-                </div>
-                <div class="card-slot" data-slot-id="1">
-                    <span class="slot-label">Путь</span>
-                </div>
-                <div class="card-slot" data-slot-id="2">
-                    <span class="slot-label">Исход</span>
-                </div>
+                <div class="card-slot" data-slot-id="0"><span class="slot-label">Вызов</span></div>
+                <div class="card-slot" data-slot-id="1"><span class="slot-label">Путь</span></div>
+                <div class="card-slot" data-slot-id="2"><span class="slot-label">Исход</span></div>
             </div>
         </div>
     </div>
 
     <div id="result-modal" class="modal-overlay">
         <div class="modal-content">
-            <button id="close-modal-btn" class="close-button">×</button>
-            <div class="modal-spread-container"></div>
-            <div class="carousel-indicators"></div>
-            <div class="ai-section">
+            <button id="close-modal-btn" class="close-button">&times;</button>
+            <div class="modal-spread-container">
+                <!-- Результаты будут вставлены здесь -->
+            </div>
+            <div class="gemini-section">
                 <h3>Персональное толкование от AI</h3>
-                <p>Задайте уточняющий вопрос для глубокого анализа</p>
-                <div class="ai-input-group">
-                    <input type="text" id="ai-prompt" placeholder="Например: Какие скрытые риски есть в проекте?">
-                    <button id="ai-submit">Узнать</button>
+                <p>Задайте уточняющий вопрос, чтобы получить более глубокое предсказание от нейросети Gemini.</p>
+                <div class="gemini-input-group">
+                    <input type="text" id="gemini-prompt" placeholder="Например: Какие скрытые риски есть в этом проекте?">
+                    <button id="gemini-submit">Получить ответ</button>
                 </div>
-                <div id="ai-response-container">
-                    <div id="ai-loader" class="loader" style="display: none;"></div>
-                    <p id="ai-response"></p>
+                <div id="gemini-response-container">
+                    <div id="gemini-loader" class="loader" style="display: none;"></div>
+                    <p id="gemini-response"></p>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="dev-panel">
+        <div id="dev-panel-toggle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.8293 10.1707C19.9392 10.7839 20 11.3895 20 12C20 12.6105 19.9392 13.2161 19.8293 13.8293L21.8293 15.3293C22.0678 15.513 22.1465 15.8329 22.0415 16.1159L20.0415 19.5819C19.9365 19.8649 19.6429 20.0351 19.3453 19.9707L16.9453 19.0707C16.3216 19.5393 15.6347 19.9234 14.8962 20.2101L14.5 22.7C14.4444 23.0041 14.1843 23.2204 13.8703 23.2204H10.1297C9.81568 23.2204 9.55558 23.0041 9.5 22.7L9.10383 20.2101C8.36531 19.9234 7.67842 19.5393 7.05471 19.0707L4.65471 19.9707C4.35714 20.0351 4.06346 19.8649 3.95848 19.5819L1.95848 16.1159C1.8535 15.8329 1.93221 15.513 2.17073 15.3293L4.17073 13.8293C4.06083 13.2161 4 12.6105 4 12C4 11.3895 4.06083 10.7839 4.17073 10.1707L2.17073 8.67073C1.93221 8.48705 1.8535 8.16712 1.95848 7.8841L3.95848 4.4181C4.06346 4.1351 4.35714 3.96486 4.65471 4.02928L7.05471 4.92928C7.67842 4.46071 8.36531 4.0766 9.10383 3.78988L9.5 1.3C9.55558 0.99593 9.81568 0.77965 10.1297 0.77965H13.8703C14.1843 0.77965 14.4444 0.99593 14.5 1.3L14.8962 3.78988C15.6347 4.0766 16.3216 4.46071 16.9453 4.92928L19.3453 4.02928C19.6429 3.96486 19.9365 4.1351 20.0415 4.4181L22.0415 7.8841C22.1465 8.16712 22.0678 8.48705 21.8293 8.67073L19.8293 10.1707ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"></path></svg></div>
+        <div id="dev-panel-content">
+            <h4>Dev Panel</h4>
+            <div class="dev-group">
+                <label for="theme-select">Тема Газпром:</label>
+                <select id="theme-select">
+                    <option value="theme-gazprom-classic">Классический синий</option>
+                    <option value="theme-gazprom-dark">Глубокий космос</option>
+                    <option value="theme-gazprom-light">Полярный день</option>
+                </select>
+            </div>
+             <div class="dev-group">
+                <label for="bg-type-select">Тип фона:</label>
+                <select id="bg-type-select">
+                    <option value="particles">Частицы</option>
+                    <option value="gradient">Градиент</option>
+                </select>
+            </div>
+            <div class="dev-group">
+                <label for="anim-speed-slider">Скорость анимации: <span id="anim-speed-value">1.0</span>x</label>
+                <input type="range" id="anim-speed-slider" min="0.1" max="2" step="0.1" value="1">
+            </div>
+            <div class="dev-group">
+                <label for="drag-speed-slider">Скорость отклика: <span id="drag-speed-value">0.1</span></label>
+                <input type="range" id="drag-speed-slider" min="0" max="0.5" step="0.05" value="0.1">
+            </div>
+            <div class="dev-group particles-control">
+                <label for="particles-count-slider">Кол-во частиц: <span id="particles-count-value">80</span></label>
+                <input type="range" id="particles-count-slider" min="10" max="200" step="10" value="80">
+            </div>
+             <div class="dev-group particles-control">
+                <label for="particles-speed-slider">Скорость частиц: <span id="particles-speed-value">2.0</span></label>
+                <input type="range" id="particles-speed-slider" min="0.5" max="10" step="0.5" value="2">
+            </div>
+             <div class="dev-group particles-control">
+                <label for="particles-size-slider">Размер частиц: <span id="particles-size-value">3.0</span></label>
+                <input type="range" id="particles-size-slider" min="1" max="10" step="0.5" value="3">
             </div>
         </div>
     </div>
@@ -752,71 +359,25 @@
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     
     <script>
-        const tarotCardsData = [
-            { id: 0, name: "Дурак (Шут)", general: "Начало нового пути, смелый шаг в неизвестность", project: "Время для запуска MVP, экспериментов, пилотных проектов. Не бойтесь выйти за рамки привычного", career: "Возможность для перехода в новую сферу или старта собственного дела", keywords: "Стартап,MVP,Эксперимент,Hello World,Риск", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3E0%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Fool%3C/text%3E%3C/svg%3E" },
-            { id: 1, name: "Маг", general: "Мастерство, инициатива, использование всех ресурсов", project: "У вас есть все инструменты для воплощения идеи. Время активных действий", career: "Используйте свои навыки на полную. Время для лидерства и инициативы", keywords: "Программирование,API,Мастерство,Создание", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EI%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Magician%3C/text%3E%3C/svg%3E" },
-            { id: 2, name: "Жрица", general: "Интуиция, скрытые знания, глубокий анализ", project: "Ищите неочевидные решения, доверьтесь интуиции при анализе данных", career: "Развивайте навыки в Big Data, AI, кибербезопасности", keywords: "Big Data,AI,Интуиция,Аналитика", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EII%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Priestess%3C/text%3E%3C/svg%3E" },
-            { id: 3, name: "Императрица", general: "Творчество, развитие продукта, пользовательский опыт", project: "Сосредоточьтесь на UX/UI и удобстве продукта", career: "Развивайте творческие навыки в дизайне и продуктовой разработке", keywords: "UX/UI,Продукт,Рост,Фичи", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EIII%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Empress%3C/text%3E%3C/svg%3E" },
-            { id: 4, name: "Император", general: "Структура, лидерство, управление, порядок", project: "Время для упорядочивания процессов и стандартов кода", career: "Выход на руководящую позицию, создание команды", keywords: "CTO,Архитектура,Управление,Процессы", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EIV%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Emperor%3C/text%3E%3C/svg%3E" },
-            { id: 5, name: "Иерофант", general: "Обучение, менторство, лучшие практики", project: "Время следовать best practices и проверенным подходам", career: "Станьте ментором или найдите наставника", keywords: "Менторство,Опенсорс,Best Practices", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EV%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Hierophant%3C/text%3E%3C/svg%3E" },
-            { id: 6, name: "Влюблённые", general: "Выбор, отношения, сотрудничество", project: "Важный выбор технологического стека или партнёра", career: "Выбор новой специализации или компании", keywords: "Выбор стека,Командная работа,Этика AI", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EVI%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Lovers%3C/text%3E%3C/svg%3E" },
-            { id: 7, name: "Колесница", general: "Прогресс, контроль, победа, решимость", project: "Проект набирает обороты и движется к релизу", career: "Вы успешно продвигаетесь к цели", keywords: "Деплой,CI/CD,Прогресс,Успех", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EVII%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Chariot%3C/text%3E%3C/svg%3E" },
-            { id: 8, name: "Справедливость", general: "Оценка, тестирование, честность, качество кода", project: "Время для тщательного тестирования и code review", career: "Ваша работа будет оценена по достоинству", keywords: "QA,Testing,Code Review,Качество", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EVIII%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EJustice%3C/text%3E%3C/svg%3E" },
-            { id: 9, name: "Отшельник", general: "Глубокая работа, самоанализ, поиск истины", project: "Необходимо углубиться в проблему или разработать сложное решение", career: "Время для глубокого изучения новой технологии", keywords: "Отладка,Research,Алгоритмы,Фокус", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EIX%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Hermit%3C/text%3E%3C/svg%3E" },
-            { id: 10, name: "Колесо Фортуны", general: "Перемены, циклы, возможности", project: "Будьте готовы к быстрым изменениям на рынке", career: "Неожиданные предложения или изменения в компании", keywords: "Тренды,Хайп,Циклы,Изменения", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EX%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EWheel of Fortune%3C/text%3E%3C/svg%3E" },
-            { id: 11, name: "Сила", general: "Внутренняя сила, терпение, управление сложными системами", project: "Требуется терпение для работы с legacy-кодом", career: "Развивайте навыки управления проектами и людьми", keywords: "Legacy,Терпение,Рефакторинг,Стойкость", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EXI%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EStrength%3C/text%3E%3C/svg%3E" },
-            { id: 12, name: "Повешенный", general: "Пересмотр, новая перспектива, пауза", project: "Возможно, проект зашел в тупик и нужен новый подход", career: "Время для переосмысления карьерного пути", keywords: "Перезагрузка,Редизайн,Пауза,Новый взгляд", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EXII%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Hanged Man%3C/text%3E%3C/svg%3E" },
-            { id: 13, name: "Смерть", general: "Окончание, трансформация, обновление", project: "Пришло время отказаться от устаревших технологий", career: "Возможно, вам придется покинуть старую компанию", keywords: "Миграция,EOL,Трансформация,Новая эра", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EXIII%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EDeath%3C/text%3E%3C/svg%3E" },
-            { id: 14, name: "Умеренность", general: "Баланс, гармония, интеграция", project: "Важно найти баланс между скоростью и качеством", career: "Ищите баланс между работой и личной жизнью", keywords: "DevOps,CI/CD,Баланс,Интеграция", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EXIV%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3ETemperance%3C/text%3E%3C/svg%3E" },
-            { id: 15, name: "Дьявол", general: "Технический долг, зависимости, искушения", project: "Остерегайтесь быстрых решений, ведущих к техдолгу", career: "Не поддавайтесь токсичной рабочей среде", keywords: "Техдолг,Vendor-lock,Выгорание,Баги", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EXV%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Devil%3C/text%3E%3C/svg%3E" },
-            { id: 16, name: "Башня", general: "Внезапный крах, кризис, перелом", project: "Будьте готовы к системному сбою или критическому багу", career: "Неожиданное увольнение или провал проекта", keywords: "Downtime,500 Error,Сбой,Кризис", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EXVI%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Tower%3C/text%3E%3C/svg%3E" },
-            { id: 17, name: "Звезда", general: "Надежда, вдохновение, инновации", project: "Появляются новые вдохновляющие идеи и возможности", career: "Выход на новый уровень в карьере", keywords: "Инновации,AI,Web3,Вдохновение", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EXVII%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Star%3C/text%3E%3C/svg%3E" },
-            { id: 18, name: "Луна", general: "Неопределенность, скрытые угрозы, интуиция", project: "Есть скрытые проблемы или неочевидные баги", career: "Чувство неопределенности, неясные перспективы", keywords: "Неопределенность,Скрытые баги,Уязвимости", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EXVIII%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Moon%3C/text%3E%3C/svg%3E" },
-            { id: 19, name: "Солнце", general: "Успех, ясность, радость, процветание", project: "Полный успех, успешный запуск, признание", career: "Признание ваших заслуг, повышение", keywords: "Успешный релиз,Признание,Growth,Позитив", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EXIX%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe Sun%3C/text%3E%3C/svg%3E" },
-            { id: 20, name: "Страшный суд", general: "Оценка, возрождение, финальное решение", project: "Время для глубокой ретроспективы и анализа", career: "Период самооценки и принятия важных решений", keywords: "Ретроспектива,Аудит,Переосмысление", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EXX%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EJudgement%3C/text%3E%3C/svg%3E" },
-            { id: 21, name: "Мир", general: "Завершение, интеграция, глобальный успех", project: "Проект достиг полной функциональности и готов к масштабированию", career: "Вы достигли мастерства в своей области", keywords: "Глобализация,Завершение,Масштабирование,Web 3.0", image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 160'%3E%3Crect width='100' height='160' fill='%23004b8f'/%3E%3Ctext x='50' y='80' text-anchor='middle' fill='white' font-size='48' font-family='Orbitron'%3EXXI%3C/text%3E%3Ctext x='50' y='120' text-anchor='middle' fill='white' font-size='12' font-family='Inter'%3EThe World%3C/text%3E%3C/svg%3E" }
-        ];
+        const tarotCardsData = [ { id: 0, name: "Дурак (Шут)", general: "Начало нового пути, смелый шаг в неизвестность.", project: "Время для запуска MVP, экспериментов, пилотных проектов. Не бойтесь выйти за рамки привычного, даже если нет полной картины. Ваша наивная вера может привести к прорыву.", career: "Возможность для перехода в новую сферу, освоения радикально иной технологии или старта собственного дела. Отпустите страх и доверьтесь процессу обучения.", keywords: "Стартап, MVP, эксперимент, 'Hello World', новая технология, первый шаг, риск.", image: "images/0.png" }, { id: 1, name: "Маг", general: "Мастерство, инициатива, использование всех доступных ресурсов.", project: "У вас есть все необходимые навыки и инструменты, чтобы воплотить идею в жизнь. Время для активных действий, написания кода, построения архитектуры. Не ждите, творите!", career: "Используйте свои знания и опыт на полную катушку. Вы обладаете уникальными навыками, чтобы проявлять инициативу и создавать что-то значимое. Возможно, это период для менторства или ведения ключевого проекта.", keywords: "Программирование, архитектура, инструменты, API, мастерство, инициатива, создание.", image: "images/1.png" }, { id: 2, name: "Жрица", general: "Интуиция, скрытые знания, глубокий анализ данных.", project: "Ищите неочевидные решения, доверьтесь своей интуиции при анализе данных. Возможно, ключ к успеху лежит в глубоком исследовании пользовательского поведения или скрытых уязвимостей. Не все ответы лежат на поверхности.", career: "Развивайте навыки в области Big Data, AI, кибербезопасности. Ваша способность видеть закономерности там, где другие видят хаос, будет востребована. Время для глубокого обучения и погружения в сложные концепции.", keywords: "Big Data, AI, интуиция, кибербезопасность, скрытые угрозы, аналитика, нейронные сети.", image: "images/2.png" }, { id: 3, name: "Императрица", general: "Творчество, развитие продукта, пользовательский опыт, плодородие и рост.", project: "Сосредоточьтесь на удобстве и привлекательности продукта. Создавайте что-то, что приносит радость и легкость пользователям. Время для итераций, прототипирования и внедрения новых фич, которые по-настояшему 'кормят' продукт.", career: "Развивайте свои творческие навыки в дизайне, продуктовой разработке, маркетинге. Вы способны создавать продукты, которые не просто работают, но и приносят удовольствие.", keywords: "UX/UI, продуктовая разработка, масштабирование, рост, плодородие, пользователь, фичи.", image: "images/3.png" }, { id: 4, name: "Император", general: "Структура, лидерство, управление, порядок и стабильность.", project: "Настало время для упорядочивания, внедрения четких процессов, стандартов кодирования и архитектурных принципов. Требуется сильное лидерство и контроль над ресурсами, чтобы обеспечить стабильность и управляемость.", career: "Выход на руководящую позицию, возможность создать или реорганизовать команду, навести порядок в хаотичном проекте. Ваша задача — быть опорой и принимать ответственные решения.", keywords: "CTO, CEO, архитектура, инфраструктура, управление, процессы, стандарты, контроль.", image: "images/4.png" }, { id: 5, name: "Иерофант (Первосвященник)", general: "Обучение, менторство, лучшие практики, устоявшиеся традиции.", project: "Время для следования лучшим практикам, изучения и применения проверенных временем подходов. Возможно, нужно привлечь опытного консультанта или начать внутренние тренинги для команды.", career: "Если вы опытный специалист, это призыв к менторству и обмену знаниями. Если вы новичок, ищите наставника, вступайте в профессиональные сообщества, изучайте документацию.", keywords: "Менторство, опенсорс, обучение, best practices, документация, сообщество, традиции.", image: "images/5.png" }, { id: 6, name: "Влюблённые (Выбор)", general: "Выбор, отношения, сотрудничество, этические дилеммы.", project: "Стоит важный выбор, который повлияет на дальнейшее развитие. Это может быть выбор технологического стека, партнера, или решение между 'быстро и плохо' и 'медленно, но качественно'. Также акцент на командной работе и разрешении конфликтов.", career: "Выбор новой специализации, компании, или решение о совместном проекте. Возможно, нужно урегулировать разногласия в команде или принять сложное этическое решение (например, в области ИИ).", keywords: "Выбор стека, build vs buy, командная работа, этика ИИ, слияние веток, компромисс.", image: "images/6.png" }, { id: 7, name: "Колесница", general: "Прогресс, контроль, победа, решимость, преодоление препятствий.", project: "Проект набирает обороты и движется к релизу или важной вехе. Вы контролируете ситуацию, несмотря на препятствия. Время для форсирования темпов, но с сохранением контроля над качеством.", career: "Вы успешно продвигаетесь к цели, преодолевая трудности. Это может быть успешное завершение сложного проекта, получение новой должности или быстрое освоение новой технологии.", keywords: "Деплой, релиз, CI/CD, масштабирование, прогресс, преодоление, успех.", image: "images/7.png" }, { id: 8, name: "Справедливость (Правосудие)", general: "Оценка, тестирование, честность, качество кода, последствия.", project: "Время для тщательного тестирования, аудита кода, рефакторинга и обеспечения высокого качества. Важно быть честным в оценке проблем и принимать справедливые решения. Возможно, придется столкнуться с последствиями прошлых ошибок.", career: "Ваша работа будет оцениваться по достоинству. Сосредоточьтесь на создании качественных решений, будьте объективны в оценке себя и других. Возможно, вы будете вовлечены в процессы Code Review или архитектурные комиссии.", keywords: "QA, тестирование, баги, code review, аудит, чистый код, ответственность, качество.", image: "images/8.png" }, { id: 9, name: "Отшельник", general: "Глубокая работа, самоанализ, поиск истины, ментальная фокусировка.", project: "Необходимо углубиться в проблему, провести тщательное исследование или разработать сложное решение в уединении. Отвлечения будут мешать.", career: "Время для глубокого изучения новой технологии, написания диссертации или сосредоточенной работы над личным проектом. Ищите внутренний ответ, а не внешний.", keywords: "Отладка, ресерч, глубокая работа, алгоритмы, уединение, фокус, Computer Science.", image: "images/9.png" }, { id: 10, name: "Колесо Фортуны (Зеркало)", general: "Перемены, циклы, возможности, неожиданные события в мире IT.", project: "Будьте готовы к быстрым изменениям на рынке или в технологической среде. Могут появиться новые возможности или неожиданные вызовы. Адаптируйтесь к циклам 'хайпа' и 'спадов'.", career: "Рынок труда в IT постоянно меняется. Будьте гибкими, осваивайте новые тренды. Неожиданные предложения или изменения в компании могут стать поворотными моментами.", keywords: "Тренды, хайп, циклы, адаптация, рынок IT, удача, изменения.", image: "images/10.png" }, { id: 11, name: "Сила", general: "Внутренняя сила, терпение, управление сложными системами, устойчивость.", project: "Требуется терпение и выдержка для работы с крупными, сложными или устаревшими системами. Не грубой силой, а методичным подходом и вниманием к деталям вы сможете справиться с техническим долгом или сложными интеграциями.", career: "Развивайте навыки управления проектами, людьми или очень сложными техническими задачами. Вы обладаете внутренней стойкостью, чтобы довести дело до конца, даже если оно кажется неподъемным.", keywords: "Legacy-код, технический долг, управление проектами, терпение, рефакторинг, стойкость.", image: "images/11.png" }, { id: 12, name: "Повешенный", general: "Пересмотр, новая перспектива, жертва для большей цели, приостановка.", project: "Возможно, проект зашел в тупик, и нужно полностью переосмыслить подход. Пауза, отказ от текущих методов, или даже временная заморозка для редизайна могут быть необходимы.", career: "Время для переосмысления карьерного пути, возможен 'саббатикал' или временное переключение на фриланс, чтобы набраться новых идей. Отпустите старые представления, чтобы увидеть новые возможности.", keywords: "Перезагрузка, рефакторинг, редизайн, новая перспектива, пауза, стратегический отказ.", image: "images/12.png" }, { id: 13, name: "Смерть", general: "Окончание, трансформация, обновление, избавление от устаревшего.", project: "Пришло время полностью отказаться от устаревших технологий, прекратить поддержку неэффективных решений или провести полную миграцию. Это болезненно, но необходимо для роста.", career: "Возможно, вам придется покинуть старую компанию, сменить специализацию или отказаться от привычных, но уже неактуальных навыков. Не бойтесь перемен, они ведут к обновлению.", keywords: "Миграция, декоммиссия, EOL, устаревание, трансформация, новая эра.", image: "images/13.png" }, { id: 14, name: "Умеренность (Время)", general: "Баланс, гармония, интеграция, оптимизация, терпение.", project: "Важно найти баланс между скоростью разработки и стабильностью операций. Оптимизируйте процессы, наладьте взаимодействие между командами, сосредоточьтесь на бесшовной интеграции и непрерывной поставке.", career: "Ищите баланс между работой и личной жизнью, между глубокой специализацией и широким кругозором. Учитесь эффективно совмещать различные подходы и технологии.", keywords: "DevOps, CI/CD, баланс, интеграция, оптимизация, межкомандное взаимодействие, гармония.", image: "images/14.png" }, { id: 15, name: "Дьявол", general: "Технический долг, зависимости, искушения, выгорание, ложные обещания.", project: "Остерегайтесь 'быстрых, грязных' решений, которые ведут к техническому долгу. Избегайте вендор-лока и зависимости от ненадежных решений. Будьте внимательны к признакам выгорания в команде.", career: "Остерегайтесь токсичных проектов или компаний, которые обещают многое, но эксплуатируют. Не позволяйте работе поглотить вас полностью. Боритесь с прокрастинацией и ложными мотивами.", keywords: "Технический долг, вендор-лок, выгорание, прокрастинация, зависимость, баги, ложные обещания.", image: "images/15.png" }, { id: 16, name: "Башня", general: "Внезапный крах, кризис, перелом, разрушение старых структур.", project: "Будьте готовы к внезапному системному сбою, критическому багу в продакшене или даже полному провалу проекта. Это разрушительное, но очищающее событие, требующее немедленной реакции и перестройки.", career: "Неожиданное увольнение, провал важного экзамена или проекта. Это может быть шоком, но также и возможностью для полного переосмысления и построения чего-то более прочного.", keywords: "Downtime, 500 Error, сбой, критический баг, кризис, разрушение, перезапуск.", image: "images/16.png" }, { id: 17, name: "Звезда", general: "Надежда, вдохновение, инновации, новые горизонты, открытость.", project: "Появляются новые, вдохновляющие идеи и возможности. Время для инноваций, исследования прорывных технологий (AI, Web3, квантовые вычисления). Делитесь своими знаниями и вдохновляйте других.", career: "Выход на новый уровень в карьере, осознание своего предназначения в IT, возможность стать частью чего-то большого и значимого. Найдите свою путеводную звезду в технологиях.", keywords: "Инновации, прорывные технологии, AI, Web3, вдохновение, опенсорс, надежда, будущее.", image: "images/17.png" }, { id: 18, name: "Луна", general: "Неопределенность, скрытые угрозы, заблуждения, интуиция, непонимание.", project: "Есть скрытые проблемы, неочевидные баги или уязвимости, которые еще не проявились. Будьте осторожны с неясными требованиями или непроверенными решениями. Доверяйте интуиции, но перепроверяйте.", career: "Чувство неопределенности, синдрома самозванца, неясные перспективы. Не доверяйте всему, что видите или слышите. Углубитесь в самоанализ и найдите истину за туманом сомнений.", keywords: "Неопределенность, скрытые баги, уязвимости, фрод, киберпреступность, синдром самозванца, туман требований.", image: "images/18.png" }, { id: 19, name: "Солнце", general: "Успех, ясность, радость, процветание, признание.", project: "Полный успех, успешный запуск, признание сообществом, ясное понимание всех аспектов. Время праздновать достижения и наслаждаться результатом.", career: "Признание ваших заслуг, повышение, успешное завершение важного этапа. Вы достигли ясности в своих целях и путях.", keywords: "Успешный релиз, ясность, признание, процветание, growth, свет, позитив.", image: "images/19.png" }, { id: 20, name: "Страшный суд", general: "Оценка, возрождение, призыв, окончательное решение, ретроспектива.", project: "Время для глубокой ретроспективы, анализа всех ошибок и успехов. Важно извлечь уроки и принять кардинальные решения о дальнейшем развитии или закрытии проекта. Это призыв к обновлению и перерождению.", career: "Период для самооценки, анализа пройденного пути и принятия важных решений о смене направления, переходе на новый уровень или возвращении к старым проектам с новым видением.", keywords: "Ретроспектива, постмортем, аудит, переосмысление, возрождение, кардинальные решения.", image: "images/20.png" }, { id: 21, name: "Мир", general: "Завершение, интеграция, глобальный успех, целостность, мастерство.", project: "Проект достиг полной функциональности, интегрирован во все необходимые системы и готов к глобальному масштабированию. Это кульминация усилий, принесшая целостный и завершенный продукт.", career: "Вы достигли мастерства в своей области, реализовали свой потенциал. Возможно, это достижение глобального признания, завершение долгого обучения или успешное построение собственной IT-империи.", keywords: "Глобализация, завершение, успех, масштабирование, интеграция, мастерство, Web 3.0, мир.", image: "images/21.png" } ];
 
         document.addEventListener('DOMContentLoaded', () => {
             gsap.registerPlugin(Flip, Draggable);
-            
             // --- DOM Элементы ---
-            const screens = {
-                start: document.getElementById('start-screen'),
-                shuffle: document.getElementById('shuffle-screen'),
-                choice: document.getElementById('choice-screen'),
-            };
-            
-            const buttons = {
-                start: document.getElementById('start-btn'),
-                deal: document.getElementById('deal-btn'),
-                closeModal: document.getElementById('close-modal-btn'),
-                aiSubmit: document.getElementById('ai-submit'),
-            };
-            
-            const containers = {
-                cardStack: document.getElementById('card-stack-container'),
-                cardSlots: document.querySelectorAll('.card-slot'),
-                cardArea: document.getElementById('card-selection-area'),
-                modalSpread: document.querySelector('.modal-spread-container'),
-                indicators: document.querySelector('.carousel-indicators')
-            };
-            
-            const modal = {
-                overlay: document.getElementById('result-modal'),
-            };
-            
-            const ai = {
-                prompt: document.getElementById('ai-prompt'),
-                response: document.getElementById('ai-response'),
-                loader: document.getElementById('ai-loader'),
-            };
+            const screens = { start: document.getElementById('start-screen'), shuffle: document.getElementById('shuffle-screen'), choice: document.getElementById('choice-screen'), };
+            const buttons = { start: document.getElementById('start-btn'), deal: document.getElementById('deal-btn'), closeModal: document.getElementById('close-modal-btn'), geminiSubmit: document.getElementById('gemini-submit'), };
+            const containers = { cardStack: document.getElementById('card-stack-container'), cardSlots: document.querySelectorAll('.card-slot'), cardArea: document.getElementById('card-selection-area'), modalSpread: document.querySelector('.modal-spread-container') };
+            const modal = { overlay: document.getElementById('result-modal'), };
+            const gemini = { prompt: document.getElementById('gemini-prompt'), response: document.getElementById('gemini-response'), loader: document.getElementById('gemini-loader'), };
+            const devPanel = { toggle: document.getElementById('dev-panel-toggle'), content: document.getElementById('dev-panel-content'), themeSelect: document.getElementById('theme-select'), bgTypeSelect: document.getElementById('bg-type-select'), animSpeed: { slider: document.getElementById('anim-speed-slider'), value: document.getElementById('anim-speed-value') }, dragSpeed: { slider: document.getElementById('drag-speed-slider'), value: document.getElementById('drag-speed-value') }, particlesCount: { slider: document.getElementById('particles-count-slider'), value: document.getElementById('particles-count-value') }, particlesSpeed: { slider: document.getElementById('particles-speed-slider'), value: document.getElementById('particles-speed-value') }, particlesSize: { slider: document.getElementById('particles-size-slider'), value: document.getElementById('particles-size-value') } };
+            const backgrounds = { particles: document.getElementById('particles-js'), gradient: document.querySelector('.animated-gradient-bg') };
             
             // --- Состояние приложения ---
             let chosenCards = new Array(3).fill(null);
             let shuffleTimeline = null;
+            let particleSettings = { count: 80, speed: 2, size: 3 };
             let cardDraggables = [];
-            const isMobile = window.matchMedia('(max-width: 768px)').matches;
+            let dragResistance = 0.1;
 
             // --- Управление экранами ---
             function switchScreen(screenName) {
@@ -824,103 +385,57 @@
                 if (screens[screenName]) screens[screenName].classList.add('active');
             }
 
-            // --- Инициализация частиц ---
+            // --- Инициализация и управление фоном ---
             function initParticles() {
-                const particleCount = isMobile ? 30 : 80;
+                const theme = document.body.className || 'theme-gazprom-classic';
+                const colors = { 'theme-gazprom-classic': { p: "#00aaff", l: "#0078d7" }, 'theme-gazprom-dark': { p: "#3399ff", l: "#005f9e" }, 'theme-gazprom-light': { p: "#0078d7", l: "#005a9e" }, };
+                const color = colors[theme];
                 
                 if (window.particlesJS) {
-                    particlesJS('particles-js', {
-                        particles: {
-                            number: { value: particleCount, density: { enable: true, value_area: 800 } },
-                            color: { value: "#00aaff" },
-                            size: { value: 3, random: true },
-                            move: { enable: true, speed: 2 },
-                            line_linked: { color: "#0078d7", opacity: 0.4 }
-                        },
-                        interactivity: {
-                            events: { onhover: { enable: !isMobile, mode: "repulse" } }
-                        }
-                    });
+                    particlesJS('particles-js', { particles: { number: { value: particleSettings.count, density: { enable: true, value_area: 800 } }, color: { value: color.p }, size: { value: particleSettings.size, random: true }, move: { enable: true, speed: particleSettings.speed } , line_linked: { color: color.l } }, interactivity: { events: { onhover: { enable: true, mode: "repulse" } } } });
                 }
             }
 
-            // --- Новая анимация тасования для мобильных ---
+            // --- Логика тасования карт ---
             function setupShuffleInteraction() {
                 if (shuffleTimeline) shuffleTimeline.kill();
                 containers.cardStack.innerHTML = '';
-
-                const cardCount = isMobile ? 7 : 12;
-                
-                for (let i = 0; i < cardCount; i++) {
+                for (let i = 0; i < tarotCardsData.length; i++) {
                     const card = document.createElement('div');
                     card.className = 'shuffle-card';
+                    gsap.set(card, { z: i * -1, y: i * -0.5 });
                     containers.cardStack.appendChild(card);
                 }
-
                 const cards = Array.from(containers.cardStack.children);
+                
+                shuffleTimeline = gsap.timeline({ repeat: -1, defaults: { ease: 'power2.inOut' } });
+                cards.forEach((card, index) => {
+                    shuffleTimeline.to(card, {
+                        y: `-=${Math.random() * 20 + 10}`,
+                        rotationZ: `+=${Math.random() * 20 - 10}`,
+                        duration: 0.5 + Math.random() * 0.5
+                    }, `<${Math.random() * 0.5}`)
+                    .to(card, {
+                        y: (index * -0.5),
+                        rotationZ: 0,
+                        duration: 0.5 + Math.random() * 0.5
+                    }, `<${Math.random() * 0.5}`);
+                });
 
-                if (isMobile) {
-                    // Веерная раскладка для мобильных
-                    cards.forEach((card, i) => {
-                        const angle = (i - cards.length/2) * 8;
-                        const radius = 150;
-                        gsap.set(card, {
-                            rotation: angle,
-                            transformOrigin: `50% ${radius}px`,
-                            y: -radius/2 + Math.abs(angle) * 0.3,
-                            x: 0
-                        });
-                    });
-
-                    // Плавное покачивание веера
-                    shuffleTimeline = gsap.timeline({ repeat: -1 });
-                    shuffleTimeline.to(containers.cardStack, {
-                        rotation: 5,
-                        duration: 2,
-                        ease: "sine.inOut"
-                    })
-                    .to(containers.cardStack, {
-                        rotation: -5,
-                        duration: 2,
-                        ease: "sine.inOut"
-                    });
-
-                    // Импульс при касании
-                    containers.cardStack.addEventListener('click', () => {
-                        gsap.to(cards, {
-                            y: '+=10',
-                            rotation: '+=2',
-                            stagger: 0.02,
-                            duration: 0.3,
-                            yoyo: true,
-                            repeat: 1,
-                            ease: 'power2.inOut'
-                        });
-                    });
-                } else {
-                    // Стандартная анимация для десктопа
-                    cards.forEach((card, i) => {
-                        gsap.set(card, { z: i * -2, y: i * -0.5 });
-                    });
-
-                    shuffleTimeline = gsap.timeline({ repeat: -1 });
-                    cards.forEach((card, index) => {
-                        shuffleTimeline.to(card, {
-                            y: `-=${Math.random() * 30 + 10}`,
-                            rotationZ: `+=${Math.random() * 10 - 5}`,
-                            duration: 1 + Math.random() * 0.5
-                        }, `<${Math.random() * 0.3}`)
-                        .to(card, {
-                            y: index * -0.5,
-                            rotationZ: 0,
-                            duration: 1 + Math.random() * 0.5
-                        }, `<${Math.random() * 0.3}`);
-                    });
-                }
+                const onMouseMove = (event) => {
+                    gsap.to(containers.cardStack, { rotationY: (event.clientX / window.innerWidth - 0.5) * 30, rotationX: (event.clientY / window.innerHeight - 0.5) * -30, duration: 1, ease: 'power1.out' });
+                };
+                document.addEventListener('mousemove', onMouseMove);
+                containers.cardStack.mouseMoveHandler = onMouseMove;
             }
-
+            
             function stopShuffleInteraction() {
                 if (shuffleTimeline) shuffleTimeline.kill();
+                const handler = containers.cardStack.mouseMoveHandler;
+                if (handler) {
+                    document.removeEventListener('mousemove', handler);
+                    delete containers.cardStack.mouseMoveHandler;
+                }
             }
 
             // --- Логика расклада ---
@@ -934,21 +449,12 @@
                 chosenCards.fill(null);
                 
                 containers.cardSlots.forEach(slot => {
-                    const label = slot.querySelector('.slot-label').textContent;
-                    slot.innerHTML = `<span class="slot-label">${label}</span>`;
+                    slot.innerHTML = `<span class="slot-label">${slot.dataset.slotLabel}</span>`;
                     slot.classList.remove('filled');
                 });
                 
-                // Показываем подсказку на мобильных
-                if (isMobile) {
-                    const hint = document.createElement('div');
-                    hint.className = 'drag-hint';
-                    hint.textContent = 'Перетащите карты в слоты ниже';
-                    containers.cardArea.appendChild(hint);
-                }
-                
                 containers.cardArea.innerHTML = '';
-                shuffleCards.slice(0, 12).forEach((card, index) => {
+                shuffleCards.forEach((card, index) => {
                     card.className = 'tarot-card';
                     card.dataset.id = tarotCardsData[index].id;
                     card.innerHTML = `<div class="card-face card-back"></div>`;
@@ -959,75 +465,60 @@
                 makeCardsDraggable();
 
                 Flip.from(state, {
-                    duration: 1,
-                    stagger: 0.05,
+                    duration: 1 * getAnimSpeed(),
+                    stagger: 0.03,
                     ease: "power3.inOut"
                 });
             }
 
             function layoutCards() {
-                const cards = containers.cardArea.querySelectorAll('.tarot-card');
-                const areaRect = containers.cardArea.getBoundingClientRect();
-                
-                if (isMobile) {
-                    // Сетка для мобильных
-                    const cols = 3;
-                    const cardWidth = 70;
-                    const cardHeight = 112;
-                    const spacing = 10;
-                    const startX = (areaRect.width - (cols * cardWidth + (cols - 1) * spacing)) / 2;
-                    
-                    cards.forEach((card, i) => {
-                        const col = i % cols;
-                        const row = Math.floor(i / cols);
-                        gsap.set(card, {
-                            x: startX + col * (cardWidth + spacing),
-                            y: row * (cardHeight + spacing) + 20,
-                            rotation: 0
-                        });
-                    });
-                } else {
-                    // Случайное расположение для десктопа
-                    let positions = [];
-                    cards.forEach(card => {
-                        let x, y, rotation;
-                        let attempts = 0;
-                        do {
-                            x = Math.random() * (areaRect.width - 100);
-                            y = Math.random() * (areaRect.height - 160);
-                            rotation = Math.random() * 30 - 15;
-                            attempts++;
-                        } while (attempts < 50 && positions.some(pos => 
-                            Math.hypot(x - pos.x, y - pos.y) < 80
-                        ));
-                        
-                        positions.push({x, y});
-                        gsap.set(card, { x, y, rotation });
-                    });
-                }
-            }
+                const area = containers.cardArea;
+                const cards = area.querySelectorAll('.tarot-card');
+                if (!cards.length) return;
+                const areaRect = area.getBoundingClientRect();
+                const cardWidth = cards[0].offsetWidth;
+                const cardHeight = cards[0].offsetHeight;
+                let positions = [];
 
+                cards.forEach(card => {
+                    let overlaps;
+                    let x, y, rotation;
+                    let attempts = 0;
+                    do {
+                        overlaps = false;
+                        x = Math.random() * (areaRect.width - cardWidth);
+                        y = Math.random() * (areaRect.height - cardHeight);
+                        rotation = Math.random() * 40 - 20;
+                        
+                        for (const pos of positions) {
+                            if (Math.hypot(x - pos.x, y - pos.y) < Math.min(cardWidth, cardHeight) * 0.8) {
+                                overlaps = true;
+                                break;
+                            }
+                        }
+                        attempts++;
+                    } while (overlaps && attempts < 100);
+                    
+                    positions.push({x, y});
+                    gsap.set(card, { x, y, rotation });
+                });
+            }
+            
             function makeCardsDraggable() {
-                cardDraggables.forEach(d => d.kill());
-                cardDraggables = [];
-                
+                if (cardDraggables.length) {
+                    cardDraggables.forEach(d => d.kill());
+                    cardDraggables = [];
+                }
                 const cards = containers.cardArea.querySelectorAll('.tarot-card');
-                
                 cards.forEach(card => {
                     const draggable = Draggable.create(card, {
                         type: "x,y",
-                        dragResistance: 0,
+                        dragResistance: dragResistance,
                         onPress: function() {
-                            gsap.to(this.target, {
-                                scale: 1.1,
-                                zIndex: 1000,
-                                duration: 0.2,
-                                rotation: 0
-                            });
+                            gsap.to(this.target, { scale: 1.1, zIndex: 1000, duration: 0.2 });
                         },
                         onDragEnd: function() {
                             let dropped = false;
-                            
                             containers.cardSlots.forEach((slot, index) => {
                                 if (this.hitTest(slot, "50%") && !slot.classList.contains('filled')) {
                                     dropped = true;
@@ -1036,13 +527,13 @@
                             });
 
                             if (!dropped) {
-                                gsap.to(this.target, {
-                                    x: this.startX,
+                                gsap.to(this.target, { 
+                                    x: this.startX, 
                                     y: this.startY,
-                                    scale: 1,
+                                    scale: 1, 
                                     zIndex: 1,
-                                    duration: 0.5,
-                                    ease: 'power3.out'
+                                    duration: 0.5, 
+                                    ease: 'power3.out' 
                                 });
                             }
                         }
@@ -1064,21 +555,17 @@
                 slot.appendChild(cardElement);
 
                 Flip.from(state, {
-                    duration: 0.5,
+                    duration: 0.5 * getAnimSpeed(),
                     ease: 'power2.inOut',
                     onComplete: () => {
-                        cardElement.innerHTML = `
-                            <div class="card-face card-back"></div>
-                            <div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>
-                        `;
-                        
-                        gsap.to(cardElement, {
-                            rotationY: 180,
-                            duration: 0.8,
+                        cardElement.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>`;
+                        gsap.to(cardElement, { 
+                            rotationY: 180, 
+                            duration: 1 * getAnimSpeed(), 
                             ease: 'power2.inOut',
                             onComplete: () => {
                                 if (chosenCards.filter(c => c !== null).length === 3) {
-                                    setTimeout(showResult, 800);
+                                    setTimeout(showResult, 500 * getAnimSpeed());
                                 }
                             }
                         });
@@ -1086,19 +573,15 @@
                 });
             }
 
-            // --- Отображение результата с каруселью ---
+            // --- Отображение результата ---
             function showResult() {
-                containers.modalSpread.innerHTML = '';
-                containers.indicators.innerHTML = '';
-                
+                containers.modalSpread.innerHTML = ''; 
                 const labels = ["Вызов", "Путь", "Исход"];
-                
-                chosenCards.forEach((cardData, i) => {
-                    if (!cardData) return;
+                for (let i = 0; i < 3; i++) {
+                    const cardData = chosenCards[i];
+                    if (!cardData) continue;
 
-                    const keywordsHTML = cardData.keywords.split(',')
-                        .map(k => `<span class="keyword">${k.trim()}</span>`)
-                        .join('');
+                    const keywordsHTML = cardData.keywords.split(',').map(k => `<span class="keyword">${k.trim()}</span>`).join('');
 
                     const cardDisplayHTML = `
                         <div class="modal-card-display">
@@ -1115,83 +598,103 @@
                         </div>
                     `;
                     containers.modalSpread.innerHTML += cardDisplayHTML;
-
-                    // Добавляем индикаторы для мобильной карусели
-                    const indicator = document.createElement('div');
-                    indicator.className = 'indicator';
-                    if (i === 0) indicator.classList.add('active');
-                    containers.indicators.appendChild(indicator);
-                });
-
-                // Обработка скролла карусели на мобильных
-                if (isMobile) {
-                    containers.modalSpread.addEventListener('scroll', () => {
-                        const scrollLeft = containers.modalSpread.scrollLeft;
-                        const cardWidth = containers.modalSpread.querySelector('.modal-card-display').offsetWidth;
-                        const activeIndex = Math.round(scrollLeft / cardWidth);
-                        
-                        document.querySelectorAll('.indicator').forEach((ind, i) => {
-                            ind.classList.toggle('active', i === activeIndex);
-                        });
-                    });
                 }
-
-                ai.prompt.value = '';
-                ai.response.textContent = '';
+                gemini.prompt.value = '';
+                gemini.response.textContent = '';
                 modal.overlay.classList.add('active');
             }
 
-            // --- AI Предсказание ---
-            async function getAIPrediction() {
-                if (chosenCards.filter(c => c !== null).length < 3 || !ai.prompt.value.trim()) {
-                    ai.response.textContent = 'Пожалуйста, выберите три карты и введите ваш вопрос.';
+            // --- Gemini API ---
+            async function getGeminiPrediction() {
+                if (chosenCards.filter(c => c !== null).length < 3 || !gemini.prompt.value.trim()) {
+                    gemini.response.textContent = 'Пожалуйста, выберите три карты и введите ваш вопрос.';
                     return;
                 }
+                gemini.loader.style.display = 'block';
+                gemini.response.textContent = '';
+                buttons.geminiSubmit.disabled = true;
                 
-                ai.loader.style.display = 'block';
-                ai.response.textContent = '';
-                buttons.aiSubmit.disabled = true;
-                
-                // Заглушка для демо
-                setTimeout(() => {
-                    ai.response.textContent = `На основе вашего расклада "${chosenCards[0].name} - ${chosenCards[1].name} - ${chosenCards[2].name}" и вопроса "${ai.prompt.value}", я вижу следующее: 
+                const promptText = `Ты - IT-оракул. Тебе сделали расклад на 3 карты Таро по вопросу: "${gemini.prompt.value}". 1. Вызов: "${chosenCards[0].name}" (${chosenCards[0].general}). 2. Путь к решению: "${chosenCards[1].name}" (${chosenCards[1].general}). 3. Потенциальный исход: "${chosenCards[2].name}" (${chosenCards[2].general}). Создай целостное, мудрое и краткое толкование (4-5 предложений), связав все три карты в единую историю, которая отвечает на вопрос пользователя.`;
 
-Вас ждёт интересный период трансформации. ${chosenCards[0].name} указывает на текущие вызовы, которые требуют вашего внимания. ${chosenCards[1].name} подсказывает путь через эти испытания. А ${chosenCards[2].name} обещает интересный исход.
-
-Будьте внимательны к деталям и доверяйте своей интуиции в принятии технических решений.`;
-                    
-                    ai.loader.style.display = 'none';
-                    buttons.aiSubmit.disabled = false;
-                }, 2000);
+                try {
+                    const apiKey = ""; // Canvas will provide the key
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    const payload = { contents: [{ role: "user", parts: [{ text: promptText }] }] };
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API call failed: ${response.status}`);
+                    const result = await response.json();
+                    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        gemini.response.textContent = result.candidates[0].content.parts[0].text;
+                    } else { throw new Error("Invalid API response structure."); }
+                } catch (error) {
+                    console.error('Error calling Gemini API:', error);
+                    gemini.response.textContent = 'Произошел сбой в цифровых потоках. Попробуйте позже.';
+                } finally {
+                    gemini.loader.style.display = 'none';
+                    buttons.geminiSubmit.disabled = false;
+                }
             }
 
-            // --- Сброс ---
+            // --- Сброс и Dev Panel ---
             function resetApp() {
                 modal.overlay.classList.remove('active');
-                setTimeout(() => switchScreen('start'), 500);
+                setTimeout(() => switchScreen('start'), 500 * getAnimSpeed());
             }
 
-            // --- Инициализация ---
+            function getAnimSpeed() { return parseFloat(document.documentElement.style.getPropertyValue('--anim-speed')) || 1; }
+
+            function setupDevPanel() {
+                devPanel.toggle.addEventListener('click', () => devPanel.content.classList.toggle('active'));
+                devPanel.themeSelect.addEventListener('change', (e) => {
+                    document.body.className = e.target.value;
+                    initParticles();
+                });
+                devPanel.bgTypeSelect.addEventListener('change', (e) => {
+                    const controls = document.querySelectorAll('.particles-control');
+                    if (e.target.value === 'gradient') {
+                        backgrounds.particles.style.opacity = '0';
+                        backgrounds.gradient.classList.add('active');
+                        controls.forEach(c => c.style.display = 'none');
+                    } else {
+                        backgrounds.particles.style.opacity = '1';
+                        backgrounds.gradient.classList.remove('active');
+                        controls.forEach(c => c.style.display = 'flex');
+                    }
+                });
+                devPanel.animSpeed.slider.addEventListener('input', (e) => {
+                    const speed = parseFloat(e.target.value);
+                    document.documentElement.style.setProperty('--anim-speed', speed);
+                    devPanel.animSpeed.value.textContent = speed.toFixed(1);
+                });
+                devPanel.dragSpeed.slider.addEventListener('input', (e) => {
+                    dragResistance = parseFloat(e.target.value);
+                    devPanel.dragSpeed.value.textContent = dragResistance.toFixed(2);
+                    makeCardsDraggable(); // Re-init with new resistance
+                });
+                devPanel.particlesCount.slider.addEventListener('input', (e) => { particleSettings.count = parseInt(e.target.value, 10); devPanel.particlesCount.value.textContent = particleSettings.count; initParticles(); });
+                devPanel.particlesSpeed.slider.addEventListener('input', (e) => { particleSettings.speed = parseFloat(e.target.value); devPanel.particlesSpeed.value.textContent = particleSettings.speed.toFixed(1); initParticles(); });
+                devPanel.particlesSize.slider.addEventListener('input', (e) => { particleSettings.size = parseFloat(e.target.value); devPanel.particlesSize.value.textContent = particleSettings.size.toFixed(1); initParticles(); });
+            }
+
+            // --- Инициализация и обработчики событий ---
             function init() {
                 initParticles();
+                setupDevPanel();
                 
-                buttons.start.addEventListener('click', () => {
-                    switchScreen('shuffle');
-                    setupShuffleInteraction();
-                });
-                
+                buttons.start.addEventListener('click', () => { switchScreen('shuffle'); setupShuffleInteraction(); });
                 buttons.deal.addEventListener('click', startSpread);
                 buttons.closeModal.addEventListener('click', resetApp);
-                buttons.aiSubmit.addEventListener('click', getAIPrediction);
+                buttons.geminiSubmit.addEventListener('click', getGeminiPrediction);
+                gemini.prompt.addEventListener('keydown', (e) => { if (e.key === 'Enter') getGeminiPrediction(); });
                 
-                ai.prompt.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') getAIPrediction();
+                containers.cardSlots.forEach(slot => { slot.dataset.slotLabel = slot.querySelector('.slot-label').textContent; });
+                
+                window.addEventListener('resize', () => {
+                    if(screens.choice.classList.contains('active')) {
+                        layoutCards();
+                    }
                 });
-                
-                // Предотвращаем масштабирование на iOS
-                document.addEventListener('gesturestart', e => e.preventDefault());
-                document.addEventListener('gesturechange', e => e.preventDefault());
-                
+
                 switchScreen('start');
             }
 

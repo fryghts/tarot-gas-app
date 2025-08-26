@@ -1,83 +1,576 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Таро — IT-предсказания</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Цифровой Оракул: IT-Таро</title>
+    <style>
+        /* --- ОБЩИЕ СТИЛИ --- */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Orbitron:wght@400;700&display=swap');
+
+        :root {
+            --font-main: 'Inter', sans-serif;
+            --font-title: 'Orbitron', sans-serif;
+            --anim-speed: 1; /* 1 = normal speed */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-main);
+            overflow: hidden;
+            transition: background-color 0.5s;
+        }
+
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 2000px;
+            position: relative;
+            z-index: 1;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            transition: opacity calc(0.5s * var(--anim-speed));
+        }
+
+        .animated-gradient-bg {
+            position: fixed;
+            width: 300%;
+            height: 300%;
+            top: -100%;
+            left: -100%;
+            z-index: -1;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity calc(0.5s * var(--anim-speed));
+            animation: gradient-animation calc(20s * var(--anim-speed)) ease infinite;
+        }
+        
+        .animated-gradient-bg.active {
+            opacity: 1;
+        }
+
+        @keyframes gradient-animation {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity calc(0.8s * var(--anim-speed));
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .screen.active { opacity: 1; pointer-events: auto; }
+
+        .title { font-family: var(--font-title); font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 700; margin-bottom: 1rem; }
+        .subtitle { font-size: clamp(1rem, 3vw, 1.25rem); max-width: 600px; margin-bottom: 2rem; line-height: 1.6; }
+        .pulsing-text { animation: pulse calc(3s * var(--anim-speed)) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+        .instruction { font-family: var(--font-title); font-size: 1.2rem; position: absolute; top: 15%; width: 100%; }
+        .action-button { font-family: var(--font-title); padding: 1rem 2.5rem; border-radius: 50px; border: none; font-size: 1.2rem; cursor: pointer; transition: all calc(0.3s * var(--anim-speed)); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .action-button:hover { transform: translateY(-3px); box-shadow: 0 6px 25px rgba(0,0,0,0.4); }
+        .action-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* --- ТЕМЫ --- */
+        .theme-gazprom-classic {
+            --bg-color: #011d3a; --primary-color: #0078d7; --secondary-color: #ffffff; --text-color: #e0f7ff; --highlight-color: #00aaff;
+            --card-back-bg: linear-gradient(145deg, #002f5c, #004b8f); --card-border: #00aaff;
+            --gradient: radial-gradient(ellipse at top, #00aaff, transparent), radial-gradient(ellipse at bottom, #002f5c, transparent);
+        }
+        .theme-gazprom-dark {
+            --bg-color: #000814; --primary-color: #005f9e; --secondary-color: #ccdeeb; --text-color: #a9c7e0; --highlight-color: #3399ff;
+            --card-back-bg: linear-gradient(145deg, #001a33, #002b52); --card-border: #0078d7;
+            --gradient: radial-gradient(ellipse at top, #3399ff, transparent), radial-gradient(ellipse at bottom, #001a33, transparent);
+        }
+        .theme-gazprom-light {
+            --bg-color: #e6f2ff; --primary-color: #005a9e; --secondary-color: #002d4f; --text-color: #004375; --highlight-color: #0078d7;
+            --card-back-bg: linear-gradient(145deg, #cce5ff, #a3d1ff); --card-border: #005a9e;
+            --gradient: radial-gradient(ellipse at top, #a3d1ff, transparent), radial-gradient(ellipse at bottom, #e6f2ff, transparent);
+        }
+
+        body { background-color: var(--bg-color); color: var(--text-color); }
+        .animated-gradient-bg { background: var(--gradient); }
+        .title { color: var(--secondary-color); text-shadow: 0 0 15px var(--primary-color);}
+        .subtitle, .instruction { color: var(--text-color); }
+        .action-button { background-color: var(--primary-color); color: var(--bg-color) !important; }
+        .action-button:hover { background-color: var(--highlight-color); }
+
+        /* --- ЭКРАН ТАСОВАНИЯ --- */
+        #shuffle-screen { justify-content: flex-end; padding-bottom: 5rem; }
+        #card-stack-container { position: absolute; width: 120px; height: 192px; top: 50%; left: 50%; transform: translate(-50%, -50%); transform-style: preserve-3d; }
+        .shuffle-card { position: absolute; width: 100%; height: 100%; border-radius: 10px; background: var(--card-back-bg); border: 2px solid var(--card-border); box-shadow: 0 0 15px rgba(0,0,0,0.5); cursor: grab; user-select: none; will-change: transform; }
+
+        /* --- ЭКРАН ВЫБОРА (DRAG & DROP) --- */
+        #choice-screen { flex-direction: row; justify-content: space-between; align-items: stretch; padding: 2rem; gap: 2rem; }
+        #card-selection-grid { flex-grow: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 1rem; padding: 1rem; overflow-y: auto; align-content: flex-start; }
+        #spread-slots-sidebar { flex-shrink: 0; width: 180px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .card-slot { width: 120px; height: 192px; border: 2px dashed var(--primary-color); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary-color); transition: background-color calc(0.3s * var(--anim-speed)); }
+        .card-slot.drag-over { background-color: rgba(255,255,255,0.1); border-style: solid; }
+        .card-slot .slot-label { font-family: var(--font-title); }
+        .tarot-card { width: 80px; height: 128px; position: relative; cursor: grab; transform-style: preserve-3d; border-radius: 8px; transition: opacity calc(0.3s * var(--anim-speed)), transform calc(0.3s * var(--anim-speed)); }
+        .tarot-card.is-dragging { opacity: 0.5; transform: scale(1.1); }
+        .tarot-card.is-dropped { opacity: 0.3; pointer-events: none; }
+        .card-slot .tarot-card { width: 100%; height: 100%; cursor: default; }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; background-size: cover; background-position: center; }
+        .card-back { background: var(--card-back-bg); border: 2px solid var(--card-border); }
+        .card-front { transform: rotateY(180deg); }
+        
+        @media (max-width: 768px) {
+            #choice-screen { flex-direction: column; padding: 1rem; gap: 1rem; }
+            #card-selection-grid { flex-grow: 1; width: 100%; height: calc(100% - 150px); padding: 0.5rem; }
+            #spread-slots-sidebar { width: 100%; flex-direction: row; height: auto; padding: 0.5rem; gap: 1rem; }
+            .card-slot { width: 80px; height: 128px; flex-shrink: 0; }
+            #spread-slots-sidebar .action-button { padding: 0.5rem; font-size: 0.8rem; width: 100%; align-self: center; }
+        }
+
+        /* --- МОДАЛЬНОЕ ОКНО --- */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity calc(0.5s * var(--anim-speed)); }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content { background: rgba(10, 20, 40, 0.9); border: 1px solid var(--primary-color); border-radius: 16px; padding: 1rem; width: 95%; max-width: 1200px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 0 40px var(--primary-color); transform: scale(0.9); transition: transform calc(0.5s * var(--anim-speed)); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .close-button { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-color); font-size: 2rem; cursor: pointer; opacity: 0.7; transition: opacity 0.3s, transform 0.3s; z-index: 10; }
+        .close-button:hover { opacity: 1; transform: rotate(90deg); }
+        
+        .modal-spread-container { display: flex; flex-direction: column; gap: 1rem; }
+        .modal-card-display { display: flex; flex-direction: column; md:flex-row; gap: 1.5rem; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 10px; border-left: 4px solid var(--primary-color); }
+        .modal-card-display img { width: 120px; height: 192px; flex-shrink: 0; border-radius: 8px; border: 2px solid var(--card-border); }
+        .card-details h4 { font-family: var(--font-title); color: var(--highlight-color); font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .card-details h5 { font-weight: bold; margin-top: 1rem; margin-bottom: 0.25rem; color: var(--secondary-color); }
+        .card-details p { font-size: 0.9rem; opacity: 0.9; line-height: 1.5; }
+        .keywords-container { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+        .keyword { background: rgba(0,0,0,0.3); border: 1px solid var(--primary-color); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; }
+
+        /* --- СЕКЦИЯ GEMINI --- */
+        .gemini-section { margin-top: 2rem; padding: 1.5rem; border-top: 1px solid var(--primary-color); background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .gemini-section h3 { font-family: var(--font-title); color: var(--highlight-color); margin-bottom: 0.5rem; }
+        .gemini-input-group { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        #gemini-prompt { flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--primary-color); border-radius: 8px; padding: 0.75rem; color: var(--text-color); font-size: 1rem; }
+        #gemini-submit { background: var(--primary-color); color: var(--bg-color); border: none; border-radius: 8px; padding: 0.75rem 1.5rem; cursor: pointer; transition: background-color 0.3s; }
+        #gemini-submit:hover { background-color: var(--highlight-color); }
+        #gemini-response-container { margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px; min-height: 50px; }
+        #gemini-response { white-space: pre-wrap; line-height: 1.6; }
+        .loader { border: 4px solid rgba(255,255,255,0.2); border-left-color: var(--primary-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- DEV PANEL --- */
+        #dev-panel { position: fixed; bottom: 20px; left: 20px; z-index: 200; }
+        #dev-panel-toggle { width: 50px; height: 50px; background: rgba(0,0,0,0.5); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 1px solid white; }
+        #dev-panel-toggle svg { width: 24px; height: 24px; }
+        #dev-panel-content { position: absolute; bottom: 60px; left: 0; background: rgba(0,0,0,0.8); border: 1px solid white; border-radius: 8px; padding: 1rem; width: 250px; display: none; flex-direction: column; gap: 1rem; }
+        #dev-panel-content.active { display: flex; }
+        .dev-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .dev-group label { font-size: 0.9rem; display: flex; justify-content: space-between;}
+        #dev-panel select, #dev-panel input, #dev-panel button { width: 100%; padding: 0.5rem; background: #333; color: white; border: 1px solid #555; border-radius: 4px; }
+        #dev-panel button { cursor: pointer; background: var(--primary-color); }
+    </style>
 </head>
-<body>
-  <div class="container">
-    <canvas id="flow-bg" aria-hidden="true"></canvas>
+<body class="theme-gazprom-classic">
 
-    <!-- Welcome -->
-    <div id="welcome-screen" class="screen active">
-      <div class="topbar">
-        <div class="emblem" aria-hidden="true">
-          <svg width="56" height="56" viewBox="0 0 86 86" xmlns="http://www.w3.org/2000/svg">
-            <defs><linearGradient id="g_logo" x1="0" x2="1"><stop offset="0" stop-color="#00a2e1"/><stop offset="1" stop-color="#008cc7"/></linearGradient></defs>
-            <circle cx="43" cy="43" r="40" fill="url(#g_logo)"/>
-            <path d="M22 54 L43 22 L64 54 Z" fill="rgba(255,255,255,0.95)"/>
-          </svg>
+    <div id="particles-js"></div>
+    <div class="animated-gradient-bg"></div>
+    <div class="app-container">
+        
+        <div id="start-screen" class="screen active">
+            <h1 class="title">Цифровой Оракул</h1>
+            <p class="subtitle">Какой баг ждет тебя в следующем спринте? Узнай свою IT-судьбу.</p>
+            <button id="start-btn" class="action-button">Начать сеанс</button>
         </div>
-        <div class="controls">
-          <button id="autoplay-welcome" class="btn small">Автопоказ</button>
+        
+        <div id="focus-screen" class="screen">
+            <h1 class="title pulsing-text">Концентрация</h1>
+            <p class="subtitle">Подумайте о проекте, карьерном пути или технологическом вызове, который вас волнует. Сконцентрируйтесь на нём. <br><br>Как только будете готовы, нажмите на экран.</p>
         </div>
-      </div>
 
-      <div class="welcome-content">
-        <h1>Раскройте тайну вашего энергетического будущего</h1>
-        <p>Нажмите «Выбрать карту». На экране выбора — лента карт, движущаяся справа налево.</p>
-        <div class="welcome-actions">
-          <button id="start-btn" class="btn">Выбрать карту</button>
+        <div id="shuffle-screen" class="screen">
+            <p class="instruction">Сосредоточьтесь на вопросе...<br>Перемешайте колоду движением курсора.</p>
+            <div id="card-stack-container"></div>
+            <button id="deal-btn" class="action-button">Сделать расклад</button>
         </div>
-      </div>
 
-      <div id="attract-overlay" class="attract-overlay hidden" aria-hidden="true">
-        <div id="attract-card" class="attract-card">
-          <div class="card-inner">
-            <div class="card-front"><img src="images/back.jpg" alt="рубашка"></div>
-            <div class="card-back"><img id="attract-image" src="" alt=""></div>
-          </div>
+        <div id="choice-screen" class="screen">
+            <div id="card-selection-grid"></div>
+            <div id="spread-slots-sidebar">
+                <div class="card-slot" data-slot-id="0"><span class="slot-label">Вызов</span></div>
+                <div class="card-slot" data-slot-id="1"><span class="slot-label">Путь</span></div>
+                <div class="card-slot" data-slot-id="2"><span class="slot-label">Исход</span></div>
+                <button id="show-result-btn" class="action-button" style="margin-top: 1rem;" disabled>Толкование</button>
+            </div>
         </div>
-      </div>
     </div>
 
-    <!-- Selection / tape -->
-    <div id="selection-screen" class="screen">
-      <div class="topbar">
-        <div class="emblem" aria-hidden="true">
-          <svg width="46" height="46" viewBox="0 0 86 86" xmlns="http://www.w3.org/2000/svg">
-            <defs><linearGradient id="g_logo2" x1="0" x2="1"><stop offset="0" stop-color="#00a2e1"/><stop offset="1" stop-color="#008cc7"/></linearGradient></defs>
-            <circle cx="43" cy="43" r="40" fill="url(#g_logo2)"/>
-            <path d="M22 54 L43 22 L64 54 Z" fill="rgba(255,255,255,0.95)"/>
-          </svg>
+    <div id="result-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="close-modal-btn" class="close-button">&times;</button>
+            <div class="modal-spread-container">
+                <!-- Результаты будут вставлены здесь -->
+            </div>
+            <div class="gemini-section">
+                <h3>Персональное толкование от AI</h3>
+                <p>Задайте уточняющий вопрос, чтобы получить более глубокое предсказание от нейросети Gemini.</p>
+                <div class="gemini-input-group">
+                    <input type="text" id="gemini-prompt" placeholder="Например: Какие скрытые риски есть в этом проекте?">
+                    <button id="gemini-submit">Получить ответ</button>
+                </div>
+                <div id="gemini-response-container">
+                    <div id="gemini-loader" class="loader" style="display: none;"></div>
+                    <p id="gemini-response"></p>
+                </div>
+            </div>
         </div>
-        <div class="controls">
-          <button id="back-btn" class="btn-ghost small">Назад</button>
-        </div>
-      </div>
-
-      <div class="tape-viewport">
-        <div id="tape" class="tape"></div>
-      </div>
-
-      <!-- detail panel (text-only) -->
-      <aside id="detail-panel" class="detail-panel hidden" aria-hidden="true">
-        <button id="close-detail" class="btn-ghost small">✕</button>
-        <div class="detail-content-only">
-          <h3 id="detail-title"></h3>
-          <div class="meaning-section"><h4>Общее значение</h4><p id="detail-general"></p></div>
-          <div class="meaning-section"><h4>Для проекта</h4><p id="detail-project"></p></div>
-          <div class="meaning-section"><h4>Для карьеры</h4><p id="detail-career"></p></div>
-          <div class="meaning-section"><h4>Ключевые слова</h4><p id="detail-keywords"></p></div>
-        </div>
-      </aside>
     </div>
-  </div>
+    
+    <div id="dev-panel">
+        <div id="dev-panel-toggle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.8293 10.1707C19.9392 10.7839 20 11.3895 20 12C20 12.6105 19.9392 13.2161 19.8293 13.8293L21.8293 15.3293C22.0678 15.513 22.1465 15.8329 22.0415 16.1159L20.0415 19.5819C19.9365 19.8649 19.6429 20.0351 19.3453 19.9707L16.9453 19.0707C16.3216 19.5393 15.6347 19.9234 14.8962 20.2101L14.5 22.7C14.4444 23.0041 14.1843 23.2204 13.8703 23.2204H10.1297C9.81568 23.2204 9.55558 23.0041 9.5 22.7L9.10383 20.2101C8.36531 19.9234 7.67842 19.5393 7.05471 19.0707L4.65471 19.9707C4.35714 20.0351 4.06346 19.8649 3.95848 19.5819L1.95848 16.1159C1.8535 15.8329 1.93221 15.513 2.17073 15.3293L4.17073 13.8293C4.06083 13.2161 4 12.6105 4 12C4 11.3895 4.06083 10.7839 4.17073 10.1707L2.17073 8.67073C1.93221 8.48705 1.8535 8.16712 1.95848 7.8841L3.95848 4.4181C4.06346 4.1351 4.35714 3.96486 4.65471 4.02928L7.05471 4.92928C7.67842 4.46071 8.36531 4.0766 9.10383 3.78988L9.5 1.3C9.55558 0.99593 9.81568 0.77965 10.1297 0.77965H13.8703C14.1843 0.77965 14.4444 0.99593 14.5 1.3L14.8962 3.78988C15.6347 4.0766 16.3216 4.46071 16.9453 4.92928L19.3453 4.02928C19.6429 3.96486 19.9365 4.1351 20.0415 4.4181L22.0415 7.8841C22.1465 8.16712 22.0678 8.48705 21.8293 8.67073L19.8293 10.1707ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"></path></svg></div>
+        <div id="dev-panel-content">
+            <h4>Dev Panel</h4>
+            <div class="dev-group">
+                <label for="theme-select">Тема Газпром:</label>
+                <select id="theme-select">
+                    <option value="theme-gazprom-classic">Классический синий</option>
+                    <option value="theme-gazprom-dark">Глубокий космос</option>
+                    <option value="theme-gazprom-light">Полярный день</option>
+                </select>
+            </div>
+             <div class="dev-group">
+                <label for="bg-type-select">Тип фона:</label>
+                <select id="bg-type-select">
+                    <option value="particles">Частицы</option>
+                    <option value="gradient">Градиент</option>
+                </select>
+            </div>
+            <div class="dev-group">
+                <label for="anim-speed-slider">Скорость анимации: <span id="anim-speed-value">1.0</span>x</label>
+                <input type="range" id="anim-speed-slider" min="0.1" max="2" step="0.1" value="1">
+            </div>
+            <div class="dev-group particles-control">
+                <label for="particles-count-slider">Кол-во частиц: <span id="particles-count-value">80</span></label>
+                <input type="range" id="particles-count-slider" min="10" max="200" step="10" value="80">
+            </div>
+             <div class="dev-group particles-control">
+                <label for="particles-speed-slider">Скорость частиц: <span id="particles-speed-value">2.0</span></label>
+                <input type="range" id="particles-speed-slider" min="0.5" max="10" step="0.5" value="2">
+            </div>
+             <div class="dev-group particles-control">
+                <label for="particles-size-slider">Размер частиц: <span id="particles-size-value">3.0</span></label>
+                <input type="range" id="particles-size-slider" min="1" max="10" step="0.5" value="3">
+            </div>
+        </div>
+    </div>
 
-  <script src="data.js"></script>
-  <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    
+    <script>
+        const tarotCardsData = [ { id: 0, name: "Дурак (Шут)", general: "Начало нового пути, смелый шаг в неизвестность.", project: "Время для запуска MVP, экспериментов, пилотных проектов. Не бойтесь выйти за рамки привычного, даже если нет полной картины. Ваша наивная вера может привести к прорыву.", career: "Возможность для перехода в новую сферу, освоения радикально иной технологии или старта собственного дела. Отпустите страх и доверьтесь процессу обучения.", keywords: "Стартап, MVP, эксперимент, 'Hello World', новая технология, первый шаг, риск.", image: "images/0.png" }, { id: 1, name: "Маг", general: "Мастерство, инициатива, использование всех доступных ресурсов.", project: "У вас есть все необходимые навыки и инструменты, чтобы воплотить идею в жизнь. Время для активных действий, написания кода, построения архитектуры. Не ждите, творите!", career: "Используйте свои знания и опыт на полную катушку. Вы обладаете уникальными навыками, чтобы проявлять инициативу и создавать что-то значимое. Возможно, это период для менторства или ведения ключевого проекта.", keywords: "Программирование, архитектура, инструменты, API, мастерство, инициатива, создание.", image: "images/1.png" }, { id: 2, name: "Жрица", general: "Интуиция, скрытые знания, глубокий анализ данных.", project: "Ищите неочевидные решения, доверьтесь своей интуиции при анализе данных. Возможно, ключ к успеху лежит в глубоком исследовании пользовательского поведения или скрытых уязвимостей. Не все ответы лежат на поверхности.", career: "Развивайте навыки в области Big Data, AI, кибербезопасности. Ваша способность видеть закономерности там, где другие видят хаос, будет востребована. Время для глубокого обучения и погружения в сложные концепции.", keywords: "Big Data, AI, интуиция, кибербезопасность, скрытые угрозы, аналитика, нейронные сети.", image: "images/2.png" }, { id: 3, name: "Императрица", general: "Творчество, развитие продукта, пользовательский опыт, плодородие и рост.", project: "Сосредоточьтесь на удобстве и привлекательности продукта. Создавайте что-то, что приносит радость и легкость пользователям. Время для итераций, прототипирования и внедрения новых фич, которые по-настояшему 'кормят' продукт.", career: "Развивайте свои творческие навыки в дизайне, продуктовой разработке, маркетинге. Вы способны создавать продукты, которые не просто работают, но и приносят удовольствие.", keywords: "UX/UI, продуктовая разработка, масштабирование, рост, плодородие, пользователь, фичи.", image: "images/3.png" }, { id: 4, name: "Император", general: "Структура, лидерство, управление, порядок и стабильность.", project: "Настало время для упорядочивания, внедрения четких процессов, стандартов кодирования и архитектурных принципов. Требуется сильное лидерство и контроль над ресурсами, чтобы обеспечить стабильность и управляемость.", career: "Выход на руководящую позицию, возможность создать или реорганизовать команду, навести порядок в хаотичном проекте. Ваша задача — быть опорой и принимать ответственные решения.", keywords: "CTO, CEO, архитектура, инфраструктура, управление, процессы, стандарты, контроль.", image: "images/4.png" }, { id: 5, name: "Иерофант (Первосвященник)", general: "Обучение, менторство, лучшие практики, устоявшиеся традиции.", project: "Время для следования лучшим практикам, изучения и применения проверенных временем подходов. Возможно, нужно привлечь опытного консультанта или начать внутренние тренинги для команды.", career: "Если вы опытный специалист, это призыв к менторству и обмену знаниями. Если вы новичок, ищите наставника, вступайте в профессиональные сообщества, изучайте документацию.", keywords: "Менторство, опенсорс, обучение, best practices, документация, сообщество, традиции.", image: "images/5.png" }, { id: 6, name: "Влюблённые (Выбор)", general: "Выбор, отношения, сотрудничество, этические дилеммы.", project: "Стоит важный выбор, который повлияет на дальнейшее развитие. Это может быть выбор технологического стека, партнера, или решение между 'быстро и плохо' и 'медленно, но качественно'. Также акцент на командной работе и разрешении конфликтов.", career: "Выбор новой специализации, компании, или решение о совместном проекте. Возможно, нужно урегулировать разногласия в команде или принять сложное этическое решение (например, в области ИИ).", keywords: "Выбор стека, build vs buy, командная работа, этика ИИ, слияние веток, компромисс.", image: "images/6.png" }, { id: 7, name: "Колесница", general: "Прогресс, контроль, победа, решимость, преодоление препятствий.", project: "Проект набирает обороты и движется к релизу или важной вехе. Вы контролируете ситуацию, несмотря на препятствия. Время для форсирования темпов, но с сохранением контроля над качеством.", career: "Вы успешно продвигаетесь к цели, преодолевая трудности. Это может быть успешное завершение сложного проекта, получение новой должности или быстрое освоение новой технологии.", keywords: "Деплой, релиз, CI/CD, масштабирование, прогресс, преодоление, успех.", image: "images/7.png" }, { id: 8, name: "Справедливость (Правосудие)", general: "Оценка, тестирование, честность, качество кода, последствия.", project: "Время для тщательного тестирования, аудита кода, рефакторинга и обеспечения высокого качества. Важно быть честным в оценке проблем и принимать справедливые решения. Возможно, придется столкнуться с последствиями прошлых ошибок.", career: "Ваша работа будет оцениваться по достоинству. Сосредоточьтесь на создании качественных решений, будьте объективны в оценке себя и других. Возможно, вы будете вовлечены в процессы Code Review или архитектурные комиссии.", keywords: "QA, тестирование, баги, code review, аудит, чистый код, ответственность, качество.", image: "images/8.png" }, { id: 9, name: "Отшельник", general: "Глубокая работа, самоанализ, поиск истины, ментальная фокусировка.", project: "Необходимо углубиться в проблему, провести тщательное исследование или разработать сложное решение в уединении. Отвлечения будут мешать.", career: "Время для глубокого изучения новой технологии, написания диссертации или сосредоточенной работы над личным проектом. Ищите внутренний ответ, а не внешний.", keywords: "Отладка, ресерч, глубокая работа, алгоритмы, уединение, фокус, Computer Science.", image: "images/9.png" }, { id: 10, name: "Колесо Фортуны (Зеркало)", general: "Перемены, циклы, возможности, неожиданные события в мире IT.", project: "Будьте готовы к быстрым изменениям на рынке или в технологической среде. Могут появиться новые возможности или неожиданные вызовы. Адаптируйтесь к циклам 'хайпа' и 'спадов'.", career: "Рынок труда в IT постоянно меняется. Будьте гибкими, осваивайте новые тренды. Неожиданные предложения или изменения в компании могут стать поворотными моментами.", keywords: "Тренды, хайп, циклы, адаптация, рынок IT, удача, изменения.", image: "images/10.png" }, { id: 11, name: "Сила", general: "Внутренняя сила, терпение, управление сложными системами, устойчивость.", project: "Требуется терпение и выдержка для работы с крупными, сложными или устаревшими системами. Не грубой силой, а методичным подходом и вниманием к деталям вы сможете справиться с техническим долгом или сложными интеграциями.", career: "Развивайте навыки управления проектами, людьми или очень сложными техническими задачами. Вы обладаете внутренней стойкостью, чтобы довести дело до конца, даже если оно кажется неподъемным.", keywords: "Legacy-код, технический долг, управление проектами, терпение, рефакторинг, стойкость.", image: "images/11.png" }, { id: 12, name: "Повешенный", general: "Пересмотр, новая перспектива, жертва для большей цели, приостановка.", project: "Возможно, проект зашел в тупик, и нужно полностью переосмыслить подход. Пауза, отказ от текущих методов, или даже временная заморозка для редизайна могут быть необходимы.", career: "Время для переосмысления карьерного пути, возможен 'саббатикал' или временное переключение на фриланс, чтобы набраться новых идей. Отпустите старые представления, чтобы увидеть новые возможности.", keywords: "Перезагрузка, рефакторинг, редизайн, новая перспектива, пауза, стратегический отказ.", image: "images/12.png" }, { id: 13, name: "Смерть", general: "Окончание, трансформация, обновление, избавление от устаревшего.", project: "Пришло время полностью отказаться от устаревших технологий, прекратить поддержку неэффективных решений или провести полную миграцию. Это болезненно, но необходимо для роста.", career: "Возможно, вам придется покинуть старую компанию, сменить специализацию или отказаться от привычных, но уже неактуальных навыков. Не бойтесь перемен, они ведут к обновлению.", keywords: "Миграция, декоммиссия, EOL, устаревание, трансформация, новая эра.", image: "images/13.png" }, { id: 14, name: "Умеренность (Время)", general: "Баланс, гармония, интеграция, оптимизация, терпение.", project: "Важно найти баланс между скоростью разработки и стабильностью операций. Оптимизируйте процессы, наладьте взаимодействие между командами, сосредоточьтесь на бесшовной интеграции и непрерывной поставке.", career: "Ищите баланс между работой и личной жизнью, между глубокой специализацией и широким кругозором. Учитесь эффективно совмещать различные подходы и технологии.", keywords: "DevOps, CI/CD, баланс, интеграция, оптимизация, межкомандное взаимодействие, гармония.", image: "images/14.png" }, { id: 15, name: "Дьявол", general: "Технический долг, зависимости, искушения, выгорание, ложные обещания.", project: "Остерегайтесь 'быстрых, грязных' решений, которые ведут к техническому долгу. Избегайте вендор-лока и зависимости от ненадежных решений. Будьте внимательны к признакам выгорания в команде.", career: "Остерегайтесь токсичных проектов или компаний, которые обещают многое, но эксплуатируют. Не позволяйте работе поглотить вас полностью. Боритесь с прокрастинацией и ложными мотивами.", keywords: "Технический долг, вендор-лок, выгорание, прокрастинация, зависимость, баги, ложные обещания.", image: "images/15.png" }, { id: 16, name: "Башня", general: "Внезапный крах, кризис, перелом, разрушение старых структур.", project: "Будьте готовы к внезапному системному сбою, критическому багу в продакшене или даже полному провалу проекта. Это разрушительное, но очищающее событие, требующее немедленной реакции и перестройки.", career: "Неожиданное увольнение, провал важного экзамена или проекта. Это может быть шоком, но также и возможностью для полного переосмысления и построения чего-то более прочного.", keywords: "Downtime, 500 Error, сбой, критический баг, кризис, разрушение, перезапуск.", image: "images/16.png" }, { id: 17, name: "Звезда", general: "Надежда, вдохновение, инновации, новые горизонты, открытость.", project: "Появляются новые, вдохновляющие идеи и возможности. Время для инноваций, исследования прорывных технологий (AI, Web3, квантовые вычисления). Делитесь своими знаниями и вдохновляйте других.", career: "Выход на новый уровень в карьере, осознание своего предназначения в IT, возможность стать частью чего-то большого и значимого. Найдите свою путеводную звезду в технологиях.", keywords: "Инновации, прорывные технологии, AI, Web3, вдохновение, опенсорс, надежда, будущее.", image: "images/17.png" }, { id: 18, name: "Луна", general: "Неопределенность, скрытые угрозы, заблуждения, интуиция, непонимание.", project: "Есть скрытые проблемы, неочевидные баги или уязвимости, которые еще не проявились. Будьте осторожны с неясными требованиями или непроверенными решениями. Доверяйте интуиции, но перепроверяйте.", career: "Чувство неопределенности, синдрома самозванца, неясные перспективы. Не доверяйте всему, что видите или слышите. Углубитесь в самоанализ и найдите истину за туманом сомнений.", keywords: "Неопределенность, скрытые баги, уязвимости, фрод, киберпреступность, синдром самозванца, туман требований.", image: "images/18.png" }, { id: 19, name: "Солнце", general: "Успех, ясность, радость, процветание, признание.", project: "Полный успех, успешный запуск, признание сообществом, ясное понимание всех аспектов. Время праздновать достижения и наслаждаться результатом.", career: "Признание ваших заслуг, повышение, успешное завершение важного этапа. Вы достигли ясности в своих целях и путях.", keywords: "Успешный релиз, ясность, признание, процветание, growth, свет, позитив.", image: "images/19.png" }, { id: 20, name: "Страшный суд", general: "Оценка, возрождение, призыв, окончательное решение, ретроспектива.", project: "Время для глубокой ретроспективы, анализа всех ошибок и успехов. Важно извлечь уроки и принять кардинальные решения о дальнейшем развитии или закрытии проекта. Это призыв к обновлению и перерождению.", career: "Период для самооценки, анализа пройденного пути и принятия важных решений о смене направления, переходе на новый уровень или возвращении к старым проектам с новым видением.", keywords: "Ретроспектива, постмортем, аудит, переосмысление, возрождение, кардинальные решения.", image: "images/20.png" }, { id: 21, name: "Мир", general: "Завершение, интеграция, глобальный успех, целостность, мастерство.", project: "Проект достиг полной функциональности, интегрирован во все необходимые системы и готов к глобальному масштабированию. Это кульминация усилий, принесшая целостный и завершенный продукт.", career: "Вы достигли мастерства в своей области, реализовали свой потенциал. Возможно, это достижение глобального признания, завершение долгого обучения или успешное построение собственной IT-империи.", keywords: "Глобализация, завершение, успех, масштабирование, интеграция, мастерство, Web 3.0, мир.", image: "images/21.png" } ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Элементы ---
+            const screens = { start: document.getElementById('start-screen'), focus: document.getElementById('focus-screen'), shuffle: document.getElementById('shuffle-screen'), choice: document.getElementById('choice-screen'), };
+            const buttons = { start: document.getElementById('start-btn'), deal: document.getElementById('deal-btn'), showResult: document.getElementById('show-result-btn'), closeModal: document.getElementById('close-modal-btn'), geminiSubmit: document.getElementById('gemini-submit'), };
+            const containers = { cardStack: document.getElementById('card-stack-container'), cardSlots: document.querySelectorAll('.card-slot'), cardGrid: document.getElementById('card-selection-grid'), modalSpread: document.querySelector('.modal-spread-container') };
+            const modal = { overlay: document.getElementById('result-modal'), };
+            const gemini = { prompt: document.getElementById('gemini-prompt'), response: document.getElementById('gemini-response'), loader: document.getElementById('gemini-loader'), };
+            const devPanel = { toggle: document.getElementById('dev-panel-toggle'), content: document.getElementById('dev-panel-content'), themeSelect: document.getElementById('theme-select'), bgTypeSelect: document.getElementById('bg-type-select'), animSpeed: { slider: document.getElementById('anim-speed-slider'), value: document.getElementById('anim-speed-value') }, particlesCount: { slider: document.getElementById('particles-count-slider'), value: document.getElementById('particles-count-value') }, particlesSpeed: { slider: document.getElementById('particles-speed-slider'), value: document.getElementById('particles-speed-value') }, particlesSize: { slider: document.getElementById('particles-size-slider'), value: document.getElementById('particles-size-value') } };
+            const backgrounds = { particles: document.getElementById('particles-js'), gradient: document.querySelector('.animated-gradient-bg') };
+            
+            // --- Состояние приложения ---
+            let chosenCards = new Array(3).fill(null);
+            let shuffleMoveHandler = null;
+            let particleSettings = { count: 80, speed: 2, size: 3 };
+            let draggedCardId = null;
+
+            // --- Управление экранами ---
+            function switchScreen(screenName) {
+                Object.values(screens).forEach(screen => screen.classList.remove('active'));
+                if (screens[screenName]) screens[screenName].classList.add('active');
+            }
+
+            // --- Инициализация и управление фоном ---
+            function initParticles() {
+                const theme = document.body.className || 'theme-gazprom-classic';
+                const colors = { 'theme-gazprom-classic': { p: "#00aaff", l: "#0078d7" }, 'theme-gazprom-dark': { p: "#3399ff", l: "#005f9e" }, 'theme-gazprom-light': { p: "#0078d7", l: "#005a9e" }, };
+                const color = colors[theme];
+                
+                if (window.particlesJS) {
+                    particlesJS('particles-js', { particles: { number: { value: particleSettings.count, density: { enable: true, value_area: 800 } }, color: { value: color.p }, size: { value: particleSettings.size, random: true }, move: { enable: true, speed: particleSettings.speed } , line_linked: { color: color.l } }, interactivity: { events: { onhover: { enable: true, mode: "repulse" } } } });
+                }
+            }
+
+            // --- Логика тасования карт ---
+            function setupShuffleInteraction() {
+                containers.cardStack.innerHTML = '';
+                for (let i = 0; i < tarotCardsData.length; i++) {
+                    const card = document.createElement('div');
+                    card.className = 'shuffle-card';
+                    gsap.set(card, { z: i * -1, y: i * -0.5 });
+                    containers.cardStack.appendChild(card);
+                }
+                const cards = Array.from(containers.cardStack.children);
+                let lastShuffledCard = null;
+                shuffleMoveHandler = (event) => {
+                    gsap.to(containers.cardStack, { rotationY: (event.clientX / window.innerWidth - 0.5) * 30, rotationX: (event.clientY / window.innerHeight - 0.5) * -30, duration: 1, ease: 'power1.out' });
+                    const randomCard = cards[Math.floor(Math.random() * cards.length)];
+                    if (randomCard === lastShuffledCard) return;
+                    lastShuffledCard = randomCard;
+                    gsap.timeline().to(randomCard, { x: Math.random() * 80 - 40, y: Math.random() * 80 - 40, rotationZ: Math.random() * 30 - 15, duration: 0.15, ease: 'power2.out' }).to(randomCard, { x: 0, y: (cards.indexOf(randomCard) * -0.5), rotationZ: 0, duration: 0.4, ease: 'back.inOut(1.7)' });
+                };
+                document.addEventListener('mousemove', shuffleMoveHandler);
+            }
+            
+            function stopShuffleInteraction() {
+                if (shuffleMoveHandler) {
+                    document.removeEventListener('mousemove', shuffleMoveHandler);
+                    shuffleMoveHandler = null;
+                }
+            }
+
+            // --- Логика расклада Drag & Drop ---
+            function startSpread() {
+                stopShuffleInteraction();
+                
+                const stackRect = containers.cardStack.getBoundingClientRect();
+                
+                switchScreen('choice');
+                gsap.set(screens.choice, { opacity: 0 });
+
+                chosenCards.fill(null);
+                buttons.showResult.disabled = true;
+                
+                containers.cardSlots.forEach(slot => {
+                    slot.innerHTML = `<span class="slot-label">${slot.dataset.slotLabel}</span>`;
+                    slot.classList.remove('filled');
+                });
+                
+                containers.cardGrid.innerHTML = '';
+                const cardElements = [];
+                tarotCardsData.forEach(cardData => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'tarot-card';
+                    cardElement.dataset.id = cardData.id;
+                    cardElement.draggable = true;
+                    cardElement.innerHTML = `<div class="card-face card-back"></div>`;
+                    cardElement.style.opacity = 0; // Start invisible
+                    containers.cardGrid.appendChild(cardElement);
+                    cardElements.push(cardElement);
+                });
+
+                gsap.to(screens.choice, { opacity: 1, duration: 0.5 * getAnimSpeed() });
+
+                // Animate cards from stack to grid
+                cardElements.forEach((card, index) => {
+                    const endRect = card.getBoundingClientRect();
+                    
+                    // Temporarily move the card to the stack's position
+                    gsap.set(card, {
+                        x: stackRect.left - endRect.left,
+                        y: stackRect.top - endRect.top,
+                    });
+
+                    // Animate to its final position (0,0 relative to itself)
+                    gsap.to(card, {
+                        x: 0,
+                        y: 0,
+                        opacity: 1,
+                        delay: index * 0.05,
+                        duration: 1 * getAnimSpeed(),
+                        ease: 'power3.out',
+                        onComplete: () => {
+                            if (index === cardElements.length - 1) {
+                                addDragDropListeners();
+                            }
+                        }
+                    });
+                });
+            }
+            
+            function addDragDropListeners() {
+                const draggableCards = containers.cardGrid.querySelectorAll('.tarot-card');
+                draggableCards.forEach(card => {
+                    card.addEventListener('dragstart', (e) => {
+                        draggedCardId = e.target.dataset.id;
+                        e.target.classList.add('is-dragging');
+                    });
+                     card.addEventListener('dragend', (e) => {
+                        e.target.classList.remove('is-dragging');
+                    });
+                });
+
+                containers.cardSlots.forEach(slot => {
+                    slot.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        if (!slot.classList.contains('filled')) {
+                           slot.classList.add('drag-over');
+                        }
+                    });
+                    slot.addEventListener('dragleave', (e) => {
+                        slot.classList.remove('drag-over');
+                    });
+                    slot.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        slot.classList.remove('drag-over');
+                        if (slot.classList.contains('filled')) return;
+
+                        const cardData = tarotCardsData.find(c => c.id == draggedCardId);
+                        const slotId = parseInt(slot.dataset.slotId, 10);
+                        chosenCards[slotId] = cardData;
+                        
+                        const originalCard = containers.cardGrid.querySelector(`.tarot-card[data-id="${draggedCardId}"]`);
+                        if(originalCard) originalCard.classList.add('is-dropped');
+
+                        slot.classList.add('filled');
+                        const cardElement = document.createElement('div');
+                        cardElement.className = 'tarot-card';
+                        cardElement.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>`;
+                        slot.innerHTML = '';
+                        slot.appendChild(cardElement);
+                        gsap.to(cardElement, { rotationY: 180, duration: 1 * getAnimSpeed(), ease: 'power2.inOut' });
+
+                        if (chosenCards.filter(c => c !== null).length === 3) {
+                            buttons.showResult.disabled = false;
+                        }
+                    });
+                });
+            }
+
+            // --- Отображение результата ---
+            function showResult() {
+                containers.modalSpread.innerHTML = ''; 
+                const labels = ["Вызов", "Путь", "Исход"];
+                for (let i = 0; i < 3; i++) {
+                    const cardData = chosenCards[i];
+                    if (!cardData) continue;
+
+                    const keywordsHTML = cardData.keywords.split(',').map(k => `<span class="keyword">${k.trim()}</span>`).join('');
+
+                    const cardDisplayHTML = `
+                        <div class="modal-card-display">
+                            <img src="${cardData.image}" alt="${cardData.name}">
+                            <div class="card-details">
+                                <h4>${labels[i]}: ${cardData.name}</h4>
+                                <p><em>${cardData.general}</em></p>
+                                <h5>Для проекта:</h5>
+                                <p>${cardData.project}</p>
+                                <h5>Для карьеры:</h5>
+                                <p>${cardData.career}</p>
+                                <div class="keywords-container">${keywordsHTML}</div>
+                            </div>
+                        </div>
+                    `;
+                    containers.modalSpread.innerHTML += cardDisplayHTML;
+                }
+                gemini.prompt.value = '';
+                gemini.response.textContent = '';
+                modal.overlay.classList.add('active');
+            }
+
+            // --- Gemini API ---
+            async function getGeminiPrediction() {
+                if (chosenCards.filter(c => c !== null).length < 3 || !gemini.prompt.value.trim()) {
+                    gemini.response.textContent = 'Пожалуйста, выберите три карты и введите ваш вопрос.';
+                    return;
+                }
+                gemini.loader.style.display = 'block';
+                gemini.response.textContent = '';
+                buttons.geminiSubmit.disabled = true;
+                
+                const promptText = `Ты - IT-оракул. Тебе сделали расклад на 3 карты Таро по вопросу: "${gemini.prompt.value}". 1. Вызов: "${chosenCards[0].name}" (${chosenCards[0].general}). 2. Путь к решению: "${chosenCards[1].name}" (${chosenCards[1].general}). 3. Потенциальный исход: "${chosenCards[2].name}" (${chosenCards[2].general}). Создай целостное, мудрое и краткое толкование (4-5 предложений), связав все три карты в единую историю, которая отвечает на вопрос пользователя.`;
+
+                try {
+                    const apiKey = ""; // Canvas will provide the key
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    const payload = { contents: [{ role: "user", parts: [{ text: promptText }] }] };
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API call failed: ${response.status}`);
+                    const result = await response.json();
+                    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        gemini.response.textContent = result.candidates[0].content.parts[0].text;
+                    } else { throw new Error("Invalid API response structure."); }
+                } catch (error) {
+                    console.error('Error calling Gemini API:', error);
+                    gemini.response.textContent = 'Произошел сбой в цифровых потоках. Попробуйте позже.';
+                } finally {
+                    gemini.loader.style.display = 'none';
+                    buttons.geminiSubmit.disabled = false;
+                }
+            }
+
+            // --- Сброс и Dev Panel ---
+            function resetApp() {
+                modal.overlay.classList.remove('active');
+                setTimeout(() => switchScreen('start'), 500 * getAnimSpeed());
+            }
+
+            function getAnimSpeed() { return parseFloat(document.documentElement.style.getPropertyValue('--anim-speed')) || 1; }
+
+            function setupDevPanel() {
+                devPanel.toggle.addEventListener('click', () => devPanel.content.classList.toggle('active'));
+                devPanel.themeSelect.addEventListener('change', (e) => {
+                    document.body.className = e.target.value;
+                    initParticles();
+                });
+                devPanel.bgTypeSelect.addEventListener('change', (e) => {
+                    const controls = document.querySelectorAll('.particles-control');
+                    if (e.target.value === 'gradient') {
+                        backgrounds.particles.style.opacity = '0';
+                        backgrounds.gradient.classList.add('active');
+                        controls.forEach(c => c.style.display = 'none');
+                    } else {
+                        backgrounds.particles.style.opacity = '1';
+                        backgrounds.gradient.classList.remove('active');
+                        controls.forEach(c => c.style.display = 'flex');
+                    }
+                });
+                devPanel.animSpeed.slider.addEventListener('input', (e) => {
+                    const speed = parseFloat(e.target.value);
+                    document.documentElement.style.setProperty('--anim-speed', speed);
+                    devPanel.animSpeed.value.textContent = speed.toFixed(1);
+                });
+                devPanel.particlesCount.slider.addEventListener('input', (e) => { particleSettings.count = parseInt(e.target.value, 10); devPanel.particlesCount.value.textContent = particleSettings.count; initParticles(); });
+                devPanel.particlesSpeed.slider.addEventListener('input', (e) => { particleSettings.speed = parseFloat(e.target.value); devPanel.particlesSpeed.value.textContent = particleSettings.speed.toFixed(1); initParticles(); });
+                devPanel.particlesSize.slider.addEventListener('input', (e) => { particleSettings.size = parseFloat(e.target.value); devPanel.particlesSize.value.textContent = particleSettings.size.toFixed(1); initParticles(); });
+            }
+
+            // --- Инициализация и обработчики событий ---
+            function init() {
+                initParticles();
+                setupDevPanel();
+                
+                buttons.start.addEventListener('click', () => switchScreen('focus'));
+                screens.focus.addEventListener('click', () => { switchScreen('shuffle'); setupShuffleInteraction(); });
+                buttons.deal.addEventListener('click', startSpread);
+                buttons.showResult.addEventListener('click', showResult);
+                buttons.closeModal.addEventListener('click', resetApp);
+                buttons.geminiSubmit.addEventListener('click', getGeminiPrediction);
+                gemini.prompt.addEventListener('keydown', (e) => { if (e.key === 'Enter') getGeminiPrediction(); });
+                
+                containers.cardSlots.forEach(slot => { slot.dataset.slotLabel = slot.querySelector('.slot-label').textContent; });
+
+                switchScreen('start');
+            }
+
+            init();
+        });
+    </script>
 </body>
 </html>

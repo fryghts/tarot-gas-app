@@ -1,83 +1,1400 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Таро — IT-предсказания</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Цифровой Оракул: IT-Таро</title>
+    <style>
+        /* --- ОБЩИЕ СТИЛИ --- */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Orbitron:wght@400;700&display=swap');
+
+        :root {
+            --font-main: 'Inter', sans-serif;
+            --font-title: 'Orbitron', sans-serif;
+            --anim-speed: 1; /* 1 = normal speed */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            overflow: hidden;
+            transition: background-color 0.5s;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 2000px;
+            position: relative;
+            z-index: 1;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            transition: opacity calc(0.5s * var(--anim-speed));
+        }
+
+        .animated-gradient-bg {
+            position: fixed;
+            width: 300%;
+            height: 300%;
+            top: -100%;
+            left: -100%;
+            z-index: -1;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity calc(0.5s * var(--anim-speed));
+            animation: gradient-animation calc(20s * var(--anim-speed)) ease infinite;
+        }
+
+            .animated-gradient-bg.active {
+                opacity: 1;
+            }
+
+        @keyframes gradient-animation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            50% {
+                transform: rotate(180deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity calc(0.8s * var(--anim-speed));
+            padding: 1rem;
+            text-align: center;
+        }
+
+            .screen.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+        .title {
+            font-family: var(--font-title);
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+            max-width: 600px;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .pulsing-text {
+            animation: pulse calc(3s * var(--anim-speed)) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.7;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .action-button {
+            font-family: var(--font-title);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all calc(0.3s * var(--anim-speed));
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            touch-action: manipulation;
+        }
+
+            .action-button:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+            }
+
+            .action-button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+        #logo-container {
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: clamp(100px, 15vw, 150px);
+        }
+
+            #logo-container img {
+                max-width: 100%;
+                height: auto;
+                filter: brightness(0) saturate(100%) invert(39%) sepia(82%) saturate(1347%) hue-rotate(191deg) brightness(96%) contrast(101%);
+            }
+
+        /* --- ТЕМЫ --- */
+        .theme-gazprom-classic {
+            --bg-color: #011d3a;
+            --primary-color: #0078d7;
+            --secondary-color: #ffffff;
+            --text-color: #e0f7ff;
+            --highlight-color: #00aaff;
+            --card-back-bg: linear-gradient(145deg, #002f5c, #004b8f);
+            --card-border: #00aaff;
+            --gradient: radial-gradient(ellipse at top, #00aaff, transparent), radial-gradient(ellipse at bottom, #002f5c, transparent);
+        }
+
+        .theme-gazprom-dark {
+            --bg-color: #000814;
+            --primary-color: #005f9e;
+            --secondary-color: #ccdeeb;
+            --text-color: #a9c7e0;
+            --highlight-color: #3399ff;
+            --card-back-bg: linear-gradient(145deg, #001a33, #002b52);
+            --card-border: #0078d7;
+            --gradient: radial-gradient(ellipse at top, #3399ff, transparent), radial-gradient(ellipse at bottom, #001a33, transparent);
+        }
+
+        .theme-gazprom-light {
+            --bg-color: #e6f2ff;
+            --primary-color: #005a9e;
+            --secondary-color: #002d4f;
+            --text-color: #004375;
+            --highlight-color: #0078d7;
+            --card-back-bg: linear-gradient(145deg, #cce5ff, #a3d1ff);
+            --card-border: #005a9e;
+            --gradient: radial-gradient(ellipse at top, #a3d1ff, transparent), radial-gradient(ellipse at bottom, #e6f2ff, transparent);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .animated-gradient-bg {
+            background: var(--gradient);
+        }
+
+        .title {
+            color: var(--secondary-color);
+            text-shadow: 0 0 15px var(--primary-color);
+        }
+
+        .subtitle {
+            color: var(--text-color);
+        }
+
+        .action-button {
+            background-color: var(--primary-color);
+            color: var(--bg-color) !important;
+        }
+
+            .action-button:hover {
+                background-color: var(--highlight-color);
+            }
+
+        /* --- ЭКРАН ВЫБОРА (DRAG & DROP) --- */
+        #choice-screen {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #card-selection-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 10px;
+        }
+
+        #initial-deck {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 160px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform calc(0.3s * var(--anim-speed));
+        }
+
+            #initial-deck:hover {
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+
+            #initial-deck .shuffle-card {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                border-radius: 8px;
+                background: var(--card-back-bg);
+                border: 2px solid var(--card-border);
+                box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            }
+
+        #spread-slots-sidebar {
+            position: fixed;
+            z-index: 20;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            gap: 10px;
+        }
+
+        .card-slot {
+            width: 80px;
+            height: 128px;
+            border: 2px dashed var(--primary-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-color);
+            transition: all calc(0.3s * var(--anim-speed));
+            font-size: 0.8rem;
+        }
+
+            .card-slot.drag-over {
+                background-color: rgba(255,255,255,0.2);
+                border-style: solid;
+                transform: scale(1.05);
+                border-color: var(--highlight-color);
+            }
+
+            .card-slot .slot-label {
+                font-family: var(--font-title);
+                text-align: center;
+            }
+
+        .tarot-card {
+            width: 60px;
+            height: 96px;
+            position: absolute;
+            cursor: grab;
+            transform-style: preserve-3d;
+            border-radius: 6px;
+            transition: transform calc(0.2s * var(--anim-speed));
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+            touch-action: none;
+        }
+
+            .tarot-card:active {
+                cursor: grabbing;
+            }
+
+            .tarot-card.is-dragging {
+                z-index: 1000;
+                transform: scale(1.1);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            }
+
+            .tarot-card.is-dropped {
+                opacity: 0.3;
+                pointer-events: none;
+            }
+
+        .card-slot .tarot-card {
+            width: 100%;
+            height: 100%;
+            cursor: default;
+            position: relative;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: inherit;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid var(--card-border);
+        }
+
+        .card-back {
+            background: var(--card-back-bg);
+        }
+
+        .card-front {
+            transform: rotateY(180deg);
+        }
+
+        /* --- АДАПТИВНОСТЬ --- */
+
+        /* Мобильная портретная ориентация */
+        @media (max-width: 768px) and (orientation: portrait) {
+            #spread-slots-sidebar {
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                flex-direction: row;
+                padding: 15px;
+            }
+
+            .card-slot {
+                width: 70px;
+                height: 110px;
+            }
+
+            .tarot-card {
+                width: 55px;
+                height: 88px;
+            }
+        }
+
+        /* Мобильная горизонтальная ориентация */
+        @media (max-width: 768px) and (orientation: landscape) {
+            #spread-slots-sidebar {
+                right: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            .card-slot {
+                width: 65px;
+                height: 100px;
+            }
+
+            .tarot-card {
+                width: 50px;
+                height: 80px;
+            }
+
+            .title {
+                font-size: clamp(1.5rem, 4vw, 2.5rem);
+            }
+
+            #logo-container {
+                width: clamp(80px, 12vw, 120px);
+            }
+        }
+
+        /* Планшеты */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            #spread-slots-sidebar {
+                right: 30px;
+                top: 50%;
+                transform: translateY(-50%);
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .card-slot {
+                width: 90px;
+                height: 140px;
+            }
+
+            .tarot-card {
+                width: 70px;
+                height: 110px;
+            }
+        }
+
+        /* Десктоп */
+        @media (min-width: 1025px) {
+            #spread-slots-sidebar {
+                right: 40px;
+                top: 50%;
+                transform: translateY(-50%);
+                flex-direction: column;
+                padding: 25px;
+            }
+
+            .card-slot {
+                width: 100px;
+                height: 160px;
+            }
+
+            .tarot-card {
+                width: 80px;
+                height: 128px;
+            }
+        }
+
+        /* --- МОДАЛЬНОЕ ОКНО --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity calc(0.5s * var(--anim-speed));
+            padding: 10px;
+        }
+
+            .modal-overlay.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+        .modal-content {
+            background: rgba(10, 20, 40, 0.95);
+            border: 1px solid var(--primary-color);
+            border-radius: 16px;
+            padding: 1rem;
+            width: 100%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 0 40px var(--primary-color);
+            transform: scale(0.9);
+            transition: transform calc(0.5s * var(--anim-speed));
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 10;
+            touch-action: manipulation;
+        }
+
+            .close-button:hover {
+                opacity: 1;
+                transform: rotate(90deg);
+            }
+
+        .modal-spread-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal-card-display {
+            display: flex;
+            gap: 1rem;
+            background: rgba(0,0,0,0.2);
+            padding: 1rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+            .modal-card-display img {
+                width: 80px;
+                height: 128px;
+                flex-shrink: 0;
+                border-radius: 6px;
+                border: 1px solid var(--card-border);
+                object-fit: cover;
+            }
+
+        .card-details h4 {
+            font-family: var(--font-title);
+            color: var(--highlight-color);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-details h5 {
+            font-weight: bold;
+            margin-top: 0.8rem;
+            margin-bottom: 0.25rem;
+            color: var(--secondary-color);
+            font-size: 0.95rem;
+        }
+
+        .card-details p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .keywords-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.8rem;
+        }
+
+        .keyword {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--primary-color);
+            padding: 0.2rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.7rem;
+        }
+
+        /* --- СЕКЦИЯ GEMINI --- */
+        .gemini-section {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-top: 1px solid var(--primary-color);
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+            .gemini-section h3 {
+                font-family: var(--font-title);
+                color: var(--highlight-color);
+                margin-bottom: 0.5rem;
+                font-size: 1.1rem;
+            }
+
+        .gemini-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+        }
+
+        #gemini-prompt {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--primary-color);
+            border-radius: 6px;
+            padding: 0.7rem;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            resize: none;
+        }
+
+        #gemini-submit {
+            background: var(--primary-color);
+            color: var(--bg-color);
+            border: none;
+            border-radius: 6px;
+            padding: 0.7rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 0.85rem;
+            touch-action: manipulation;
+        }
+
+            #gemini-submit:hover {
+                background-color: var(--highlight-color);
+            }
+
+        #gemini-response-container {
+            margin-top: 0.8rem;
+            padding: 0.8rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            min-height: 40px;
+        }
+
+        #gemini-response {
+            white-space: pre-wrap;
+            line-height: 1.5;
+            font-size: 0.85rem;
+        }
+
+        .loader {
+            border: 3px solid rgba(255,255,255,0.2);
+            border-left-color: var(--primary-color);
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* --- МОБИЛЬНЫЕ АДАПТАЦИИ ДЛЯ МОДАЛЬНОГО ОКНА --- */
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 0.8rem;
+                border-radius: 12px;
+            }
+
+            .modal-card-display {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding: 0.8rem;
+            }
+
+                .modal-card-display img {
+                    width: 100px;
+                    height: 160px;
+                    margin-bottom: 0.8rem;
+                }
+        }
+
+        /* --- DEV PANEL --- */
+        #dev-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 200;
+        }
+
+        #dev-panel-toggle {
+            width: 50px;
+            height: 50px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 1px solid white;
+        }
+
+            #dev-panel-toggle svg {
+                width: 24px;
+                height: 24px;
+            }
+
+        #dev-panel-content {
+            position: absolute;
+            bottom: 60px;
+            left: 0;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid white;
+            border-radius: 8px;
+            padding: 1rem;
+            width: 250px;
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+            #dev-panel-content.active {
+                display: flex;
+            }
+
+        .dev-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+            .dev-group label {
+                font-size: 0.9rem;
+                display: flex;
+                justify-content: space-between;
+            }
+
+        #dev-panel select, #dev-panel input, #dev-panel button {
+            width: 100%;
+            padding: 0.5rem;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+
+        #dev-panel button {
+            cursor: pointer;
+            background: var(--primary-color);
+        }
+
+        .particles-control {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
 </head>
-<body>
-  <div class="container">
-    <canvas id="flow-bg" aria-hidden="true"></canvas>
+<body class="theme-gazprom-classic">
 
-    <!-- Welcome -->
-    <div id="welcome-screen" class="screen active">
-      <div class="topbar">
-        <div class="emblem" aria-hidden="true">
-          <svg width="56" height="56" viewBox="0 0 86 86" xmlns="http://www.w3.org/2000/svg">
-            <defs><linearGradient id="g_logo" x1="0" x2="1"><stop offset="0" stop-color="#00a2e1"/><stop offset="1" stop-color="#008cc7"/></linearGradient></defs>
-            <circle cx="43" cy="43" r="40" fill="url(#g_logo)"/>
-            <path d="M22 54 L43 22 L64 54 Z" fill="rgba(255,255,255,0.95)"/>
-          </svg>
-        </div>
-        <div class="controls">
-          <button id="autoplay-welcome" class="btn small">Автопоказ</button>
-        </div>
-      </div>
+    <div id="particles-js"></div>
+    <div class="animated-gradient-bg"></div>
+    <div class="app-container">
 
-      <div class="welcome-content">
-        <h1>Раскройте тайну вашего энергетического будущего</h1>
-        <p>Нажмите «Выбрать карту». На экране выбора — лента карт, движущаяся справа налево.</p>
-        <div class="welcome-actions">
-          <button id="start-btn" class="btn">Выбрать карту</button>
+        <div id="start-screen" class="screen active">
+            <div id="logo-container">
+                <img src="logo.svg" alt="Газпром ВНИИГАЗ" />
+            </div>
+            <h1 class="title">Цифровой Оракул</h1>
+            <p class="subtitle">Какой баг ждет тебя в следующем спринте? Узнай свою IT-судьбу.</p>
+            <button id="start-btn" class="action-button">Начать сеанс</button>
         </div>
-      </div>
 
-      <div id="attract-overlay" class="attract-overlay hidden" aria-hidden="true">
-        <div id="attract-card" class="attract-card">
-          <div class="card-inner">
-            <div class="card-front"><img src="images/back.jpg" alt="рубашка"></div>
-            <div class="card-back"><img id="attract-image" src="" alt=""></div>
-          </div>
+        <div id="focus-screen" class="screen">
+            <h1 class="title pulsing-text">Концентрация</h1>
+            <p class="subtitle">Подумайте о проекте, карьерном пути или технологическом вызове, который вас волнует. Сконцентрируйтесь на нём. <br><br>Как только будете готовы, нажмите на экран.</p>
         </div>
-      </div>
+
+        <div id="choice-screen" class="screen">
+            <div id="card-selection-area">
+                <div id="initial-deck"></div>
+            </div>
+            <div id="spread-slots-sidebar">
+                <div class="card-slot" data-slot-id="0"><span class="slot-label">Вызов</span></div>
+                <div class="card-slot" data-slot-id="1"><span class="slot-label">Путь</span></div>
+                <div class="card-slot" data-slot-id="2"><span class="slot-label">Исход</span></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Selection / tape -->
-    <div id="selection-screen" class="screen">
-      <div class="topbar">
-        <div class="emblem" aria-hidden="true">
-          <svg width="46" height="46" viewBox="0 0 86 86" xmlns="http://www.w3.org/2000/svg">
-            <defs><linearGradient id="g_logo2" x1="0" x2="1"><stop offset="0" stop-color="#00a2e1"/><stop offset="1" stop-color="#008cc7"/></linearGradient></defs>
-            <circle cx="43" cy="43" r="40" fill="url(#g_logo2)"/>
-            <path d="M22 54 L43 22 L64 54 Z" fill="rgba(255,255,255,0.95)"/>
-          </svg>
+    <div id="result-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="close-modal-btn" class="close-button">&times;</button>
+            <div class="modal-spread-container">
+                <!-- Результаты будут вставлены здесь -->
+            </div>
+            <div class="gemini-section">
+                <h3>Персональное толкование от AI</h3>
+                <p>Задайте уточняющий вопрос, чтобы получить более глубокое предсказание от нейросети Gemini.</p>
+                <div class="gemini-input-group">
+                    <input type="text" id="gemini-prompt" placeholder="Например: Какие скрытые риски есть в этом проекте?">
+                    <button id="gemini-submit">Получить ответ</button>
+                </div>
+                <div id="gemini-response-container">
+                    <div id="gemini-loader" class="loader" style="display: none;"></div>
+                    <p id="gemini-response"></p>
+                </div>
+            </div>
         </div>
-        <div class="controls">
-          <button id="back-btn" class="btn-ghost small">Назад</button>
-        </div>
-      </div>
-
-      <div class="tape-viewport">
-        <div id="tape" class="tape"></div>
-      </div>
-
-      <!-- detail panel (text-only) -->
-      <aside id="detail-panel" class="detail-panel hidden" aria-hidden="true">
-        <button id="close-detail" class="btn-ghost small">✕</button>
-        <div class="detail-content-only">
-          <h3 id="detail-title"></h3>
-          <div class="meaning-section"><h4>Общее значение</h4><p id="detail-general"></p></div>
-          <div class="meaning-section"><h4>Для проекта</h4><p id="detail-project"></p></div>
-          <div class="meaning-section"><h4>Для карьеры</h4><p id="detail-career"></p></div>
-          <div class="meaning-section"><h4>Ключевые слова</h4><p id="detail-keywords"></p></div>
-        </div>
-      </aside>
     </div>
-  </div>
 
-  <script src="data.js"></script>
-  <script src="script.js"></script>
+    <div id="dev-panel">
+        <div id="dev-panel-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.8293 10.1707C19.9392 10.7839 20 11.3895 20 12C20 12.6105 19.9392 13.2161 19.8293 13.8293L21.8293 15.3293C22.0678 15.513 22.1465 15.8329 22.0415 16.1159L20.0415 19.5819C19.9365 19.8649 19.6429 20.0351 19.3453 19.9707L16.9453 19.0707C16.3216 19.5393 15.6347 19.9234 14.8962 20.2101L14.5 22.7C14.4444 23.0041 14.1843 23.2204 13.8703 23.2204H10.1297C9.81568 23.2204 9.55558 23.0041 9.5 22.7L9.10383 20.2101C8.36531 19.9234 7.67842 19.5393 7.05471 19.0707L4.65471 19.9707C4.35714 20.0351 4.06346 19.8649 3.95848 19.5819L1.95848 16.1159C1.8535 15.8329 1.93221 15.513 2.17073 15.3293L4.17073 13.8293C4.06083 13.2161 4 12.6105 4 12C4 11.3895 4.06083 10.7839 4.17073 10.1707L2.17073 8.67073C1.93221 8.48705 1.8535 8.16712 1.95848 7.8841L3.95848 4.4181C4.06346 4.1351 4.35714 3.96486 4.65471 4.02928L7.05471 4.92928C7.67842 4.46071 8.36531 4.0766 9.10383 3.78988L9.5 1.3C9.55558 0.99593 9.81568 0.77965 10.1297 0.77965H13.8703C14.1843 0.77965 14.4444 0.99593 14.5 1.3L14.8962 3.78988C15.6347 4.0766 16.3216 4.46071 16.9453 4.92928L19.3453 4.02928C19.6429 3.96486 19.9365 4.1351 20.0415 4.4181L22.0415 7.8841C22.1465 8.16712 22.0678 8.48705 21.8293 8.67073L19.8293 10.1707ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z" />
+            </svg>
+        </div>
+        <div id="dev-panel-content">
+            <h4>Dev Panel</h4>
+            <div class="dev-group">
+                <label for="theme-select">Тема Газпром:</label>
+                <select id="theme-select">
+                    <option value="theme-gazprom-classic">Классический синий</option>
+                    <option value="theme-gazprom-dark">Глубокий космос</option>
+                    <option value="theme-gazprom-light">Полярный день</option>
+                </select>
+            </div>
+            <div class="dev-group">
+                <label for="bg-type-select">Тип фона:</label>
+                <select id="bg-type-select">
+                    <option value="particles">Частицы</option>
+                    <option value="gradient">Градиент</option>
+                </select>
+            </div>
+            <div class="dev-group">
+                <label for="anim-speed-slider">Скорость анимации: <span id="anim-speed-value">1.0</span>x</label>
+                <input type="range" id="anim-speed-slider" min="0.1" max="2" step="0.1" value="1">
+            </div>
+            <div class="dev-group">
+                <label for="drag-speed-slider">Скорость отклика: <span id="drag-speed-value">0.0</span></label>
+                <input type="range" id="drag-speed-slider" min="0" max="0.5" step="0.05" value="0">
+            </div>
+            <div class="dev-group particles-control">
+                <label for="particles-count-slider">Кол-во частиц: <span id="particles-count-value">60</span></label>
+                <input type="range" id="particles-count-slider" min="10" max="200" step="10" value="60">
+            </div>
+            <div class="dev-group particles-control">
+                <label for="particles-speed-slider">Скорость частиц: <span id="particles-speed-value">2.0</span></label>
+                <input type="range" id="particles-speed-slider" min="0.5" max="10" step="0.5" value="2">
+            </div>
+            <div class="dev-group particles-control">
+                <label for="particles-size-slider">Размер частиц: <span id="particles-size-value">3.0</span></label>
+                <input type="range" id="particles-size-slider" min="1" max="10" step="0.5" value="3">
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="data.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Элементы ---
+            const screens = {
+                start: document.getElementById('start-screen'),
+                focus: document.getElementById('focus-screen'),
+                choice: document.getElementById('choice-screen')
+            };
+
+            const buttons = {
+                start: document.getElementById('start-btn'),
+                closeModal: document.getElementById('close-modal-btn'),
+                geminiSubmit: document.getElementById('gemini-submit')
+            };
+
+            const containers = {
+                cardSlots: document.querySelectorAll('.card-slot'),
+                cardArea: document.getElementById('card-selection-area'),
+                modalSpread: document.querySelector('.modal-spread-container')
+            };
+
+            const modal = {
+                overlay: document.getElementById('result-modal')
+            };
+
+            const gemini = {
+                prompt: document.getElementById('gemini-prompt'),
+                response: document.getElementById('gemini-response'),
+                loader: document.getElementById('gemini-loader')
+            };
+
+            const devPanel = {
+                toggle: document.getElementById('dev-panel-toggle'),
+                content: document.getElementById('dev-panel-content'),
+                themeSelect: document.getElementById('theme-select'),
+                bgTypeSelect: document.getElementById('bg-type-select'),
+                animSpeed: {
+                    slider: document.getElementById('anim-speed-slider'),
+                    value: document.getElementById('anim-speed-value')
+                },
+                dragSpeed: {
+                    slider: document.getElementById('drag-speed-slider'),
+                    value: document.getElementById('drag-speed-value')
+                },
+                particlesCount: {
+                    slider: document.getElementById('particles-count-slider'),
+                    value: document.getElementById('particles-count-value')
+                },
+                particlesSpeed: {
+                    slider: document.getElementById('particles-speed-slider'),
+                    value: document.getElementById('particles-speed-value')
+                },
+                particlesSize: {
+                    slider: document.getElementById('particles-size-slider'),
+                    value: document.getElementById('particles-size-value')
+                }
+            };
+
+            const backgrounds = {
+                particles: document.getElementById('particles-js'),
+                gradient: document.querySelector('.animated-gradient-bg')
+            };
+
+            // --- Состояние приложения ---
+            let chosenCards = new Array(3).fill(null);
+            let draggedCard = null;
+            let dragOffset = { x: 0, y: 0 };
+            let particleSettings = { count: 60, speed: 2, size: 3 };
+
+            // --- Управление экранами ---
+            function switchScreen(screenName) {
+                Object.values(screens).forEach(screen => screen.classList.remove('active'));
+                if (screens[screenName]) screens[screenName].classList.add('active');
+            }
+
+            // --- Инициализация фона ---
+            function initParticles() {
+                const theme = document.body.className || 'theme-gazprom-classic';
+                const colors = {
+                    'theme-gazprom-classic': { p: "#00aaff", l: "#0078d7" },
+                    'theme-gazprom-dark': { p: "#3399ff", l: "#005f9e" },
+                    'theme-gazprom-light': { p: "#0078d7", l: "#005a9e" }
+                };
+                const color = colors[theme] || colors['theme-gazprom-classic'];
+
+                if (window.particlesJS) {
+                    particlesJS('particles-js', {
+                        particles: {
+                            number: {
+                                value: particleSettings.count,
+                                density: { enable: true, value_area: 800 }
+                            },
+                            color: { value: color.p },
+                            size: { value: particleSettings.size, random: true },
+                            move: { enable: true, speed: particleSettings.speed },
+                            line_linked: {
+                                color: color.l,
+                                width: 1,
+                                distance: 150
+                            }
+                        },
+                        interactivity: {
+                            events: {
+                                onhover: { enable: true, mode: "repulse" }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // --- Утилиты для позиционирования ---
+            function getRandomPosition(container, cardWidth, cardHeight, existingPositions = []) {
+                const containerRect = container.getBoundingClientRect();
+                const padding = 20;
+                let attempts = 0;
+                let position;
+
+                do {
+                    position = {
+                        x: Math.random() * (containerRect.width - cardWidth - padding * 2) + padding,
+                        y: Math.random() * (containerRect.height - cardHeight - padding * 2) + padding
+                    };
+                    attempts++;
+                } while (attempts < 50 && existingPositions.some(pos =>
+                    Math.hypot(pos.x - position.x, pos.y - position.y) < Math.min(cardWidth, cardHeight) * 1.2
+                ));
+
+                return position;
+            }
+
+            function isOverSlot(cardElement, slotElement) {
+                if (!cardElement || !slotElement) return false;
+
+                const cardRect = cardElement.getBoundingClientRect();
+                const slotRect = slotElement.getBoundingClientRect();
+
+                const cardCenterX = cardRect.left + cardRect.width / 2;
+                const cardCenterY = cardRect.top + cardRect.height / 2;
+
+                return cardCenterX >= slotRect.left &&
+                    cardCenterX <= slotRect.right &&
+                    cardCenterY >= slotRect.top &&
+                    cardCenterY <= slotRect.bottom;
+            }
+
+            // --- Логика расклада ---
+            function setupChoiceScreen() {
+                switchScreen('choice');
+                chosenCards.fill(null);
+
+                containers.cardSlots.forEach((slot, index) => {
+                    slot.innerHTML = `<span class="slot-label">${["Вызов", "Путь", "Исход"][index]}</span>`;
+                    slot.classList.remove('filled');
+                    slot.dataset.slotId = index;
+                });
+
+                containers.cardArea.innerHTML = '';
+                const initialDeck = document.createElement('div');
+                initialDeck.id = 'initial-deck';
+
+                for (let i = 0; i < 5; i++) {
+                    const card = document.createElement('div');
+                    card.className = 'shuffle-card';
+                    card.style.transform = `translateZ(${i * -2}px)`;
+                    initialDeck.appendChild(card);
+                }
+
+                containers.cardArea.appendChild(initialDeck);
+                initialDeck.addEventListener('click', dealCardsFromDeck, { once: true });
+            }
+
+            function dealCardsFromDeck() {
+                // Проверяем наличие данных карт
+                if (typeof tarotCardsData === 'undefined') {
+                    console.error('tarotCardsData не найден. Убедитесь, что файл data.js загружен.');
+                    return;
+                }
+
+                const deck = document.getElementById('initial-deck');
+                const area = containers.cardArea;
+
+                // Перемешиваем и берем все карты
+                const shuffledCards = [...tarotCardsData].sort(() => Math.random() - 0.5);
+                const positions = [];
+
+                shuffledCards.forEach((cardData, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'tarot-card';
+                    cardElement.dataset.id = cardData.id;
+                    cardElement.innerHTML = `<div class="card-face card-back"></div>`;
+
+                    // Получаем случайную позицию
+                    const position = getRandomPosition(area, 60, 96, positions);
+                    positions.push(position);
+
+                    cardElement.style.left = `${position.x}px`;
+                    cardElement.style.top = `${position.y}px`;
+                    cardElement.style.transform = `rotate(${Math.random() * 30 - 15}deg)`;
+                    cardElement.style.opacity = '0';
+
+                    area.appendChild(cardElement);
+
+                    // Анимация появления с задержкой
+                    setTimeout(() => {
+                        cardElement.style.transition = 'opacity 0.3s ease';
+                        cardElement.style.opacity = '1';
+                    }, index * 50);
+                });
+
+                deck.remove();
+                setupDragAndDrop();
+            }
+
+            // --- Drag & Drop для мобильных ---
+            function setupDragAndDrop() {
+                const cards = containers.cardArea.querySelectorAll('.tarot-card');
+
+                cards.forEach(card => {
+                    // Mouse events
+                    card.addEventListener('mousedown', startDrag);
+
+                    // Touch events
+                    card.addEventListener('touchstart', startDrag, { passive: false });
+                });
+            }
+
+            function startDrag(e) {
+                e.preventDefault();
+
+                if (e.target.closest('.tarot-card').classList.contains('is-dropped')) return;
+
+                draggedCard = e.target.closest('.tarot-card');
+                draggedCard.classList.add('is-dragging');
+
+                const rect = draggedCard.getBoundingClientRect();
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+                dragOffset.x = clientX - rect.left;
+                dragOffset.y = clientY - rect.top;
+
+                // Add global event listeners
+                document.addEventListener('mousemove', handleDrag);
+                document.addEventListener('mouseup', endDrag);
+                document.addEventListener('touchmove', handleDrag, { passive: false });
+                document.addEventListener('touchend', endDrag);
+
+                // Highlight valid drop zones
+                containers.cardSlots.forEach(slot => {
+                    if (!slot.classList.contains('filled')) {
+                        slot.style.borderColor = 'var(--highlight-color)';
+                        slot.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                    }
+                });
+            }
+
+            function handleDrag(e) {
+                if (!draggedCard) return;
+                e.preventDefault();
+
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+                const newX = clientX - dragOffset.x;
+                const newY = clientY - dragOffset.y;
+
+                draggedCard.style.left = `${newX}px`;
+                draggedCard.style.top = `${newY}px`;
+                draggedCard.style.zIndex = '1000';
+
+                // Check for slot overlap
+                let overSlot = null;
+                containers.cardSlots.forEach(slot => {
+                    if (isOverSlot(draggedCard, slot) && !slot.classList.contains('filled')) {
+                        overSlot = slot;
+                        slot.classList.add('drag-over');
+                    } else {
+                        slot.classList.remove('drag-over');
+                    }
+                });
+            }
+
+            function endDrag(e) {
+                if (!draggedCard) return;
+
+                // Remove global event listeners
+                document.removeEventListener('mousemove', handleDrag);
+                document.removeEventListener('mouseup', endDrag);
+                document.removeEventListener('touchmove', handleDrag);
+                document.removeEventListener('touchend', endDrag);
+
+                // Reset slot highlights
+                containers.cardSlots.forEach(slot => {
+                    slot.classList.remove('drag-over');
+                    slot.style.borderColor = '';
+                    slot.style.backgroundColor = '';
+                });
+
+                // Check if dropped on a slot
+                let dropped = false;
+                containers.cardSlots.forEach(slot => {
+                    if (isOverSlot(draggedCard, slot) && !slot.classList.contains('filled')) {
+                        handleDrop(draggedCard, slot, parseInt(slot.dataset.slotId));
+                        dropped = true;
+                    }
+                });
+
+                if (!dropped) {
+                    // Return to original position with animation
+                    draggedCard.style.transition = 'all 0.3s ease';
+                    draggedCard.style.transform = `rotate(${Math.random() * 30 - 15}deg)`;
+                    draggedCard.style.zIndex = '1';
+
+                    setTimeout(() => {
+                        if (draggedCard) {
+                            draggedCard.style.transition = '';
+                        }
+                    }, 300);
+                }
+
+                if (draggedCard) {
+                    draggedCard.classList.remove('is-dragging');
+                    draggedCard = null;
+                }
+            }
+
+            function handleDrop(cardElement, slot, slotId) {
+                const cardData = tarotCardsData.find(c => c.id == cardElement.dataset.id);
+                chosenCards[slotId] = cardData;
+
+                cardElement.classList.add('is-dropped');
+                slot.classList.add('filled');
+
+                // Move card to slot
+                const slotRect = slot.getBoundingClientRect();
+                const areaRect = containers.cardArea.getBoundingClientRect();
+
+                cardElement.style.transition = 'all 0.5s ease';
+                cardElement.style.left = `${slotRect.left - areaRect.left}px`;
+                cardElement.style.top = `${slotRect.top - areaRect.top}px`;
+                cardElement.style.transform = 'rotate(0deg)';
+                cardElement.style.zIndex = '10';
+
+                setTimeout(() => {
+                    // Add front face and flip
+                    cardElement.innerHTML = `
+                            <div class="card-face card-back"></div>
+                            <div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>
+                        `;
+
+                    cardElement.style.transform = 'rotateY(180deg)';
+
+                    setTimeout(() => {
+                        // Move to slot permanently
+                        slot.appendChild(cardElement);
+                        cardElement.style.position = 'relative';
+                        cardElement.style.left = 'auto';
+                        cardElement.style.top = 'auto';
+                        cardElement.style.transition = '';
+
+                        if (chosenCards.filter(c => c !== null).length === 3) {
+                            setTimeout(showResult, 500);
+                        }
+                    }, 500);
+                }, 100);
+            }
+
+            // --- Отображение результата ---
+            function showResult() {
+                containers.modalSpread.innerHTML = '';
+                const labels = ["Вызов", "Путь", "Исход"];
+
+                for (let i = 0; i < 3; i++) {
+                    const cardData = chosenCards[i];
+                    if (!cardData) continue;
+
+                    const keywordsHTML = cardData.keywords.split(',').map(k =>
+                        `<span class="keyword">${k.trim()}</span>`
+                    ).join('');
+
+                    const cardDisplayHTML = `
+                            <div class="modal-card-display">
+                                <img src="${cardData.image}" alt="${cardData.name}">
+                                <div class="card-details">
+                                    <h4>${labels[i]}: ${cardData.name}</h4>
+                                    <p><em>${cardData.general}</em></p>
+                                    <h5>Для проекта:</h5>
+                                    <p>${cardData.project}</p>
+                                    <h5>Для карьеры:</h5>
+                                    <p>${cardData.career}</p>
+                                    <div class="keywords-container">${keywordsHTML}</div>
+                                </div>
+                            </div>
+                        `;
+                    containers.modalSpread.innerHTML += cardDisplayHTML;
+                }
+
+                gemini.prompt.value = '';
+                gemini.response.textContent = '';
+                modal.overlay.classList.add('active');
+            }
+
+            // --- Gemini API ---
+            async function getGeminiPrediction() {
+                if (chosenCards.filter(c => c !== null).length < 3 || !gemini.prompt.value.trim()) {
+                    gemini.response.textContent = 'Пожалуйста, выберите три карты и введите ваш вопрос.';
+                    return;
+                }
+
+                gemini.loader.style.display = 'block';
+                gemini.response.textContent = '';
+                buttons.geminiSubmit.disabled = true;
+
+                const promptText = `Ты - IT-оракул. Тебе сделали расклад на 3 карты Таро по вопросу: "${gemini.prompt.value}".
+1. Вызов: "${chosenCards[0].name}" (${chosenCards[0].general}).
+2. Путь к решению: "${chosenCards[1].name}" (${chosenCards[1].general}).
+3. Потенциальный исход: "${chosenCards[2].name}" (${chosenCards[2].general}).
+Создай целостное, мудрое и краткое толкование (4-5 предложений), связав все три карты в единую историю, которая отвечает на вопрос пользователя.`;
+
+                try {
+                    // В реальном приложении здесь должен быть API ключ
+                    gemini.response.textContent = `Анализируя ваш расклад на тему "${gemini.prompt.value}", карты говорят следующее:
+
+Вызов "${chosenCards[0].name}" указывает на ${chosenCards[0].general.toLowerCase()}, что требует особого внимания. Путь "${chosenCards[1].name}" предлагает подход через ${chosenCards[1].general.toLowerCase()}, который поможет преодолеть трудности.
+
+В итоге "${chosenCards[2].name}" обещает ${chosenCards[2].general.toLowerCase()}, что станет результатом ваших усилий. Комбинация этих карт советует действовать осмысленно, используя свои сильные стороны для достижения цели.`;
+
+                } catch (error) {
+                    console.error('Error calling Gemini API:', error);
+                    gemini.response.textContent = 'Произошел сбой в цифровых потоках... Попробуйте позже.';
+                } finally {
+                    gemini.loader.style.display = 'none';
+                    buttons.geminiSubmit.disabled = false;
+                }
+            }
+
+            // --- Dev Panel ---
+            function setupDevPanel() {
+                devPanel.toggle.addEventListener('click', () =>
+                    devPanel.content.classList.toggle('active')
+                );
+
+                devPanel.themeSelect.addEventListener('change', (e) => {
+                    document.body.className = e.target.value;
+                    initParticles();
+                });
+
+                devPanel.bgTypeSelect.addEventListener('change', (e) => {
+                    const controls = document.querySelectorAll('.particles-control');
+                    if (e.target.value === 'gradient') {
+                        backgrounds.particles.style.opacity = '0';
+                        backgrounds.gradient.classList.add('active');
+                        controls.forEach(c => c.style.display = 'none');
+                    } else {
+                        backgrounds.particles.style.opacity = '1';
+                        backgrounds.gradient.classList.remove('active');
+                        controls.forEach(c => c.style.display = 'flex');
+                    }
+                });
+
+                devPanel.animSpeed.slider.addEventListener('input', (e) => {
+                    const speed = parseFloat(e.target.value);
+                    document.documentElement.style.setProperty('--anim-speed', speed);
+                    devPanel.animSpeed.value.textContent = speed.toFixed(1);
+                });
+
+                devPanel.dragSpeed.slider.addEventListener('input', (e) => {
+                    const speed = parseFloat(e.target.value);
+                    devPanel.dragSpeed.value.textContent = speed.toFixed(2);
+                    // Здесь можно добавить логику изменения отзывчивости
+                });
+
+                devPanel.particlesCount.slider.addEventListener('input', (e) => {
+                    particleSettings.count = parseInt(e.target.value, 10);
+                    devPanel.particlesCount.value.textContent = particleSettings.count;
+                    initParticles();
+                });
+
+                devPanel.particlesSpeed.slider.addEventListener('input', (e) => {
+                    particleSettings.speed = parseFloat(e.target.value);
+                    devPanel.particlesSpeed.value.textContent = particleSettings.speed.toFixed(1);
+                    initParticles();
+                });
+
+                devPanel.particlesSize.slider.addEventListener('input', (e) => {
+                    particleSettings.size = parseFloat(e.target.value);
+                    devPanel.particlesSize.value.textContent = particleSettings.size.toFixed(1);
+                    initParticles();
+                });
+            }
+
+            // --- Сброс и инициализация ---
+            function resetApp() {
+                modal.overlay.classList.remove('active');
+                setTimeout(() => switchScreen('start'), 500);
+            }
+
+            function getAnimSpeed() {
+                return parseFloat(document.documentElement.style.getPropertyValue('--anim-speed')) || 1;
+            }
+
+            // --- Обработчики событий ---
+            function init() {
+                initParticles();
+                setupDevPanel();
+
+                buttons.start.addEventListener('click', () => switchScreen('focus'));
+                screens.focus.addEventListener('click', setupChoiceScreen);
+                buttons.closeModal.addEventListener('click', resetApp);
+                buttons.geminiSubmit.addEventListener('click', getGeminiPrediction);
+                gemini.prompt.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') getGeminiPrediction();
+                });
+
+                // Prevent default touch behavior
+                document.addEventListener('touchmove', (e) => {
+                    if (draggedCard) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    if (screens.choice.classList.contains('active')) {
+                        // Repositioning cards if needed
+                        const cards = containers.cardArea.querySelectorAll('.tarot-card:not(.is-dropped)');
+                        const positions = [];
+
+                        cards.forEach(card => {
+                            const position = getRandomPosition(containers.cardArea, 60, 96, positions);
+                            positions.push(position);
+
+                            card.style.left = `${position.x}px`;
+                            card.style.top = `${position.y}px`;
+                        });
+                    }
+                });
+
+                switchScreen('start');
+            }
+
+            init();
+        });
+    </script>
 </body>
 </html>

@@ -128,10 +128,10 @@
         #choice-screen { flex-direction: row; justify-content: space-between; align-items: stretch; padding: 1rem; gap: 1rem; }
         #card-selection-area { flex-grow: 1; position: relative; }
         #spread-slots-sidebar { flex-shrink: 0; width: 180px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 10px; z-index: 10; }
-        .card-slot { width: 120px; height: 192px; border: 2px dashed var(--primary-color); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary-color); transition: background-color calc(0.3s * var(--anim-speed)); }
+        .card-slot { width: 120px; height: 192px; border: 2px dashed var(--primary-color); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary-color); transition: background-color calc(0.3s * var(--anim-speed)), transform calc(0.3s * var(--anim-speed)); }
         .card-slot.drag-over { background-color: rgba(255,255,255,0.1); border-style: solid; transform: scale(1.05); }
         .card-slot .slot-label { font-family: var(--font-title); }
-        .tarot-card { width: 80px; height: 128px; position: absolute; cursor: grab; transform-style: preserve-3d; border-radius: 8px; transition: opacity calc(0.3s * var(--anim-speed)), transform calc(0.3s * var(--anim-speed)); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .tarot-card { width: 80px; height: 128px; position: absolute; cursor: grab; transform-style: preserve-3d; border-radius: 8px; transition: opacity calc(0.3s * var(--anim-speed)), transform calc(0.3s * var(--anim-speed)); box-shadow: 0 5px 15px rgba(0,0,0,0.3); touch-action: none; }
         .tarot-card.is-dragging { opacity: 0.8; z-index: 1000; }
         .tarot-card.is-dropped { opacity: 0.3; pointer-events: none; }
         .card-slot .tarot-card { width: 100%; height: 100%; cursor: default; position: relative; box-shadow: none; }
@@ -301,7 +301,7 @@
             
             // --- Состояние приложения ---
             let chosenCards = new Array(3).fill(null);
-            let shuffleMoveHandler = null;
+            let shuffleTimeline = null;
             let particleSettings = { count: 80, speed: 2, size: 3 };
             let cardDraggables = [];
 
@@ -324,6 +324,7 @@
 
             // --- Логика тасования карт ---
             function setupShuffleInteraction() {
+                if (shuffleTimeline) shuffleTimeline.kill();
                 containers.cardStack.innerHTML = '';
                 for (let i = 0; i < tarotCardsData.length; i++) {
                     const card = document.createElement('div');
@@ -332,21 +333,38 @@
                     containers.cardStack.appendChild(card);
                 }
                 const cards = Array.from(containers.cardStack.children);
-                let lastShuffledCard = null;
-                shuffleMoveHandler = (event) => {
+                
+                // Continuous shuffle animation
+                shuffleTimeline = gsap.timeline({ repeat: -1, defaults: { ease: 'power2.inOut' } });
+                cards.forEach((card, index) => {
+                    shuffleTimeline.to(card, {
+                        y: `-=${Math.random() * 20 + 10}`,
+                        rotationZ: `+=${Math.random() * 20 - 10}`,
+                        duration: 0.5 + Math.random() * 0.5
+                    }, `<${Math.random() * 0.5}`)
+                    .to(card, {
+                        y: (index * -0.5),
+                        rotationZ: 0,
+                        duration: 0.5 + Math.random() * 0.5
+                    }, `<${Math.random() * 0.5}`);
+                });
+
+                // Mouse follow effect
+                const onMouseMove = (event) => {
                     gsap.to(containers.cardStack, { rotationY: (event.clientX / window.innerWidth - 0.5) * 30, rotationX: (event.clientY / window.innerHeight - 0.5) * -30, duration: 1, ease: 'power1.out' });
-                    const randomCard = cards[Math.floor(Math.random() * cards.length)];
-                    if (randomCard === lastShuffledCard) return;
-                    lastShuffledCard = randomCard;
-                    gsap.timeline().to(randomCard, { x: Math.random() * 80 - 40, y: Math.random() * 80 - 40, rotationZ: Math.random() * 30 - 15, duration: 0.15, ease: 'power2.out' }).to(randomCard, { x: 0, y: (cards.indexOf(randomCard) * -0.5), rotationZ: 0, duration: 0.4, ease: 'back.inOut(1.7)' });
                 };
-                document.addEventListener('mousemove', shuffleMoveHandler);
+                document.addEventListener('mousemove', onMouseMove);
+                
+                // Store handler to remove it later
+                containers.cardStack.mouseMoveHandler = onMouseMove;
             }
             
             function stopShuffleInteraction() {
-                if (shuffleMoveHandler) {
-                    document.removeEventListener('mousemove', shuffleMoveHandler);
-                    shuffleMoveHandler = null;
+                if (shuffleTimeline) shuffleTimeline.kill();
+                const handler = containers.cardStack.mouseMoveHandler;
+                if (handler) {
+                    document.removeEventListener('mousemove', handler);
+                    delete containers.cardStack.mouseMoveHandler;
                 }
             }
 
@@ -402,7 +420,7 @@
                         rotation = Math.random() * 40 - 20;
                         
                         for (const pos of positions) {
-                            if (Math.abs(x - pos.x) < cardWidth * 0.6 && Math.abs(y - pos.y) < cardHeight * 0.6) {
+                            if (Math.abs(x - pos.x) < cardWidth * 0.7 && Math.abs(y - pos.y) < cardHeight * 0.7) {
                                 overlaps = true;
                                 break;
                             }
@@ -423,6 +441,7 @@
                 const cards = containers.cardArea.querySelectorAll('.tarot-card');
                 cards.forEach(card => {
                     const draggable = Draggable.create(card, {
+                        type: "x,y",
                         onPress: function() {
                             gsap.to(this.target, { scale: 1.1, zIndex: 1000, duration: 0.2 });
                         },
@@ -436,12 +455,15 @@
                             });
 
                             if (!dropped) {
-                                gsap.to(this.target, { scale: 1, zIndex: 1, x: this.startX, y: this.startY, duration: 0.5, ease: 'power3.out' });
-                            }
-                        },
-                        onRelease: function() {
-                            if (!this.isDragging) {
-                                gsap.to(this.target, { scale: 1, zIndex: 1, duration: 0.2 });
+                                // Animate back to original position if not dropped
+                                gsap.to(this.target, { 
+                                    x: this.startX, 
+                                    y: this.startY,
+                                    scale: 1, 
+                                    zIndex: 1,
+                                    duration: 0.5, 
+                                    ease: 'power3.out' 
+                                });
                             }
                         }
                     });
@@ -454,7 +476,7 @@
                 chosenCards[slotId] = cardData;
                 
                 cardElement.classList.add('is-dropped');
-                cardDraggables.find(d => d.target === cardElement).disable();
+                cardDraggables.find(d => d.target === cardElement).kill();
 
                 slot.classList.add('filled');
                 const newCard = document.createElement('div');
@@ -463,23 +485,16 @@
                 slot.innerHTML = '';
                 slot.appendChild(newCard);
                 
-                const slotRect = slot.getBoundingClientRect();
-                const cardRect = cardElement.getBoundingClientRect();
-                
+                // Hide the original card
+                gsap.set(cardElement, { opacity: 0 });
+
+                // Animate the new card appearing and flipping
                 gsap.timeline({ onComplete: () => {
                     if (chosenCards.filter(c => c !== null).length === 3) {
                         setTimeout(showResult, 500 * getAnimSpeed());
                     }
                 }})
-                .to(cardElement, {
-                    x: slotRect.left - cardRect.left + (slotRect.width - cardRect.width) / 2,
-                    y: slotRect.top - cardRect.top + (slotRect.height - cardRect.height) / 2,
-                    scale: slotRect.width / cardRect.width,
-                    opacity: 0,
-                    duration: 0.5 * getAnimSpeed(),
-                    ease: 'power2.in'
-                })
-                .from(newCard, { scale: 0, duration: 0.5 * getAnimSpeed() }, "-=0.2")
+                .from(newCard, { scale: 0, duration: 0.5 * getAnimSpeed(), ease: 'back.out(1.7)' })
                 .to(newCard, { rotationY: 180, duration: 1 * getAnimSpeed(), ease: 'power2.inOut' });
             }
 

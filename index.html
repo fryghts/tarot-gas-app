@@ -20,6 +20,9 @@
             font-family: var(--font-main);
             overflow: hidden;
             transition: background-color 0.5s;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
         }
 
         .app-container {
@@ -126,12 +129,12 @@
         #card-selection-area { flex-grow: 1; position: relative; }
         #spread-slots-sidebar { flex-shrink: 0; width: 180px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 10px; z-index: 10; }
         .card-slot { width: 120px; height: 192px; border: 2px dashed var(--primary-color); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary-color); transition: background-color calc(0.3s * var(--anim-speed)); }
-        .card-slot.drag-over { background-color: rgba(255,255,255,0.1); border-style: solid; }
+        .card-slot.drag-over { background-color: rgba(255,255,255,0.1); border-style: solid; transform: scale(1.05); }
         .card-slot .slot-label { font-family: var(--font-title); }
-        .tarot-card { width: 80px; height: 128px; position: absolute; cursor: grab; transform-style: preserve-3d; border-radius: 8px; transition: opacity calc(0.3s * var(--anim-speed)), transform calc(0.3s * var(--anim-speed)); }
-        .tarot-card.is-dragging { opacity: 0.5; transform: scale(1.1); z-index: 1000; }
+        .tarot-card { width: 80px; height: 128px; position: absolute; cursor: grab; transform-style: preserve-3d; border-radius: 8px; transition: opacity calc(0.3s * var(--anim-speed)), transform calc(0.3s * var(--anim-speed)); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .tarot-card.is-dragging { opacity: 0.8; z-index: 1000; }
         .tarot-card.is-dropped { opacity: 0.3; pointer-events: none; }
-        .card-slot .tarot-card { width: 100%; height: 100%; cursor: default; position: relative; }
+        .card-slot .tarot-card { width: 100%; height: 100%; cursor: default; position: relative; box-shadow: none; }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; background-size: cover; background-position: center; }
         .card-back { background: var(--card-back-bg); border: 2px solid var(--card-border); }
         .card-front { transform: rotateY(180deg); }
@@ -139,10 +142,9 @@
         @media (max-width: 768px) {
             #choice-screen { flex-direction: column-reverse; padding: 0.5rem; gap: 0.5rem; }
             #card-selection-area { flex-grow: 1; width: 100%; height: calc(100% - 140px); }
-            #spread-slots-sidebar { width: 100%; flex-direction: row; height: 130px; padding: 0.5rem; gap: 0.5rem; }
+            #spread-slots-sidebar { width: 100%; flex-direction: row; height: 130px; padding: 0.5rem; gap: 0.5rem; justify-content: center; }
             .card-slot { width: 80px; height: 112px; flex-shrink: 0; }
             .card-slot .slot-label { font-size: 0.8rem; }
-            #spread-slots-sidebar .action-button { padding: 0.5rem; font-size: 0.8rem; width: 100%; height: 112px; align-self: center; }
         }
 
         /* --- МОДАЛЬНОЕ ОКНО --- */
@@ -215,7 +217,6 @@
                 <div class="card-slot" data-slot-id="0"><span class="slot-label">Вызов</span></div>
                 <div class="card-slot" data-slot-id="1"><span class="slot-label">Путь</span></div>
                 <div class="card-slot" data-slot-id="2"><span class="slot-label">Исход</span></div>
-                <button id="show-result-btn" class="action-button" style="margin-top: 1rem;" disabled>Толкование</button>
             </div>
         </div>
     </div>
@@ -281,16 +282,17 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Flip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Draggable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     
     <script>
         const tarotCardsData = [ { id: 0, name: "Дурак (Шут)", general: "Начало нового пути, смелый шаг в неизвестность.", project: "Время для запуска MVP, экспериментов, пилотных проектов. Не бойтесь выйти за рамки привычного, даже если нет полной картины. Ваша наивная вера может привести к прорыву.", career: "Возможность для перехода в новую сферу, освоения радикально иной технологии или старта собственного дела. Отпустите страх и доверьтесь процессу обучения.", keywords: "Стартап, MVP, эксперимент, 'Hello World', новая технология, первый шаг, риск.", image: "images/0.png" }, { id: 1, name: "Маг", general: "Мастерство, инициатива, использование всех доступных ресурсов.", project: "У вас есть все необходимые навыки и инструменты, чтобы воплотить идею в жизнь. Время для активных действий, написания кода, построения архитектуры. Не ждите, творите!", career: "Используйте свои знания и опыт на полную катушку. Вы обладаете уникальными навыками, чтобы проявлять инициативу и создавать что-то значимое. Возможно, это период для менторства или ведения ключевого проекта.", keywords: "Программирование, архитектура, инструменты, API, мастерство, инициатива, создание.", image: "images/1.png" }, { id: 2, name: "Жрица", general: "Интуиция, скрытые знания, глубокий анализ данных.", project: "Ищите неочевидные решения, доверьтесь своей интуиции при анализе данных. Возможно, ключ к успеху лежит в глубоком исследовании пользовательского поведения или скрытых уязвимостей. Не все ответы лежат на поверхности.", career: "Развивайте навыки в области Big Data, AI, кибербезопасности. Ваша способность видеть закономерности там, где другие видят хаос, будет востребована. Время для глубокого обучения и погружения в сложные концепции.", keywords: "Big Data, AI, интуиция, кибербезопасность, скрытые угрозы, аналитика, нейронные сети.", image: "images/2.png" }, { id: 3, name: "Императрица", general: "Творчество, развитие продукта, пользовательский опыт, плодородие и рост.", project: "Сосредоточьтесь на удобстве и привлекательности продукта. Создавайте что-то, что приносит радость и легкость пользователям. Время для итераций, прототипирования и внедрения новых фич, которые по-настояшему 'кормят' продукт.", career: "Развивайте свои творческие навыки в дизайне, продуктовой разработке, маркетинге. Вы способны создавать продукты, которые не просто работают, но и приносят удовольствие.", keywords: "UX/UI, продуктовая разработка, масштабирование, рост, плодородие, пользователь, фичи.", image: "images/3.png" }, { id: 4, name: "Император", general: "Структура, лидерство, управление, порядок и стабильность.", project: "Настало время для упорядочивания, внедрения четких процессов, стандартов кодирования и архитектурных принципов. Требуется сильное лидерство и контроль над ресурсами, чтобы обеспечить стабильность и управляемость.", career: "Выход на руководящую позицию, возможность создать или реорганизовать команду, навести порядок в хаотичном проекте. Ваша задача — быть опорой и принимать ответственные решения.", keywords: "CTO, CEO, архитектура, инфраструктура, управление, процессы, стандарты, контроль.", image: "images/4.png" }, { id: 5, name: "Иерофант (Первосвященник)", general: "Обучение, менторство, лучшие практики, устоявшиеся традиции.", project: "Время для следования лучшим практикам, изучения и применения проверенных временем подходов. Возможно, нужно привлечь опытного консультанта или начать внутренние тренинги для команды.", career: "Если вы опытный специалист, это призыв к менторству и обмену знаниями. Если вы новичок, ищите наставника, вступайте в профессиональные сообщества, изучайте документацию.", keywords: "Менторство, опенсорс, обучение, best practices, документация, сообщество, традиции.", image: "images/5.png" }, { id: 6, name: "Влюблённые (Выбор)", general: "Выбор, отношения, сотрудничество, этические дилеммы.", project: "Стоит важный выбор, который повлияет на дальнейшее развитие. Это может быть выбор технологического стека, партнера, или решение между 'быстро и плохо' и 'медленно, но качественно'. Также акцент на командной работе и разрешении конфликтов.", career: "Выбор новой специализации, компании, или решение о совместном проекте. Возможно, нужно урегулировать разногласия в команде или принять сложное этическое решение (например, в области ИИ).", keywords: "Выбор стека, build vs buy, командная работа, этика ИИ, слияние веток, компромисс.", image: "images/6.png" }, { id: 7, name: "Колесница", general: "Прогресс, контроль, победа, решимость, преодоление препятствий.", project: "Проект набирает обороты и движется к релизу или важной вехе. Вы контролируете ситуацию, несмотря на препятствия. Время для форсирования темпов, но с сохранением контроля над качеством.", career: "Вы успешно продвигаетесь к цели, преодолевая трудности. Это может быть успешное завершение сложного проекта, получение новой должности или быстрое освоение новой технологии.", keywords: "Деплой, релиз, CI/CD, масштабирование, прогресс, преодоление, успех.", image: "images/7.png" }, { id: 8, name: "Справедливость (Правосудие)", general: "Оценка, тестирование, честность, качество кода, последствия.", project: "Время для тщательного тестирования, аудита кода, рефакторинга и обеспечения высокого качества. Важно быть честным в оценке проблем и принимать справедливые решения. Возможно, придется столкнуться с последствиями прошлых ошибок.", career: "Ваша работа будет оцениваться по достоинству. Сосредоточьтесь на создании качественных решений, будьте объективны в оценке себя и других. Возможно, вы будете вовлечены в процессы Code Review или архитектурные комиссии.", keywords: "QA, тестирование, баги, code review, аудит, чистый код, ответственность, качество.", image: "images/8.png" }, { id: 9, name: "Отшельник", general: "Глубокая работа, самоанализ, поиск истины, ментальная фокусировка.", project: "Необходимо углубиться в проблему, провести тщательное исследование или разработать сложное решение в уединении. Отвлечения будут мешать.", career: "Время для глубокого изучения новой технологии, написания диссертации или сосредоточенной работы над личным проектом. Ищите внутренний ответ, а не внешний.", keywords: "Отладка, ресерч, глубокая работа, алгоритмы, уединение, фокус, Computer Science.", image: "images/9.png" }, { id: 10, name: "Колесо Фортуны (Зеркало)", general: "Перемены, циклы, возможности, неожиданные события в мире IT.", project: "Будьте готовы к быстрым изменениям на рынке или в технологической среде. Могут появиться новые возможности или неожиданные вызовы. Адаптируйтесь к циклам 'хайпа' и 'спадов'.", career: "Рынок труда в IT постоянно меняется. Будьте гибкими, осваивайте новые тренды. Неожиданные предложения или изменения в компании могут стать поворотными моментами.", keywords: "Тренды, хайп, циклы, адаптация, рынок IT, удача, изменения.", image: "images/10.png" }, { id: 11, name: "Сила", general: "Внутренняя сила, терпение, управление сложными системами, устойчивость.", project: "Требуется терпение и выдержка для работы с крупными, сложными или устаревшими системами. Не грубой силой, а методичным подходом и вниманием к деталям вы сможете справиться с техническим долгом или сложными интеграциями.", career: "Развивайте навыки управления проектами, людьми или очень сложными техническими задачами. Вы обладаете внутренней стойкостью, чтобы довести дело до конца, даже если оно кажется неподъемным.", keywords: "Legacy-код, технический долг, управление проектами, терпение, рефакторинг, стойкость.", image: "images/11.png" }, { id: 12, name: "Повешенный", general: "Пересмотр, новая перспектива, жертва для большей цели, приостановка.", project: "Возможно, проект зашел в тупик, и нужно полностью переосмыслить подход. Пауза, отказ от текущих методов, или даже временная заморозка для редизайна могут быть необходимы.", career: "Время для переосмысления карьерного пути, возможен 'саббатикал' или временное переключение на фриланс, чтобы набраться новых идей. Отпустите старые представления, чтобы увидеть новые возможности.", keywords: "Перезагрузка, рефакторинг, редизайн, новая перспектива, пауза, стратегический отказ.", image: "images/12.png" }, { id: 13, name: "Смерть", general: "Окончание, трансформация, обновление, избавление от устаревшего.", project: "Пришло время полностью отказаться от устаревших технологий, прекратить поддержку неэффективных решений или провести полную миграцию. Это болезненно, но необходимо для роста.", career: "Возможно, вам придется покинуть старую компанию, сменить специализацию или отказаться от привычных, но уже неактуальных навыков. Не бойтесь перемен, они ведут к обновлению.", keywords: "Миграция, декоммиссия, EOL, устаревание, трансформация, новая эра.", image: "images/13.png" }, { id: 14, name: "Умеренность (Время)", general: "Баланс, гармония, интеграция, оптимизация, терпение.", project: "Важно найти баланс между скоростью разработки и стабильностью операций. Оптимизируйте процессы, наладьте взаимодействие между командами, сосредоточьтесь на бесшовной интеграции и непрерывной поставке.", career: "Ищите баланс между работой и личной жизнью, между глубокой специализацией и широким кругозором. Учитесь эффективно совмещать различные подходы и технологии.", keywords: "DevOps, CI/CD, баланс, интеграция, оптимизация, межкомандное взаимодействие, гармония.", image: "images/14.png" }, { id: 15, name: "Дьявол", general: "Технический долг, зависимости, искушения, выгорание, ложные обещания.", project: "Остерегайтесь 'быстрых, грязных' решений, которые ведут к техническому долгу. Избегайте вендор-лока и зависимости от ненадежных решений. Будьте внимательны к признакам выгорания в команде.", career: "Остерегайтесь токсичных проектов или компаний, которые обещают многое, но эксплуатируют. Не позволяйте работе поглотить вас полностью. Боритесь с прокрастинацией и ложными мотивами.", keywords: "Технический долг, вендор-лок, выгорание, прокрастинация, зависимость, баги, ложные обещания.", image: "images/15.png" }, { id: 16, name: "Башня", general: "Внезапный крах, кризис, перелом, разрушение старых структур.", project: "Будьте готовы к внезапному системному сбою, критическому багу в продакшене или даже полному провалу проекта. Это разрушительное, но очищающее событие, требующее немедленной реакции и перестройки.", career: "Неожиданное увольнение, провал важного экзамена или проекта. Это может быть шоком, но также и возможностью для полного переосмысления и построения чего-то более прочного.", keywords: "Downtime, 500 Error, сбой, критический баг, кризис, разрушение, перезапуск.", image: "images/16.png" }, { id: 17, name: "Звезда", general: "Надежда, вдохновение, инновации, новые горизонты, открытость.", project: "Появляются новые, вдохновляющие идеи и возможности. Время для инноваций, исследования прорывных технологий (AI, Web3, квантовые вычисления). Делитесь своими знаниями и вдохновляйте других.", career: "Выход на новый уровень в карьере, осознание своего предназначения в IT, возможность стать частью чего-то большого и значимого. Найдите свою путеводную звезду в технологиях.", keywords: "Инновации, прорывные технологии, AI, Web3, вдохновение, опенсорс, надежда, будущее.", image: "images/17.png" }, { id: 18, name: "Луна", general: "Неопределенность, скрытые угрозы, заблуждения, интуиция, непонимание.", project: "Есть скрытые проблемы, неочевидные баги или уязвимости, которые еще не проявились. Будьте осторожны с неясными требованиями или непроверенными решениями. Доверяйте интуиции, но перепроверяйте.", career: "Чувство неопределенности, синдрома самозванца, неясные перспективы. Не доверяйте всему, что видите или слышите. Углубитесь в самоанализ и найдите истину за туманом сомнений.", keywords: "Неопределенность, скрытые баги, уязвимости, фрод, киберпреступность, синдром самозванца, туман требований.", image: "images/18.png" }, { id: 19, name: "Солнце", general: "Успех, ясность, радость, процветание, признание.", project: "Полный успех, успешный запуск, признание сообществом, ясное понимание всех аспектов. Время праздновать достижения и наслаждаться результатом.", career: "Признание ваших заслуг, повышение, успешное завершение важного этапа. Вы достигли ясности в своих целях и путях.", keywords: "Успешный релиз, ясность, признание, процветание, growth, свет, позитив.", image: "images/19.png" }, { id: 20, name: "Страшный суд", general: "Оценка, возрождение, призыв, окончательное решение, ретроспектива.", project: "Время для глубокой ретроспективы, анализа всех ошибок и успехов. Важно извлечь уроки и принять кардинальные решения о дальнейшем развитии или закрытии проекта. Это призыв к обновлению и перерождению.", career: "Период для самооценки, анализа пройденного пути и принятия важных решений о смене направления, переходе на новый уровень или возвращении к старым проектам с новым видением.", keywords: "Ретроспектива, постмортем, аудит, переосмысление, возрождение, кардинальные решения.", image: "images/20.png" }, { id: 21, name: "Мир", general: "Завершение, интеграция, глобальный успех, целостность, мастерство.", project: "Проект достиг полной функциональности, интегрирован во все необходимые системы и готов к глобальному масштабированию. Это кульминация усилий, принесшая целостный и завершенный продукт.", career: "Вы достигли мастерства в своей области, реализовали свой потенциал. Возможно, это достижение глобального признания, завершение долгого обучения или успешное построение собственной IT-империи.", keywords: "Глобализация, завершение, успех, масштабирование, интеграция, мастерство, Web 3.0, мир.", image: "images/21.png" } ];
 
         document.addEventListener('DOMContentLoaded', () => {
-            gsap.registerPlugin(Flip);
+            gsap.registerPlugin(Flip, Draggable);
             // --- DOM Элементы ---
             const screens = { start: document.getElementById('start-screen'), focus: document.getElementById('focus-screen'), shuffle: document.getElementById('shuffle-screen'), choice: document.getElementById('choice-screen'), };
-            const buttons = { start: document.getElementById('start-btn'), deal: document.getElementById('deal-btn'), showResult: document.getElementById('show-result-btn'), closeModal: document.getElementById('close-modal-btn'), geminiSubmit: document.getElementById('gemini-submit'), };
+            const buttons = { start: document.getElementById('start-btn'), deal: document.getElementById('deal-btn'), closeModal: document.getElementById('close-modal-btn'), geminiSubmit: document.getElementById('gemini-submit'), };
             const containers = { cardStack: document.getElementById('card-stack-container'), cardSlots: document.querySelectorAll('.card-slot'), cardArea: document.getElementById('card-selection-area'), modalSpread: document.querySelector('.modal-spread-container') };
             const modal = { overlay: document.getElementById('result-modal'), };
             const gemini = { prompt: document.getElementById('gemini-prompt'), response: document.getElementById('gemini-response'), loader: document.getElementById('gemini-loader'), };
@@ -301,7 +303,7 @@
             let chosenCards = new Array(3).fill(null);
             let shuffleMoveHandler = null;
             let particleSettings = { count: 80, speed: 2, size: 3 };
-            let draggedCard = null;
+            let cardDraggables = [];
 
             // --- Управление экранами ---
             function switchScreen(screenName) {
@@ -348,18 +350,15 @@
                 }
             }
 
-            // --- Логика расклада Drag & Drop ---
+            // --- Логика расклада ---
             function startSpread() {
                 stopShuffleInteraction();
-                
-                // Подготовка к анимации
                 const shuffleCards = Array.from(containers.cardStack.children);
                 const state = Flip.getState(shuffleCards);
                 
                 switchScreen('choice');
                 
                 chosenCards.fill(null);
-                buttons.showResult.disabled = true;
                 
                 containers.cardSlots.forEach(slot => {
                     slot.innerHTML = `<span class="slot-label">${slot.dataset.slotLabel}</span>`;
@@ -369,14 +368,13 @@
                 containers.cardArea.innerHTML = '';
                 shuffleCards.forEach((card, index) => {
                     card.className = 'tarot-card';
-                    card.dataset.id = tarotCardsData[index].id; // Assign ID
-                    card.draggable = true;
+                    card.dataset.id = tarotCardsData[index].id;
                     card.innerHTML = `<div class="card-face card-back"></div>`;
                     containers.cardArea.appendChild(card);
                 });
 
                 layoutCards();
-                addDragDropListeners();
+                makeCardsDraggable();
 
                 Flip.from(state, {
                     duration: 1 * getAnimSpeed(),
@@ -389,64 +387,100 @@
                 const area = containers.cardArea;
                 const cards = area.querySelectorAll('.tarot-card');
                 const areaRect = area.getBoundingClientRect();
+                const cardWidth = cards[0]?.offsetWidth || 80;
+                const cardHeight = cards[0]?.offsetHeight || 128;
+                let positions = [];
 
-                const centerX = areaRect.width / 2;
-                const centerY = areaRect.height / 2;
-                const radiusX = areaRect.width * 0.45;
-                const radiusY = areaRect.height * 0.45;
-
-                cards.forEach((card, i) => {
-                    const angle = (i / cards.length) * Math.PI * 1.5 - Math.PI * 1.25;
-                    const x = centerX + radiusX * Math.cos(angle) - card.offsetWidth / 2;
-                    const y = centerY + radiusY * Math.sin(angle) - card.offsetHeight / 2;
-                    const rotation = (angle * 180 / Math.PI) + 90 + (Math.random() * 10 - 5);
+                cards.forEach(card => {
+                    let overlaps;
+                    let x, y, rotation;
+                    let attempts = 0;
+                    do {
+                        overlaps = false;
+                        x = Math.random() * (areaRect.width - cardWidth);
+                        y = Math.random() * (areaRect.height - cardHeight);
+                        rotation = Math.random() * 40 - 20;
+                        
+                        for (const pos of positions) {
+                            if (Math.abs(x - pos.x) < cardWidth * 0.6 && Math.abs(y - pos.y) < cardHeight * 0.6) {
+                                overlaps = true;
+                                break;
+                            }
+                        }
+                        attempts++;
+                    } while (overlaps && attempts < 100);
+                    
+                    positions.push({x, y});
                     gsap.set(card, { x, y, rotation });
                 });
             }
             
-            function addDragDropListeners() {
-                const draggableCards = containers.cardArea.querySelectorAll('.tarot-card');
-                draggableCards.forEach(card => {
-                    card.addEventListener('dragstart', (e) => {
-                        draggedCard = e.target;
-                        setTimeout(() => e.target.classList.add('is-dragging'), 0);
-                    });
-                     card.addEventListener('dragend', (e) => {
-                        e.target.classList.remove('is-dragging');
-                        draggedCard = null;
-                    });
-                });
+            function makeCardsDraggable() {
+                if (cardDraggables.length) {
+                    cardDraggables.forEach(d => d.kill());
+                    cardDraggables = [];
+                }
+                const cards = containers.cardArea.querySelectorAll('.tarot-card');
+                cards.forEach(card => {
+                    const draggable = Draggable.create(card, {
+                        onPress: function() {
+                            gsap.to(this.target, { scale: 1.1, zIndex: 1000, duration: 0.2 });
+                        },
+                        onDragEnd: function() {
+                            let dropped = false;
+                            containers.cardSlots.forEach((slot, index) => {
+                                if (this.hitTest(slot, "50%") && !slot.classList.contains('filled')) {
+                                    dropped = true;
+                                    handleDrop(this.target, slot, index);
+                                }
+                            });
 
-                containers.cardSlots.forEach(slot => {
-                    slot.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        if (!slot.classList.contains('filled')) slot.classList.add('drag-over');
-                    });
-                    slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
-                    slot.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        slot.classList.remove('drag-over');
-                        if (slot.classList.contains('filled') || !draggedCard) return;
-
-                        const cardData = tarotCardsData.find(c => c.id == draggedCard.dataset.id);
-                        const slotId = parseInt(slot.dataset.slotId, 10);
-                        chosenCards[slotId] = cardData;
-                        
-                        draggedCard.classList.add('is-dropped');
-
-                        slot.classList.add('filled');
-                        const cardElement = document.createElement('div');
-                        cardElement.className = 'tarot-card';
-                        cardElement.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>`;
-                        slot.innerHTML = '';
-                        slot.appendChild(cardElement);
-                        gsap.to(cardElement, { rotationY: 180, duration: 1 * getAnimSpeed(), ease: 'power2.inOut' });
-
-                        if (chosenCards.filter(c => c !== null).length === 3) {
-                            buttons.showResult.disabled = false;
+                            if (!dropped) {
+                                gsap.to(this.target, { scale: 1, zIndex: 1, x: this.startX, y: this.startY, duration: 0.5, ease: 'power3.out' });
+                            }
+                        },
+                        onRelease: function() {
+                            if (!this.isDragging) {
+                                gsap.to(this.target, { scale: 1, zIndex: 1, duration: 0.2 });
+                            }
                         }
                     });
+                    cardDraggables.push(draggable[0]);
                 });
+            }
+            
+            function handleDrop(cardElement, slot, slotId) {
+                const cardData = tarotCardsData.find(c => c.id == cardElement.dataset.id);
+                chosenCards[slotId] = cardData;
+                
+                cardElement.classList.add('is-dropped');
+                cardDraggables.find(d => d.target === cardElement).disable();
+
+                slot.classList.add('filled');
+                const newCard = document.createElement('div');
+                newCard.className = 'tarot-card';
+                newCard.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>`;
+                slot.innerHTML = '';
+                slot.appendChild(newCard);
+                
+                const slotRect = slot.getBoundingClientRect();
+                const cardRect = cardElement.getBoundingClientRect();
+                
+                gsap.timeline({ onComplete: () => {
+                    if (chosenCards.filter(c => c !== null).length === 3) {
+                        setTimeout(showResult, 500 * getAnimSpeed());
+                    }
+                }})
+                .to(cardElement, {
+                    x: slotRect.left - cardRect.left + (slotRect.width - cardRect.width) / 2,
+                    y: slotRect.top - cardRect.top + (slotRect.height - cardRect.height) / 2,
+                    scale: slotRect.width / cardRect.width,
+                    opacity: 0,
+                    duration: 0.5 * getAnimSpeed(),
+                    ease: 'power2.in'
+                })
+                .from(newCard, { scale: 0, duration: 0.5 * getAnimSpeed() }, "-=0.2")
+                .to(newCard, { rotationY: 180, duration: 1 * getAnimSpeed(), ease: 'power2.inOut' });
             }
 
             // --- Отображение результата ---
@@ -555,7 +589,6 @@
                 buttons.start.addEventListener('click', () => switchScreen('focus'));
                 screens.focus.addEventListener('click', () => { switchScreen('shuffle'); setupShuffleInteraction(); });
                 buttons.deal.addEventListener('click', startSpread);
-                buttons.showResult.addEventListener('click', showResult);
                 buttons.closeModal.addEventListener('click', resetApp);
                 buttons.geminiSubmit.addEventListener('click', getGeminiPrediction);
                 gemini.prompt.addEventListener('keydown', (e) => { if (e.key === 'Enter') getGeminiPrediction(); });

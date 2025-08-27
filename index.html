@@ -11,7 +11,6 @@
         :root {
             --font-main: 'Inter', sans-serif;
             --font-title: 'Orbitron', sans-serif;
-            --anim-speed: 1; /* 1 = normal speed */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,265 +18,239 @@
         body {
             font-family: var(--font-main);
             overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             transition: background-color 0.5s;
-            -webkit-user-select: none; /* Safari */
-            -ms-user-select: none; /* IE 10 and IE 11 */
-            user-select: none; /* Standard syntax */
+            -webkit-user-select: none; -ms-user-select: none; user-select: none;
+            touch-action: none;
         }
 
         .app-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            perspective: 2000px;
-            position: relative;
-            z-index: 1;
-        }
-
-        #particles-js {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            z-index: 0;
-            transition: opacity calc(0.5s * var(--anim-speed));
-        }
-
-        .animated-gradient-bg {
-            position: fixed;
-            width: 300%;
-            height: 300%;
-            top: -100%;
-            left: -100%;
-            z-index: -1;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity calc(0.5s * var(--anim-speed));
-            animation: gradient-animation calc(20s * var(--anim-speed)) ease infinite;
+            width: 100vw; height: 100vh; display: flex;
+            justify-content: center; align-items: center;
+            perspective: 2000px; position: relative; z-index: 1;
         }
         
-        .animated-gradient-bg.active {
-            opacity: 1;
+        .app-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: #000;
+            opacity: 0;
+            z-index: 1;
+            pointer-events: none;
+            transition: opacity 2s ease-in-out;
+        }
+        .app-container.focus-active::before {
+            opacity: 0.6;
         }
 
-        @keyframes gradient-animation {
-            0% { transform: rotate(0deg); }
-            50% { transform: rotate(180deg); }
-            100% { transform: rotate(360deg); }
+        #particles-js { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: 0; }
+        
+        #confetti-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 10000;
         }
 
         .screen {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity calc(0.8s * var(--anim-speed));
-            padding: 1rem;
-            text-align: center;
+            position: absolute; width: 100%; height: 100%; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.8s;
+            padding: 1rem; text-align: center;
+            z-index: 2;
         }
-
         .screen.active { opacity: 1; pointer-events: auto; }
+        .title { font-family: var(--font-title); font-size: clamp(2rem, 6vw, 4rem); font-weight: 700; margin-bottom: 1rem; }
+        .subtitle { font-size: clamp(0.9rem, 2.5vw, 1.2rem); max-width: 600px; margin-bottom: 2rem; line-height: 1.6; }
+        
+        .shining-text {
+            color: var(--secondary-color);
+            text-shadow: 0 0 7px var(--highlight-color), 0 0 12px var(--highlight-color);
+            animation: text-glow 3s ease-in-out infinite alternate;
+        }
+        @keyframes text-glow {
+            from { text-shadow: 0 0 7px var(--highlight-color), 0 0 12px var(--highlight-color); }
+            to { text-shadow: 0 0 12px var(--highlight-color), 0 0 24px var(--highlight-color), 0 0 4px #fff; }
+        }
 
-        .title { font-family: var(--font-title); font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 700; margin-bottom: 1rem; }
-        .subtitle { font-size: clamp(1rem, 3vw, 1.25rem); max-width: 600px; margin-bottom: 2rem; line-height: 1.6; }
-        .action-button { font-family: var(--font-title); padding: 1rem 2.5rem; border-radius: 50px; border: none; font-size: 1.2rem; cursor: pointer; transition: all calc(0.3s * var(--anim-speed)); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .action-button {
+            font-family: var(--font-title); padding: 1rem 2.5rem; border-radius: 50px; border: none;
+            font-size: 1.1rem; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); touch-action: manipulation;
+        }
         .action-button:hover { transform: translateY(-3px); box-shadow: 0 6px 25px rgba(0,0,0,0.4); }
-        .action-button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        #logo-container {
-            position: absolute;
-            top: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 150px;
-        }
-        #logo-container svg {
-            width: 100%;
-            height: auto;
-        }
+        #logo-container { position: absolute; top: 1rem; left: 50%; transform: translateX(-50%); width: clamp(100px, 15vw, 150px); }
+        #logo-container img { max-width: 100%; height: auto; filter: brightness(0) saturate(100%) invert(39%) sepia(82%) saturate(1347%) hue-rotate(191deg) brightness(96%) contrast(101%); }
 
         /* --- ТЕМЫ --- */
         .theme-gazprom-classic {
-            --bg-color: #011d3a; --primary-color: #0078d7; --secondary-color: #ffffff; --text-color: #e0f7ff; --highlight-color: #00aaff;
-            --card-back-bg: linear-gradient(145deg, #002f5c, #004b8f); --card-border: #00aaff;
-            --gradient: radial-gradient(ellipse at top, #00aaff, transparent), radial-gradient(ellipse at bottom, #002f5c, transparent);
+            --bg-color: #011d3a; --primary-color: #0078d7; --secondary-color: #ffffff;
+            --text-color: #e0f7ff; --highlight-color: #00aaff; --card-back-bg: linear-gradient(145deg, #002f5c, #004b8f);
+            --card-border: #00aaff;
         }
         .theme-gazprom-dark {
-            --bg-color: #000814; --primary-color: #005f9e; --secondary-color: #ccdeeb; --text-color: #a9c7e0; --highlight-color: #3399ff;
-            --card-back-bg: linear-gradient(145deg, #001a33, #002b52); --card-border: #0078d7;
-            --gradient: radial-gradient(ellipse at top, #3399ff, transparent), radial-gradient(ellipse at bottom, #001a33, transparent);
+            --bg-color: #000814; --primary-color: #005f9e; --secondary-color: #ccdeeb;
+            --text-color: #a9c7e0; --highlight-color: #3399ff; --card-back-bg: linear-gradient(145deg, #001a33, #002b52);
+            --card-border: #0078d7;
         }
         .theme-gazprom-light {
-            --bg-color: #e6f2ff; --primary-color: #005a9e; --secondary-color: #002d4f; --text-color: #004375; --highlight-color: #0078d7;
-            --card-back-bg: linear-gradient(145deg, #cce5ff, #a3d1ff); --card-border: #005a9e;
-            --gradient: radial-gradient(ellipse at top, #a3d1ff, transparent), radial-gradient(ellipse at bottom, #e6f2ff, transparent);
+            --bg-color: #e6f2ff; --primary-color: #005a9e; --secondary-color: #002d4f;
+            --text-color: #004375; --highlight-color: #0078d7; --card-back-bg: linear-gradient(145deg, #cce5ff, #a3d1ff);
+            --card-border: #005a9e;
         }
-
-        body { background-color: var(--bg-color); color: var(--text-color); }
-        .animated-gradient-bg { background: var(--gradient); }
-        .title { color: var(--secondary-color); text-shadow: 0 0 15px var(--primary-color);}
-        .subtitle { color: var(--text-color); }
+        
+        .title { color: var(--secondary-color); text-shadow: 0 0 15px var(--primary-color); }
         .action-button { background-color: var(--primary-color); color: var(--bg-color) !important; }
         .action-button:hover { background-color: var(--highlight-color); }
-        #logo-container svg path { fill: var(--primary-color); }
-
-        /* --- ЭКРАН ТАСОВАНИЯ --- */
-        #shuffle-screen { justify-content: center; }
-        #shuffle-screen .subtitle { position: absolute; top: 15%; width: 100%;}
-        #shuffle-screen .action-button { position: absolute; bottom: 5rem; }
-        #card-stack-container { position: relative; width: 120px; height: 192px; transform-style: preserve-3d; }
-        .shuffle-card { position: absolute; width: 100%; height: 100%; border-radius: 10px; background: var(--card-back-bg); border: 2px solid var(--card-border); box-shadow: 0 0 15px rgba(0,0,0,0.5); cursor: grab; user-select: none; will-change: transform; }
 
         /* --- ЭКРАН ВЫБОРА (DRAG & DROP) --- */
-        #choice-screen { flex-direction: row; justify-content: space-between; align-items: stretch; padding: 1rem; gap: 1rem; }
-        #card-selection-area { flex-grow: 1; position: relative; }
-        #spread-slots-sidebar { flex-shrink: 0; width: 180px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 10px; z-index: 10; }
-        .card-slot { width: 120px; height: 192px; border: 2px dashed var(--primary-color); border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary-color); transition: background-color calc(0.3s * var(--anim-speed)), transform calc(0.3s * var(--anim-speed)); }
-        .card-slot.drag-over { background-color: rgba(255,255,255,0.1); border-style: solid; transform: scale(1.05); }
-        .card-slot .slot-label { font-family: var(--font-title); }
-        .tarot-card { width: 80px; height: 128px; position: absolute; cursor: grab; transform-style: preserve-3d; border-radius: 8px; transition: opacity calc(0.3s * var(--anim-speed)), transform calc(0.3s * var(--anim-speed)); box-shadow: 0 5px 15px rgba(0,0,0,0.3); touch-action: none; }
-        .tarot-card.is-dragging { opacity: 0.8; z-index: 1000; }
-        .tarot-card.is-dropped { opacity: 0.3; pointer-events: none; }
-        .card-slot .tarot-card { width: 100%; height: 100%; cursor: default; position: relative; box-shadow: none; }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; background-size: cover; background-position: center; }
-        .card-back { background: var(--card-back-bg); border: 2px solid var(--card-border); }
-        .card-front { transform: rotateY(180deg); }
-        
-        @media (max-width: 768px) {
-            #choice-screen { flex-direction: column-reverse; padding: 0.5rem; gap: 0.5rem; }
-            #card-selection-area { flex-grow: 1; width: 100%; height: calc(100% - 140px); }
-            #spread-slots-sidebar { width: 100%; flex-direction: row; height: 130px; padding: 0.5rem; gap: 0.5rem; justify-content: center; }
-            .card-slot { width: 80px; height: 112px; flex-shrink: 0; }
-            .card-slot .slot-label { font-size: 0.8rem; }
+        #choice-screen, #card-selection-area { position: absolute; inset: 0; overflow: hidden;}
+        #initial-deck {
+            position: absolute; top: 60%; left: 50%; width: 100px; height: 160px;
+            transform: translate(-50%, -50%); cursor: pointer; transform-style: preserve-3d;
+            transition: transform 0.3s, opacity 0.5s;
         }
+        #initial-deck:hover { transform: translate(-50%, -50%) scale(1.05); }
+        #initial-deck .shuffle-card {
+            position: absolute; width: 100%; height: 100%; border-radius: 8px;
+            background: var(--card-back-bg); border: 2px solid var(--card-border);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        #spread-slots-sidebar {
+            position: fixed; z-index: 20; background: rgba(0,0,0,0.3);
+            border-radius: 10px; backdrop-filter: blur(10px); display: flex; gap: 10px;
+        }
+        .card-slot {
+            width: 80px; height: 128px; border: 2px dashed var(--primary-color);
+            border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: var(--primary-color); transition: all 0.3s; font-size: 0.8rem;
+        }
+        .card-slot.drag-over { border-style: solid; transform: scale(1.05); }
+        .card-slot .slot-label { font-family: var(--font-title); text-align: center; }
 
-        /* --- МОДАЛЬНОЕ ОКНО --- */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity calc(0.5s * var(--anim-speed)); }
+        .tarot-card {
+            width: 80px; height: 128px; position: absolute; cursor: grab;
+            transform-style: preserve-3d; border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4); touch-action: none;
+            transform: translateZ(0); /* Для улучшения рендеринга */
+        }
+        .tarot-card:active { cursor: grabbing; }
+        .tarot-card.is-dragging { z-index: 1000; box-shadow: 0 8px 25px rgba(0,0,0,0.6); }
+        
+		.card-slot .tarot-card {
+		  width: 100%;
+		  height: 100%;
+		  cursor: default;
+		  position: relative;        
+		  box-shadow: none;
+		  display: block;
+		  left: auto;
+		  top: auto;
+          /* Сохраняем 3D-контекст после попадания в слот */
+          transform-style: preserve-3d;
+		}
+
+        .card-face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; border-radius: inherit;
+            background-size: cover; background-position: center; border: 1px solid var(--card-border);
+        }
+        .card-back { background: var(--card-back-bg); }
+        .card-front { transform: rotateY(180deg); }
+		
+
+        /* --- АДАПТИВНОСТЬ --- */
+        @media (max-width: 768px) and (orientation: portrait) { #spread-slots-sidebar { bottom: 20px; left: 50%; transform: translateX(-50%); flex-direction: row; padding: 15px; } }
+        @media (max-width: 768px) and (orientation: landscape) { #spread-slots-sidebar { right: 20px; top: 50%; transform: translateY(-50%); flex-direction: column; padding: 15px; } }
+        @media (min-width: 769px) { #spread-slots-sidebar { right: 30px; top: 50%; transform: translateY(-50%); flex-direction: column; padding: 20px; } }
+        @media (min-width: 1025px) { .card-slot { width: 100px; height: 160px; } #spread-slots-sidebar { right: 40px; } }
+        
+        /* --- МОДАЛЬНОЕ ОКНО И УВЕДОМЛЕНИЯ --- */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.5s; padding: 10px; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        .modal-content { background: rgba(10, 20, 40, 0.9); border: 1px solid var(--primary-color); border-radius: 16px; padding: 1rem; width: 95%; max-width: 1200px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 0 40px var(--primary-color); transform: scale(0.9); transition: transform calc(0.5s * var(--anim-speed)); }
+        .modal-content { background: rgba(10, 20, 40, 0.95); border: 1px solid var(--primary-color); border-radius: 16px; padding: 1rem; width: 100%; max-width: 1000px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 0 40px var(--primary-color); transform: scale(0.9); transition: transform 0.5s; }
         .modal-overlay.active .modal-content { transform: scale(1); }
         .close-button { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-color); font-size: 2rem; cursor: pointer; opacity: 0.7; transition: opacity 0.3s, transform 0.3s; z-index: 10; }
         .close-button:hover { opacity: 1; transform: rotate(90deg); }
-        
         .modal-spread-container { display: flex; flex-direction: column; gap: 1rem; }
-        .modal-card-display { display: flex; flex-direction: column; md:flex-row; gap: 1.5rem; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 10px; border-left: 4px solid var(--primary-color); }
-        .modal-card-display img { width: 120px; height: 192px; flex-shrink: 0; border-radius: 8px; border: 2px solid var(--card-border); }
-        .card-details h4 { font-family: var(--font-title); color: var(--highlight-color); font-size: 1.5rem; margin-bottom: 0.5rem; }
-        .card-details h5 { font-weight: bold; margin-top: 1rem; margin-bottom: 0.25rem; color: var(--secondary-color); }
-        .card-details p { font-size: 0.9rem; opacity: 0.9; line-height: 1.5; }
-        .keywords-container { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
-        .keyword { background: rgba(0,0,0,0.3); border: 1px solid var(--primary-color); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; }
+        .modal-card-display { display: flex; gap: 1rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 10px; border-left: 4px solid var(--primary-color); }
+        .modal-card-display img { width: 80px; height: 128px; flex-shrink: 0; border-radius: 6px; border: 1px solid var(--card-border); object-fit: cover; }
+        .card-details h4 { font-family: var(--font-title); color: var(--highlight-color); font-size: 1.2rem; margin-bottom: 0.5rem; }
+        .card-details h5 { font-weight: bold; margin-top: 0.8rem; margin-bottom: 0.25rem; color: var(--secondary-color); font-size: 0.95rem; }
+        .card-details p { font-size: 0.85rem; opacity: 0.9; line-height: 1.4; }
+        .keywords-container { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; }
+        .keyword { background: rgba(0,0,0,0.3); border: 1px solid var(--primary-color); padding: 0.2rem 0.6rem; border-radius: 15px; font-size: 0.7rem; }
 
-        /* --- СЕКЦИЯ GEMINI --- */
-        .gemini-section { margin-top: 2rem; padding: 1.5rem; border-top: 1px solid var(--primary-color); background: rgba(0,0,0,0.2); border-radius: 10px; }
-        .gemini-section h3 { font-family: var(--font-title); color: var(--highlight-color); margin-bottom: 0.5rem; }
-        .gemini-input-group { display: flex; gap: 0.5rem; margin-top: 1rem; }
-        #gemini-prompt { flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--primary-color); border-radius: 8px; padding: 0.75rem; color: var(--text-color); font-size: 1rem; }
-        #gemini-submit { background: var(--primary-color); color: var(--bg-color); border: none; border-radius: 8px; padding: 0.75rem 1.5rem; cursor: pointer; transition: background-color 0.3s; }
-        #gemini-submit:hover { background-color: var(--highlight-color); }
-        #gemini-response-container { margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px; min-height: 50px; }
-        #gemini-response { white-space: pre-wrap; line-height: 1.6; }
-        .loader { border: 4px solid rgba(255,255,255,0.2); border-left-color: var(--primary-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: auto; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .placement-toast {
+            position: fixed; bottom: 20%; left: 50%; background: rgba(10, 20, 40, 0.9);
+            color: var(--text-color); padding: 1rem 2rem; border-radius: 8px;
+            border-top: 3px solid var(--highlight-color); box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+            text-align: center; z-index: 9999; pointer-events: none;
+            animation: toast-fade 2.5s ease-out forwards;
+        }
+        .placement-toast h4 { font-family: var(--font-title); color: var(--highlight-color); margin-bottom: 0.25rem; }
+        @keyframes toast-fade {
+            0% { opacity: 0; transform: translate(-50%, 20px); }
+            15%, 85% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -20px); }
+        }
 
-        /* --- DEV PANEL --- */
+        #slot-explanation {
+            position: absolute; top: 5%; left: 50%;
+            transform: translateX(-50%); width: 90%; max-width: 500px;
+            line-height: 1.8; transition: opacity 0.5s;
+        }
+        #slot-explanation strong { color: var(--highlight-color); font-weight: normal;}
+        
+        /* DEV PANEL */
         #dev-panel { position: fixed; bottom: 20px; left: 20px; z-index: 200; }
         #dev-panel-toggle { width: 50px; height: 50px; background: rgba(0,0,0,0.5); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 1px solid white; }
-        #dev-panel-toggle svg { width: 24px; height: 24px; }
-        #dev-panel-content { position: absolute; bottom: 60px; left: 0; background: rgba(0,0,0,0.8); border: 1px solid white; border-radius: 8px; padding: 1rem; width: 250px; display: none; flex-direction: column; gap: 1rem; }
-        #dev-panel-content.active { display: flex; }
-        .dev-group { display: flex; flex-direction: column; gap: 0.5rem; }
-        .dev-group label { font-size: 0.9rem; display: flex; justify-content: space-between;}
-        #dev-panel select, #dev-panel input, #dev-panel button { width: 100%; padding: 0.5rem; background: #333; color: white; border: 1px solid #555; border-radius: 4px; }
-        #dev-panel button { cursor: pointer; background: var(--primary-color); }
+        #dev-panel-content { position: absolute; bottom: 60px; left: 0; background: rgba(0,0,0,0.8); border: 1px solid white; border-radius: 8px; padding: 1rem; width: 300px; display: none; grid-template-columns: 1fr; gap: 0.8rem; }
+        #dev-panel-content.active { display: grid; }
+        #dev-panel-content h4 { text-align: center; }
+        .dev-group label { font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
+        #dev-panel select, #dev-panel input, #dev-panel button { width: 100%; padding: 0.4rem; background: #333; color: white; border: 1px solid #555; border-radius: 4px; }
+        #dev-panel button { cursor: pointer; background: var(--primary-color); margin-top: 0.5rem; }
+
+        /* ЭФФЕКТЫ */
+        .tarot-card.breathing-glow { animation: cardGlow 3.5s ease-in-out infinite; }
+        
+        /* ИСПРАВЛЕННЫЙ КОД СВЕЧЕНИЯ */
+        @keyframes cardGlow {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(0, 170, 255, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(0, 170, 255, 0.9);
+            }
+        }
+        
+        .ripple-v1 { position: absolute; pointer-events: none; border-radius: 50%; background: radial-gradient(circle, rgba(0, 170, 255, 0.4) 0%, transparent 70%); transform: scale(0); animation: rippleEffect 0.6s ease-out; }
+        @keyframes rippleEffect { to { transform: scale(4); opacity: 0; } }
+
+        .card-slot.magnetic-pulse.attracting { transform: scale(1.08); border-style: solid; animation: magneticPulse 0.5s ease-in-out infinite alternate; }
+        @keyframes magneticPulse { from { box-shadow: 0 0 15px var(--highlight-color); } to { box-shadow: 0 0 25px var(--highlight-color), 0 0 35px rgba(0, 170, 255, 0.5); } }
+
+        #initial-deck.deck-breathing-mystic { animation: deckMystic 2.5s ease-in-out infinite; }
+        @keyframes deckMystic { 0%, 100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1) drop-shadow(0 0 10px rgba(0, 170, 255, 0.3)); } 50% { transform: translate(-50%, -50%) scale(1.08); filter: brightness(1.1) drop-shadow(0 0 20px rgba(0, 170, 255, 0.8)); } }
     </style>
 </head>
 <body class="theme-gazprom-classic">
 
     <div id="particles-js"></div>
-    <div class="animated-gradient-bg"></div>
+    <canvas id="confetti-canvas"></canvas>
+
     <div class="app-container">
-        
         <div id="start-screen" class="screen active">
-            <div id="logo-container">
-                <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                     width="283.465px" height="156.969px" viewBox="0 0 283.465 156.969" enable-background="new 0 0 283.465 156.969"
-                     xml:space="preserve">
-                <g>
-                    <g>
-                        <path d="M85.011,39.222C82.404,27.804,75.867,18.517,74.965,17c-1.421,2.132-6.637,10.329-9.288,19.429
-                            c-2.894,10.139-3.318,19.138-2.32,28c0.992,8.864,4.737,17.957,4.737,17.957c1.99,4.776,4.974,9.887,6.917,12.4
-                            c2.842-3.695,9.384-14.718,11.422-29.126C87.568,57.654,87.617,50.643,85.011,39.222z M74.965,91.946
-                            c-1.279-2.416-3.27-7.007-3.46-14.106c-0.048-6.869,2.702-12.748,3.506-13.977c0.713,1.229,3.081,6.349,3.363,13.36
-                            C78.566,84.087,76.292,89.483,74.965,91.946z M84.253,58.604c-0.097,4.355-0.618,8.952-1.281,11.701
-                            c0.239-4.737-0.33-11.418-1.421-16.631c-1.09-5.213-4.171-13.93-6.634-17.958c-2.274,3.837-5.072,11.373-6.539,17.91
-                            c-1.473,6.542-1.518,14.452-1.518,16.825c-0.388-2.001-1.369-9.131-1.09-16.304c0.228-5.914,1.611-11.988,2.371-14.783
-                            c2.888-9.335,6.161-15.302,6.776-16.25c0.615,0.949,4.737,8.293,6.873,16.016C83.918,46.85,84.346,54.244,84.253,58.604z"/>
-                        <path d="M79.392,97.447H59.561v13.31c0.017-0.019,0.032-0.038,0.049-0.055c4.673-4.672,12.25-4.672,16.923,0
-                            c4.672,4.673,4.672,12.25,0,16.921c-0.02,0.021-0.042,0.037-0.06,0.057c0,0,0,0.003-0.002,0.004
-                            c-0.023,0.023-0.048,0.041-0.07,0.063c-4.659,4.628-10.75,6.943-16.84,6.943c-6.116,0-12.234-2.332-16.901-7
-                            c-8.224-8.223-9.197-20.948-2.929-30.242c0.846-1.255,1.821-2.448,2.929-3.559c4.667-4.665,10.786-6.995,16.901-6.995V54.904
-                            c-23.507,0-42.562,19.056-42.562,42.543c0,23.506,19.055,42.561,42.562,42.561c12.256,0,23.296-5.184,31.063-13.469V97.447H79.392
-                            z"/>
-                    </g>
-                    <g>
-                        <path d="M95.663,54.904h16.225v5.275h-7.718v37.258h-8.507V54.904z"/>
-                        <path d="M121.072,81.458l1.458-21.282h0.488l1.456,21.282H121.072z M111.655,97.438h8.323l0.79-11.304h4.013
-                            l0.79,11.304h8.326l-4.438-42.533h-13.367L111.655,97.438z"/>
-                        <path d="M145.078,82.548v8.01c0,1.094,0.849,1.398,1.335,1.398c0.793,0,1.338-0.668,1.338-1.398v-9.892
-                            c0-1.337-0.244-2.793-3.404-2.793h-3.462v-4.679h3.584c2.43,0,3.282-0.548,3.282-3.161v-8.458c0-0.728-0.545-1.396-1.338-1.396
-                            c-0.486,0-1.335,0.303-1.335,1.396v6.938h-8.506v-6.015c0-2.979,0.364-7.595,6.317-7.595h7.053c5.958,0,6.32,4.616,6.32,7.595
-                            v6.806c0,4.618-3.22,5.895-5.771,5.771v0.427c5.711-0.123,5.771,4.252,5.771,5.771v8.569c0,2.976-0.362,7.595-6.32,7.595h-7.053
-                            c-5.954,0-6.317-4.619-6.317-7.595v-7.294H145.078z"/>
-                        <path d="M160.733,54.904h19.691v42.533h-8.504V60.18h-2.677v37.258h-8.51V54.904z"/>
-                        <path d="M193.903,78.299V60.18h1.096c0.911,0,1.579,0.789,1.579,2.123v13.869c0,1.337-0.668,2.128-1.579,2.128
-                            H193.903z M185.396,97.438h8.507V82.976h4.86c5.957,0,6.321-4.619,6.321-7.595V62.499c0-2.979-0.364-7.595-6.321-7.595h-13.367
-                            V97.438z"/>
-                        <path d="M220.398,90.559c0,0.73-0.545,1.398-1.335,1.398c-0.489,0-1.339-0.305-1.339-1.398V61.576
-                            c0-1.093,0.85-1.396,1.339-1.396c0.79,0,1.335,0.668,1.335,1.396V90.559z M209.217,89.843c0,2.976,0.366,7.595,6.32,7.595h7.049
-                            c5.953,0,6.32-4.619,6.32-7.595V62.499c0-2.979-0.367-7.595-6.32-7.595h-7.049c-5.955,0-6.32,4.616-6.32,7.595V89.843z"/>
-                        <path d="M255.406,54.904h11.059v42.533h-8.508V70.764h-0.303l-4.375,26.673h-6.807L242.1,70.764h-0.307v26.673
-                            h-8.506V54.904h11.058l5.53,29.895L255.406,54.904z"/>
-                    </g>
-                    <g>
-                        <path d="M106.657,126.496h-1.054v4.486h0.956c1.594,0,2.06-0.611,2.06-2.205
-                            C108.619,127.305,108.153,126.496,106.657,126.496z"/>
-                        <path d="M108.521,121.347c0-1.03-0.466-1.643-1.667-1.643h-1.25v3.629h1.25
-                            C108.055,123.333,108.521,122.745,108.521,121.347z"/>
-                        <polygon points="232.522,119.705 231.418,127.451 233.675,127.451 232.547,119.705 		"/>
-                        <path d="M95.663,110.644v29.325h170.794v-29.325H95.663z M107.417,134.146h-5.909v-17.605h6.767
-                            c2.06,0,4.34,1.251,4.34,4.414c0,2.401-1.471,3.53-2.403,3.727c1.643,0.687,2.574,1.814,2.574,4.265
-                            C112.786,132.232,111.021,134.146,107.417,134.146z M138.528,134.146h-4.241v-7.479h-2.771v7.479h-4.242v-17.605h4.242v6.792
-                            h2.771v-6.792h4.241V134.146z M164.271,134.146h-4.045v-4.096c0-1.889,0.589-4.756,0.785-6.62h-0.025l-3.653,10.715h-4.118
-                            v-17.605h4.045v4.365c0,1.936-0.54,4.755-0.638,6.693h0.024l3.58-11.058h4.045V134.146z M190.012,134.146h-4.046v-4.096
-                            c0-1.889,0.589-4.756,0.785-6.62h-0.024l-3.653,10.715h-4.119v-17.605H183v4.365c0,1.936-0.54,4.755-0.638,6.693h0.024
-                            l3.58-11.058h4.046V134.146z M214.552,119.876h-5.615v14.27h-4.241v-17.605h9.856V119.876z M234.876,134.146l-0.638-3.531h-3.236
-                            l-0.539,3.531h-4.217l3.824-17.605h5.075l3.898,17.605H234.876z M255.592,134.563c-2.623,0-5.565-1.152-5.565-5.689h3.897
-                            c0,1.963,0.564,2.525,1.496,2.525c1.104,0,1.545-0.563,1.545-2.525c0-1.641-0.516-2.305-1.863-2.305h-0.613v-3.163h1.006
-                            c0.613,0,1.274-0.686,1.274-1.936c0-1.323-0.417-2.157-1.422-2.157c-1.079,0-1.423,0.784-1.423,2.598h-3.897
-                            c0-3.652,2.28-5.761,5.32-5.761c3.358,0,5.246,2.182,5.246,4.658c0,2.182-0.71,3.286-2.5,4.07h0.048
-                            c1.791,0.663,3.065,1.397,3.065,4.559C261.206,132.92,258.95,134.563,255.592,134.563z"/>
-                    </g>
-                </g>
-                </svg>
-            </div>
+            <div id="logo-container"><img src="logo.svg" alt="Логотип" /></div>
             <h1 class="title">Цифровой Оракул</h1>
             <p class="subtitle">Какой баг ждет тебя в следующем спринте? Узнай свою IT-судьбу.</p>
             <button id="start-btn" class="action-button">Начать сеанс</button>
         </div>
 
-        <div id="shuffle-screen" class="screen">
-            <p class="subtitle">Сосредоточьтесь на вопросе и перемешайте колоду движением курсора.</p>
-            <div id="card-stack-container"></div>
-            <button id="deal-btn" class="action-button">Сделать расклад</button>
+        <div id="focus-screen" class="screen">
+            <h1 class="title shining-text">Концентрация</h1>
+            <p class="subtitle shining-text">Подумайте о проекте, карьерном пути или технологическом вызове, который вас волнует. Сконцентрируйтесь на нём.</p>
         </div>
 
         <div id="choice-screen" class="screen">
@@ -287,18 +260,21 @@
                 <div class="card-slot" data-slot-id="1"><span class="slot-label">Путь</span></div>
                 <div class="card-slot" data-slot-id="2"><span class="slot-label">Исход</span></div>
             </div>
+            <div id="slot-explanation" class="subtitle shining-text">
+                Три карты определят твой путь.<br>
+                Первая укажет на <strong>Вызов</strong>. Вторая откроет <strong>Путь</strong>.<br>
+                Третья предскажет <strong>Исход</strong>.
+            </div>
         </div>
     </div>
 
     <div id="result-modal" class="modal-overlay">
         <div class="modal-content">
-            <button id="close-modal-btn" class="close-button">&times;</button>
-            <div class="modal-spread-container">
-                <!-- Результаты будут вставлены здесь -->
-            </div>
+             <button id="close-modal-btn" class="close-button">&times;</button>
+            <div class="modal-spread-container"></div>
             <div class="gemini-section">
                 <h3>Персональное толкование от AI</h3>
-                <p>Задайте уточняющий вопрос, чтобы получить более глубокое предсказание от нейросети Gemini.</p>
+                <p>Задайте уточняющий вопрос, чтобы получить более глубокое предсказание.</p>
                 <div class="gemini-input-group">
                     <input type="text" id="gemini-prompt" placeholder="Например: Какие скрытые риски есть в этом проекте?">
                     <button id="gemini-submit">Получить ответ</button>
@@ -310,391 +286,425 @@
             </div>
         </div>
     </div>
-    
+
     <div id="dev-panel">
-        <div id="dev-panel-toggle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.8293 10.1707C19.9392 10.7839 20 11.3895 20 12C20 12.6105 19.9392 13.2161 19.8293 13.8293L21.8293 15.3293C22.0678 15.513 22.1465 15.8329 22.0415 16.1159L20.0415 19.5819C19.9365 19.8649 19.6429 20.0351 19.3453 19.9707L16.9453 19.0707C16.3216 19.5393 15.6347 19.9234 14.8962 20.2101L14.5 22.7C14.4444 23.0041 14.1843 23.2204 13.8703 23.2204H10.1297C9.81568 23.2204 9.55558 23.0041 9.5 22.7L9.10383 20.2101C8.36531 19.9234 7.67842 19.5393 7.05471 19.0707L4.65471 19.9707C4.35714 20.0351 4.06346 19.8649 3.95848 19.5819L1.95848 16.1159C1.8535 15.8329 1.93221 15.513 2.17073 15.3293L4.17073 13.8293C4.06083 13.2161 4 12.6105 4 12C4 11.3895 4.06083 10.7839 4.17073 10.1707L2.17073 8.67073C1.93221 8.48705 1.8535 8.16712 1.95848 7.8841L3.95848 4.4181C4.06346 4.1351 4.35714 3.96486 4.65471 4.02928L7.05471 4.92928C7.67842 4.46071 8.36531 4.0766 9.10383 3.78988L9.5 1.3C9.55558 0.99593 9.81568 0.77965 10.1297 0.77965H13.8703C14.1843 0.77965 14.4444 0.99593 14.5 1.3L14.8962 3.78988C15.6347 4.0766 16.3216 4.46071 16.9453 4.92928L19.3453 4.02928C19.6429 3.96486 19.9365 4.1351 20.0415 4.4181L22.0415 7.8841C22.1465 8.16712 22.0678 8.48705 21.8293 8.67073L19.8293 10.1707ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"></path></svg></div>
+        <div id="dev-panel-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.8293 10.1707C19.9392 10.7839 20 11.3895 20 12C20 12.6105 19.9392 13.2161 19.8293 13.8293L21.8293 15.3293C22.0678 15.513 22.1465 15.8329 22.0415 16.1159L20.0415 19.5819C19.9365 19.8649 19.6429 20.0351 19.3453 19.9707L16.9453 19.0707C16.3216 19.5393 15.6347 19.9234 14.8962 20.2101L14.5 22.7C14.4444 23.0041 14.1843 23.2204 13.8703 23.2204H10.1297C9.81568 23.2204 9.55558 23.0041 9.5 22.7L9.10383 20.2101C8.36531 19.9234 7.67842 19.5393 7.05471 19.0707L4.65471 19.9707C4.35714 20.0351 4.06346 19.8649 3.95848 19.5819L1.95848 16.1159C1.8535 15.8329 1.93221 15.513 2.17073 15.3293L4.17073 13.8293C4.06083 13.2161 4 12.6105 4 12C4 11.3895 4.06083 10.7839 4.17073 10.1707L2.17073 8.67073C1.93221 8.48705 1.8535 8.16712 1.95848 7.8841L3.95848 4.4181C4.06346 4.1351 4.35714 3.96486 4.65471 4.02928L7.05471 4.92928C7.67842 4.46071 8.36531 4.0766 9.10383 3.78988L9.5 1.3C9.55558 0.99593 9.81568 0.77965 10.1297 0.77965H13.8703C14.1843 0.77965 14.4444 0.99593 14.5 1.3L14.8962 3.78988C15.6347 4.0766 16.3216 4.46071 16.9453 4.92928L19.3453 4.02928C19.6429 3.96486 19.9365 4.1351 20.0415 4.4181L22.0415 7.8841C22.1465 8.16712 22.0678 8.48705 21.8293 8.67073L19.8293 10.1707ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"/></svg>
+        </div>
         <div id="dev-panel-content">
             <h4>Dev Panel</h4>
             <div class="dev-group">
-                <label for="theme-select">Тема Газпром:</label>
+                <label for="theme-select">Тема:</label>
                 <select id="theme-select">
                     <option value="theme-gazprom-classic">Классический синий</option>
                     <option value="theme-gazprom-dark">Глубокий космос</option>
                     <option value="theme-gazprom-light">Полярный день</option>
                 </select>
             </div>
-             <div class="dev-group">
-                <label for="bg-type-select">Тип фона:</label>
-                <select id="bg-type-select">
-                    <option value="particles">Частицы</option>
-                    <option value="gradient">Градиент</option>
-                </select>
+            <div class="dev-group">
+                <label>Звуки (Органичные)<input type="checkbox" id="sound-effects-toggle"></label>
             </div>
             <div class="dev-group">
-                <label for="anim-speed-slider">Скорость анимации: <span id="anim-speed-value">1.0</span>x</label>
-                <input type="range" id="anim-speed-slider" min="0.1" max="2" step="0.1" value="1">
+                <label>Дышащие карты (свечение)<input type="checkbox" id="breathing-cards-toggle"></label>
             </div>
             <div class="dev-group">
-                <label for="drag-speed-slider">Скорость отклика: <span id="drag-speed-value">0.1</span></label>
-                <input type="range" id="drag-speed-slider" min="0" max="0.5" step="0.05" value="0.1">
+                <label>Ripple эффект (заливка)<input type="checkbox" id="ripple-effects-toggle"></label>
             </div>
-            <div class="dev-group particles-control">
-                <label for="particles-count-slider">Кол-во частиц: <span id="particles-count-value">80</span></label>
-                <input type="range" id="particles-count-slider" min="10" max="200" step="10" value="80">
+            <div class="dev-group">
+                <label>Магнитное притяжение<input type="checkbox" id="magnetic-snap-toggle"></label>
             </div>
-             <div class="dev-group particles-control">
-                <label for="particles-speed-slider">Скорость частиц: <span id="particles-speed-value">2.0</span></label>
-                <input type="range" id="particles-speed-slider" min="0.5" max="10" step="0.5" value="2">
+            <div class="dev-group">
+                <label>Confetti анимация<input type="checkbox" id="confetti-toggle"></label>
             </div>
-             <div class="dev-group particles-control">
-                <label for="particles-size-slider">Размер частиц: <span id="particles-size-value">3.0</span></label>
-                <input type="range" id="particles-size-slider" min="1" max="10" step="0.5" value="3">
+            <div class="dev-group">
+                <label>Вибрация телефона<input type="checkbox" id="vibration-toggle"></label>
             </div>
+            <div class="dev-group">
+                <label>Дыхание колоды<input type="checkbox" id="deck-breathing-toggle"></label>
+            </div>
+            <button id="restart-app-btn">Перезапустить</button>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Flip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Draggable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    
+    <script src="data.js"></script>
+
     <script>
-        const tarotCardsData = [ { id: 0, name: "Дурак (Шут)", general: "Начало нового пути, смелый шаг в неизвестность.", project: "Время для запуска MVP, экспериментов, пилотных проектов. Не бойтесь выйти за рамки привычного, даже если нет полной картины. Ваша наивная вера может привести к прорыву.", career: "Возможность для перехода в новую сферу, освоения радикально иной технологии или старта собственного дела. Отпустите страх и доверьтесь процессу обучения.", keywords: "Стартап, MVP, эксперимент, 'Hello World', новая технология, первый шаг, риск.", image: "images/0.png" }, { id: 1, name: "Маг", general: "Мастерство, инициатива, использование всех доступных ресурсов.", project: "У вас есть все необходимые навыки и инструменты, чтобы воплотить идею в жизнь. Время для активных действий, написания кода, построения архитектуры. Не ждите, творите!", career: "Используйте свои знания и опыт на полную катушку. Вы обладаете уникальными навыками, чтобы проявлять инициативу и создавать что-то значимое. Возможно, это период для менторства или ведения ключевого проекта.", keywords: "Программирование, архитектура, инструменты, API, мастерство, инициатива, создание.", image: "images/1.png" }, { id: 2, name: "Жрица", general: "Интуиция, скрытые знания, глубокий анализ данных.", project: "Ищите неочевидные решения, доверьтесь своей интуиции при анализе данных. Возможно, ключ к успеху лежит в глубоком исследовании пользовательского поведения или скрытых уязвимостей. Не все ответы лежат на поверхности.", career: "Развивайте навыки в области Big Data, AI, кибербезопасности. Ваша способность видеть закономерности там, где другие видят хаос, будет востребована. Время для глубокого обучения и погружения в сложные концепции.", keywords: "Big Data, AI, интуиция, кибербезопасность, скрытые угрозы, аналитика, нейронные сети.", image: "images/2.png" }, { id: 3, name: "Императрица", general: "Творчество, развитие продукта, пользовательский опыт, плодородие и рост.", project: "Сосредоточьтесь на удобстве и привлекательности продукта. Создавайте что-то, что приносит радость и легкость пользователям. Время для итераций, прототипирования и внедрения новых фич, которые по-настояшему 'кормят' продукт.", career: "Развивайте свои творческие навыки в дизайне, продуктовой разработке, маркетинге. Вы способны создавать продукты, которые не просто работают, но и приносят удовольствие.", keywords: "UX/UI, продуктовая разработка, масштабирование, рост, плодородие, пользователь, фичи.", image: "images/3.png" }, { id: 4, name: "Император", general: "Структура, лидерство, управление, порядок и стабильность.", project: "Настало время для упорядочивания, внедрения четких процессов, стандартов кодирования и архитектурных принципов. Требуется сильное лидерство и контроль над ресурсами, чтобы обеспечить стабильность и управляемость.", career: "Выход на руководящую позицию, возможность создать или реорганизовать команду, навести порядок в хаотичном проекте. Ваша задача — быть опорой и принимать ответственные решения.", keywords: "CTO, CEO, архитектура, инфраструктура, управление, процессы, стандарты, контроль.", image: "images/4.png" }, { id: 5, name: "Иерофант (Первосвященник)", general: "Обучение, менторство, лучшие практики, устоявшиеся традиции.", project: "Время для следования лучшим практикам, изучения и применения проверенных временем подходов. Возможно, нужно привлечь опытного консультанта или начать внутренние тренинги для команды.", career: "Если вы опытный специалист, это призыв к менторству и обмену знаниями. Если вы новичок, ищите наставника, вступайте в профессиональные сообщества, изучайте документацию.", keywords: "Менторство, опенсорс, обучение, best practices, документация, сообщество, традиции.", image: "images/5.png" }, { id: 6, name: "Влюблённые (Выбор)", general: "Выбор, отношения, сотрудничество, этические дилеммы.", project: "Стоит важный выбор, который повлияет на дальнейшее развитие. Это может быть выбор технологического стека, партнера, или решение между 'быстро и плохо' и 'медленно, но качественно'. Также акцент на командной работе и разрешении конфликтов.", career: "Выбор новой специализации, компании, или решение о совместном проекте. Возможно, нужно урегулировать разногласия в команде или принять сложное этическое решение (например, в области ИИ).", keywords: "Выбор стека, build vs buy, командная работа, этика ИИ, слияние веток, компромисс.", image: "images/6.png" }, { id: 7, name: "Колесница", general: "Прогресс, контроль, победа, решимость, преодоление препятствий.", project: "Проект набирает обороты и движется к релизу или важной вехе. Вы контролируете ситуацию, несмотря на препятствия. Время для форсирования темпов, но с сохранением контроля над качеством.", career: "Вы успешно продвигаетесь к цели, преодолевая трудности. Это может быть успешное завершение сложного проекта, получение новой должности или быстрое освоение новой технологии.", keywords: "Деплой, релиз, CI/CD, масштабирование, прогресс, преодоление, успех.", image: "images/7.png" }, { id: 8, name: "Справедливость (Правосудие)", general: "Оценка, тестирование, честность, качество кода, последствия.", project: "Время для тщательного тестирования, аудита кода, рефакторинга и обеспечения высокого качества. Важно быть честным в оценке проблем и принимать справедливые решения. Возможно, придется столкнуться с последствиями прошлых ошибок.", career: "Ваша работа будет оцениваться по достоинству. Сосредоточьтесь на создании качественных решений, будьте объективны в оценке себя и других. Возможно, вы будете вовлечены в процессы Code Review или архитектурные комиссии.", keywords: "QA, тестирование, баги, code review, аудит, чистый код, ответственность, качество.", image: "images/8.png" }, { id: 9, name: "Отшельник", general: "Глубокая работа, самоанализ, поиск истины, ментальная фокусировка.", project: "Необходимо углубиться в проблему, провести тщательное исследование или разработать сложное решение в уединении. Отвлечения будут мешать.", career: "Время для глубокого изучения новой технологии, написания диссертации или сосредоточенной работы над личным проектом. Ищите внутренний ответ, а не внешний.", keywords: "Отладка, ресерч, глубокая работа, алгоритмы, уединение, фокус, Computer Science.", image: "images/9.png" }, { id: 10, name: "Колесо Фортуны (Зеркало)", general: "Перемены, циклы, возможности, неожиданные события в мире IT.", project: "Будьте готовы к быстрым изменениям на рынке или в технологической среде. Могут появиться новые возможности или неожиданные вызовы. Адаптируйтесь к циклам 'хайпа' и 'спадов'.", career: "Рынок труда в IT постоянно меняется. Будьте гибкими, осваивайте новые тренды. Неожиданные предложения или изменения в компании могут стать поворотными моментами.", keywords: "Тренды, хайп, циклы, адаптация, рынок IT, удача, изменения.", image: "images/10.png" }, { id: 11, name: "Сила", general: "Внутренняя сила, терпение, управление сложными системами, устойчивость.", project: "Требуется терпение и выдержка для работы с крупными, сложными или устаревшими системами. Не грубой силой, а методичным подходом и вниманием к деталям вы сможете справиться с техническим долгом или сложными интеграциями.", career: "Развивайте навыки управления проектами, людьми или очень сложными техническими задачами. Вы обладаете внутренней стойкостью, чтобы довести дело до конца, даже если оно кажется неподъемным.", keywords: "Legacy-код, технический долг, управление проектами, терпение, рефакторинг, стойкость.", image: "images/11.png" }, { id: 12, name: "Повешенный", general: "Пересмотр, новая перспектива, жертва для большей цели, приостановка.", project: "Возможно, проект зашел в тупик, и нужно полностью переосмыслить подход. Пауза, отказ от текущих методов, или даже временная заморозка для редизайна могут быть необходимы.", career: "Время для переосмысления карьерного пути, возможен 'саббатикал' или временное переключение на фриланс, чтобы набраться новых идей. Отпустите старые представления, чтобы увидеть новые возможности.", keywords: "Перезагрузка, рефакторинг, редизайн, новая перспектива, пауза, стратегический отказ.", image: "images/12.png" }, { id: 13, name: "Смерть", general: "Окончание, трансформация, обновление, избавление от устаревшего.", project: "Пришло время полностью отказаться от устаревших технологий, прекратить поддержку неэффективных решений или провести полную миграцию. Это болезненно, но необходимо для роста.", career: "Возможно, вам придется покинуть старую компанию, сменить специализацию или отказаться от привычных, но уже неактуальных навыков. Не бойтесь перемен, они ведут к обновлению.", keywords: "Миграция, декоммиссия, EOL, устаревание, трансформация, новая эра.", image: "images/13.png" }, { id: 14, name: "Умеренность (Время)", general: "Баланс, гармония, интеграция, оптимизация, терпение.", project: "Важно найти баланс между скоростью разработки и стабильностью операций. Оптимизируйте процессы, наладьте взаимодействие между командами, сосредоточьтесь на бесшовной интеграции и непрерывной поставке.", career: "Ищите баланс между работой и личной жизнью, между глубокой специализацией и широким кругозором. Учитесь эффективно совмещать различные подходы и технологии.", keywords: "DevOps, CI/CD, баланс, интеграция, оптимизация, межкомандное взаимодействие, гармония.", image: "images/14.png" }, { id: 15, name: "Дьявол", general: "Технический долг, зависимости, искушения, выгорание, ложные обещания.", project: "Остерегайтесь 'быстрых, грязных' решений, которые ведут к техническому долгу. Избегайте вендор-лока и зависимости от ненадежных решений. Будьте внимательны к признакам выгорания в команде.", career: "Остерегайтесь токсичных проектов или компаний, которые обещают многое, но эксплуатируют. Не позволяйте работе поглотить вас полностью. Боритесь с прокрастинацией и ложными мотивами.", keywords: "Технический долг, вендор-лок, выгорание, прокрастинация, зависимость, баги, ложные обещания.", image: "images/15.png" }, { id: 16, name: "Башня", general: "Внезапный крах, кризис, перелом, разрушение старых структур.", project: "Будьте готовы к внезапному системному сбою, критическому багу в продакшене или даже полному провалу проекта. Это разрушительное, но очищающее событие, требующее немедленной реакции и перестройки.", career: "Неожиданное увольнение, провал важного экзамена или проекта. Это может быть шоком, но также и возможностью для полного переосмысления и построения чего-то более прочного.", keywords: "Downtime, 500 Error, сбой, критический баг, кризис, разрушение, перезапуск.", image: "images/16.png" }, { id: 17, name: "Звезда", general: "Надежда, вдохновение, инновации, новые горизонты, открытость.", project: "Появляются новые, вдохновляющие идеи и возможности. Время для инноваций, исследования прорывных технологий (AI, Web3, квантовые вычисления). Делитесь своими знаниями и вдохновляйте других.", career: "Выход на новый уровень в карьере, осознание своего предназначения в IT, возможность стать частью чего-то большого и значимого. Найдите свою путеводную звезду в технологиях.", keywords: "Инновации, прорывные технологии, AI, Web3, вдохновение, опенсорс, надежда, будущее.", image: "images/17.png" }, { id: 18, name: "Луна", general: "Неопределенность, скрытые угрозы, заблуждения, интуиция, непонимание.", project: "Есть скрытые проблемы, неочевидные баги или уязвимости, которые еще не проявились. Будьте осторожны с неясными требованиями или непроверенными решениями. Доверяйте интуиции, но перепроверяйте.", career: "Чувство неопределенности, синдрома самозванца, неясные перспективы. Не доверяйте всему, что видите или слышите. Углубитесь в самоанализ и найдите истину за туманом сомнений.", keywords: "Неопределенность, скрытые баги, уязвимости, фрод, киберпреступность, синдром самозванца, туман требований.", image: "images/18.png" }, { id: 19, name: "Солнце", general: "Успех, ясность, радость, процветание, признание.", project: "Полный успех, успешный запуск, признание сообществом, ясное понимание всех аспектов. Время праздновать достижения и наслаждаться результатом.", career: "Признание ваших заслуг, повышение, успешное завершение важного этапа. Вы достигли ясности в своих целях и путях.", keywords: "Успешный релиз, ясность, признание, процветание, growth, свет, позитив.", image: "images/19.png" }, { id: 20, name: "Страшный суд", general: "Оценка, возрождение, призыв, окончательное решение, ретроспектива.", project: "Время для глубокой ретроспективы, анализа всех ошибок и успехов. Важно извлечь уроки и принять кардинальные решения о дальнейшем развитии или закрытии проекта. Это призыв к обновлению и перерождению.", career: "Период для самооценки, анализа пройденного пути и принятия важных решений о смене направления, переходе на новый уровень или возвращении к старым проектам с новым видением.", keywords: "Ретроспектива, постмортем, аудит, переосмысление, возрождение, кардинальные решения.", image: "images/20.png" }, { id: 21, name: "Мир", general: "Завершение, интеграция, глобальный успех, целостность, мастерство.", project: "Проект достиг полной функциональности, интегрирован во все необходимые системы и готов к глобальному масштабированию. Это кульминация усилий, принесшая целостный и завершенный продукт.", career: "Вы достигли мастерства в своей области, реализовали свой потенциал. Возможно, это достижение глобального признания, завершение долгого обучения или успешное построение собственной IT-империи.", keywords: "Глобализация, завершение, успех, масштабирование, интеграция, мастерство, Web 3.0, мир.", image: "images/21.png" } ];
-
         document.addEventListener('DOMContentLoaded', () => {
-            gsap.registerPlugin(Flip, Draggable);
-            // --- DOM Элементы ---
-            const screens = { start: document.getElementById('start-screen'), shuffle: document.getElementById('shuffle-screen'), choice: document.getElementById('choice-screen'), };
-            const buttons = { start: document.getElementById('start-btn'), deal: document.getElementById('deal-btn'), closeModal: document.getElementById('close-modal-btn'), geminiSubmit: document.getElementById('gemini-submit'), };
-            const containers = { cardStack: document.getElementById('card-stack-container'), cardSlots: document.querySelectorAll('.card-slot'), cardArea: document.getElementById('card-selection-area'), modalSpread: document.querySelector('.modal-spread-container') };
-            const modal = { overlay: document.getElementById('result-modal'), };
-            const gemini = { prompt: document.getElementById('gemini-prompt'), response: document.getElementById('gemini-response'), loader: document.getElementById('gemini-loader'), };
-            const devPanel = { toggle: document.getElementById('dev-panel-toggle'), content: document.getElementById('dev-panel-content'), themeSelect: document.getElementById('theme-select'), bgTypeSelect: document.getElementById('bg-type-select'), animSpeed: { slider: document.getElementById('anim-speed-slider'), value: document.getElementById('anim-speed-value') }, dragSpeed: { slider: document.getElementById('drag-speed-slider'), value: document.getElementById('drag-speed-value') }, particlesCount: { slider: document.getElementById('particles-count-slider'), value: document.getElementById('particles-count-value') }, particlesSpeed: { slider: document.getElementById('particles-speed-slider'), value: document.getElementById('particles-speed-value') }, particlesSize: { slider: document.getElementById('particles-size-slider'), value: document.getElementById('particles-size-value') } };
-            const backgrounds = { particles: document.getElementById('particles-js'), gradient: document.querySelector('.animated-gradient-bg') };
-            
-            // --- Состояние приложения ---
-            let chosenCards = new Array(3).fill(null);
-            let shuffleTimeline = null;
-            let particleSettings = { count: 80, speed: 2, size: 3 };
-            let cardDraggables = [];
-            let dragResistance = 0.1;
+            const screens = { start: document.getElementById('start-screen'), focus: document.getElementById('focus-screen'), choice: document.getElementById('choice-screen') };
+            const buttons = { start: document.getElementById('start-btn'), closeModal: document.getElementById('close-modal-btn'), geminiSubmit: document.getElementById('gemini-submit') };
+            const containers = { cardSlots: document.querySelectorAll('.card-slot'), cardArea: document.getElementById('card-selection-area'), modalSpread: document.querySelector('.modal-spread-container'), app: document.querySelector('.app-container') };
+            const modal = { overlay: document.getElementById('result-modal') };
+            const devPanel = {
+                toggle: document.getElementById('dev-panel-toggle'), content: document.getElementById('dev-panel-content'),
+                themeSelect: document.getElementById('theme-select'), soundToggle: document.getElementById('sound-effects-toggle'),
+                breathingToggle: document.getElementById('breathing-cards-toggle'), rippleToggle: document.getElementById('ripple-effects-toggle'),
+                magneticToggle: document.getElementById('magnetic-snap-toggle'), confettiToggle: document.getElementById('confetti-toggle'),
+                vibrationToggle: document.getElementById('vibration-toggle'), deckBreathingToggle: document.getElementById('deck-breathing-toggle'),
+                restartBtn: document.getElementById('restart-app-btn')
+            };
 
-            // --- Управление экранами ---
-            function switchScreen(screenName) {
-                Object.values(screens).forEach(screen => screen.classList.remove('active'));
-                if (screens[screenName]) screens[screenName].classList.add('active');
+            let chosenCards = new Array(3).fill(null);
+            let draggedCard = null, dragOffset = { x: 0, y: 0 };
+            let confettiCanvas, confettiContext, confettiParticles = [];
+            let audioContext, sounds = {};
+
+            let effects = {
+                sounds: { enabled: true }, breathing: { enabled: true }, ripple: { enabled: true },
+                magnetic: { enabled: true }, confetti: { enabled: true }, vibration: { enabled: false },
+                deckBreathing: { enabled: false }
+            };
+
+            function loadEffectsFromStorage() {
+                const saved = localStorage.getItem('tarot-effects');
+                if (saved) { try { effects = { ...effects, ...JSON.parse(saved) }; } catch (e) { console.error(e); } }
+            }
+            function saveEffectsToStorage() { localStorage.setItem('tarot-effects', JSON.stringify(effects)); }
+
+            function applyEffectsToUI() {
+                devPanel.soundToggle.checked = effects.sounds.enabled;
+                devPanel.breathingToggle.checked = effects.breathing.enabled;
+                devPanel.rippleToggle.checked = effects.ripple.enabled;
+                devPanel.magneticToggle.checked = effects.magnetic.enabled;
+                devPanel.confettiToggle.checked = effects.confetti.enabled;
+                devPanel.vibrationToggle.checked = effects.vibration.enabled;
+                devPanel.deckBreathingToggle.checked = effects.deckBreathing.enabled;
             }
 
-            // --- Инициализация и управление фоном ---
+            function initAudio() {
+                if (!audioContext && effects.sounds.enabled) {
+                    try {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        const sine = (freq, vol, dur) => createTone(freq, dur, vol);
+                        sounds = {
+                            cardClick: () => sine(659, 0.15, 0.5), cardDrop: () => sine(523, 0.2, 0.8), cardFlip: () => sine(784, 0.12, 0.6),
+                            complete: () => { sine(523, 0.1, 0.5)(); setTimeout(() => sine(659, 0.1, 0.5)(), 100); setTimeout(() => sine(784, 0.1, 0.5)(), 200); }
+                        };
+                    } catch (e) { console.warn('Audio not supported'); effects.sounds.enabled = false; }
+                }
+            }
+
+            function createTone(frequency, duration, volume, type = 'sine') {
+                return () => {
+                    if (!audioContext || !effects.sounds.enabled) return;
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode); gainNode.connect(audioContext.destination);
+                    oscillator.type = type;
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration);
+                };
+            }
+            function playSound(soundName) { if (sounds[soundName]) sounds[soundName](); }
+            function vibrate(pattern) { if (effects.vibration.enabled && 'vibrate' in navigator) navigator.vibrate(pattern); }
+
+            function createRipple(x, y, element) {
+                if (!effects.ripple.enabled) return;
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple-v1';
+                const size = 100;
+                ripple.style.width = `${size}px`;
+                ripple.style.height = `${size}px`;
+                ripple.style.left = `${x - size / 2}px`;
+                ripple.style.top = `${y - size / 2}px`;
+                element.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            }
+
+            function updateBreathingCards() {
+                document.querySelectorAll('.tarot-card:not(.is-dropped)').forEach(c => c.classList.toggle('breathing-glow', effects.breathing.enabled));
+            }
+            function updateMagneticSlots() {
+                containers.cardSlots.forEach(s => s.classList.toggle('magnetic-pulse', effects.magnetic.enabled));
+            }
+            function updateDeckBreathing() {
+                const deck = document.getElementById('initial-deck');
+                if (deck) deck.classList.toggle('deck-breathing-mystic', effects.deckBreathing.enabled);
+            }
+
+            function switchScreen(screenName) {
+                Object.values(screens).forEach(s => s.classList.remove('active'));
+                screens[screenName].classList.add('active');
+            }
+
             function initParticles() {
                 const theme = document.body.className || 'theme-gazprom-classic';
-                const colors = { 'theme-gazprom-classic': { p: "#00aaff", l: "#0078d7" }, 'theme-gazprom-dark': { p: "#3399ff", l: "#005f9e" }, 'theme-gazprom-light': { p: "#0078d7", l: "#005a9e" }, };
-                const color = colors[theme];
-                
-                if (window.particlesJS) {
-                    particlesJS('particles-js', { particles: { number: { value: particleSettings.count, density: { enable: true, value_area: 800 } }, color: { value: color.p }, size: { value: particleSettings.size, random: true }, move: { enable: true, speed: particleSettings.speed } , line_linked: { color: color.l } }, interactivity: { events: { onhover: { enable: true, mode: "repulse" } } } });
-                }
+                const colors = { 'theme-gazprom-classic': { p: "#00aaff", l: "#0078d7" }, 'theme-gazprom-dark': { p: "#3399ff", l: "#005f9e" }, 'theme-gazprom-light': { p: "#0078d7", l: "#005a9e" } };
+                const color = colors[theme] || colors['theme-gazprom-classic'];
+                if (window.particlesJS) particlesJS('particles-js', { particles: { number: { value: 60 }, color: { value: color.p }, size: { value: 3, random: true }, move: { enable: true, speed: 2 }, line_linked: { color: color.l, distance: 150 } }, interactivity: { events: { onhover: { enable: true, mode: "repulse" } } } });
             }
 
-            // --- Логика тасования карт ---
-            function setupShuffleInteraction() {
-                if (shuffleTimeline) shuffleTimeline.kill();
-                containers.cardStack.innerHTML = '';
-                for (let i = 0; i < tarotCardsData.length; i++) {
-                    const card = document.createElement('div');
-                    card.className = 'shuffle-card';
-                    gsap.set(card, { z: i * -1, y: i * -0.5 });
-                    containers.cardStack.appendChild(card);
-                }
-                const cards = Array.from(containers.cardStack.children);
-                
-                shuffleTimeline = gsap.timeline({ repeat: -1, defaults: { ease: 'power2.inOut' } });
-                cards.forEach((card, index) => {
-                    shuffleTimeline.to(card, {
-                        y: `-=${Math.random() * 20 + 10}`,
-                        rotationZ: `+=${Math.random() * 20 - 10}`,
-                        duration: 0.5 + Math.random() * 0.5
-                    }, `<${Math.random() * 0.5}`)
-                    .to(card, {
-                        y: (index * -0.5),
-                        rotationZ: 0,
-                        duration: 0.5 + Math.random() * 0.5
-                    }, `<${Math.random() * 0.5}`);
-                });
-
-                const onMouseMove = (event) => {
-                    gsap.to(containers.cardStack, { rotationY: (event.clientX / window.innerWidth - 0.5) * 30, rotationX: (event.clientY / window.innerHeight - 0.5) * -30, duration: 1, ease: 'power1.out' });
-                };
-                document.addEventListener('mousemove', onMouseMove);
-                containers.cardStack.mouseMoveHandler = onMouseMove;
-            }
-            
-            function stopShuffleInteraction() {
-                if (shuffleTimeline) shuffleTimeline.kill();
-                const handler = containers.cardStack.mouseMoveHandler;
-                if (handler) {
-                    document.removeEventListener('mousemove', handler);
-                    delete containers.cardStack.mouseMoveHandler;
-                }
-            }
-
-            // --- Логика расклада ---
-            function startSpread() {
-                stopShuffleInteraction();
-                const shuffleCards = Array.from(containers.cardStack.children);
-                const state = Flip.getState(shuffleCards);
-                
+            function setupChoiceScreen() {
                 switchScreen('choice');
-                
+                const explanation = document.getElementById('slot-explanation');
+                if(explanation) explanation.style.opacity = 1;
+
                 chosenCards.fill(null);
-                
-                containers.cardSlots.forEach(slot => {
-                    slot.innerHTML = `<span class="slot-label">${slot.dataset.slotLabel}</span>`;
+                containers.cardSlots.forEach((slot, index) => {
+                    slot.innerHTML = `<span class="slot-label">${["Вызов", "Путь", "Исход"][index]}</span>`;
                     slot.classList.remove('filled');
                 });
-                
                 containers.cardArea.innerHTML = '';
-                shuffleCards.forEach((card, index) => {
-                    card.className = 'tarot-card';
-                    card.dataset.id = tarotCardsData[index].id;
-                    card.innerHTML = `<div class="card-face card-back"></div>`;
-                    containers.cardArea.appendChild(card);
-                });
-
-                layoutCards();
-                makeCardsDraggable();
-
-                Flip.from(state, {
-                    duration: 1 * getAnimSpeed(),
-                    stagger: 0.03,
-                    ease: "power3.inOut"
-                });
-            }
-
-            function layoutCards() {
-                const area = containers.cardArea;
-                const cards = area.querySelectorAll('.tarot-card');
-                if (!cards.length) return;
-                const areaRect = area.getBoundingClientRect();
-                const cardWidth = cards[0].offsetWidth;
-                const cardHeight = cards[0].offsetHeight;
-                let positions = [];
-
-                cards.forEach(card => {
-                    let overlaps;
-                    let x, y, rotation;
-                    let attempts = 0;
-                    do {
-                        overlaps = false;
-                        x = Math.random() * (areaRect.width - cardWidth);
-                        y = Math.random() * (areaRect.height - cardHeight);
-                        rotation = Math.random() * 40 - 20;
-                        
-                        for (const pos of positions) {
-                            if (Math.hypot(x - pos.x, y - pos.y) < Math.min(cardWidth, cardHeight) * 0.8) {
-                                overlaps = true;
-                                break;
-                            }
-                        }
-                        attempts++;
-                    } while (overlaps && attempts < 100);
-                    
-                    positions.push({x, y});
-                    gsap.set(card, { x, y, rotation });
-                });
-            }
-            
-            function makeCardsDraggable() {
-                if (cardDraggables.length) {
-                    cardDraggables.forEach(d => d.kill());
-                    cardDraggables = [];
+                const initialDeck = document.createElement('div');
+                initialDeck.id = 'initial-deck';
+                for (let i = 0; i < 5; i++) {
+                    const card = document.createElement('div');
+                    card.className = 'shuffle-card';
+                    card.style.transform = `translateZ(${i * -2}px)`;
+                    initialDeck.appendChild(card);
                 }
-                const cards = containers.cardArea.querySelectorAll('.tarot-card');
-                cards.forEach(card => {
-                    const draggable = Draggable.create(card, {
-                        type: "x,y",
-                        dragResistance: dragResistance,
-                        onPress: function() {
-                            gsap.to(this.target, { scale: 1.1, zIndex: 1000, duration: 0.2 });
-                        },
-                        onDragEnd: function() {
-                            let dropped = false;
-                            containers.cardSlots.forEach((slot, index) => {
-                                if (this.hitTest(slot, "50%") && !slot.classList.contains('filled')) {
-                                    dropped = true;
-                                    handleDrop(this.target, slot, index);
-                                }
-                            });
+                containers.cardArea.appendChild(initialDeck);
+                updateDeckBreathing();
+                initialDeck.addEventListener('click', dealCardsFromDeck, { once: true });
+            }
 
-                            if (!dropped) {
-                                gsap.to(this.target, { 
-                                    x: this.startX, 
-                                    y: this.startY,
-                                    scale: 1, 
-                                    zIndex: 1,
-                                    duration: 0.5, 
-                                    ease: 'power3.out' 
-                                });
-                            }
-                        }
+            function dealCardsFromDeck() {
+                const deck = document.getElementById('initial-deck');
+                if (!deck) return;
+
+                gsap.to('#slot-explanation', { opacity: 0, duration: 0.3, pointerEvents: 'none' });
+
+                const shuffledCards = [...tarotCardsData].sort(() => 0.5 - Math.random());
+                const deckRect = deck.getBoundingClientRect();
+                const areaRect = containers.cardArea.getBoundingClientRect();
+
+                shuffledCards.forEach((cardData, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'tarot-card';
+                    cardElement.dataset.id = cardData.id;
+                    cardElement.innerHTML = `<div class="card-face card-back"></div>`;
+                    
+                    cardElement.style.left = `${deckRect.left - areaRect.left}px`;
+                    cardElement.style.top = `${deckRect.top - areaRect.top}px`;
+                    containers.cardArea.appendChild(cardElement);
+
+                    const slotRect = containers.cardSlots[0].getBoundingClientRect();
+                    const availableWidth = slotRect.left - areaRect.left - cardElement.clientWidth - 20;
+                    
+                    const finalX = Math.random() * availableWidth + 10;
+                    const finalY = Math.random() * (areaRect.height - cardElement.clientHeight - 20) + 10;
+                    const finalRotation = Math.random() * 40 - 20;
+
+                    gsap.to(cardElement, { 
+                        left: finalX, top: finalY, rotation: finalRotation,
+                        duration: 0.7, delay: index * 0.02, ease: 'power2.out' 
                     });
-                    cardDraggables.push(draggable[0]);
                 });
+                
+                gsap.to(deck, { opacity: 0, duration: 0.5, onComplete: () => deck.remove() });
+
+                setTimeout(() => {
+                    document.querySelectorAll('.tarot-card').forEach(card => {
+                        card.addEventListener('mousedown', startDrag);
+                        card.addEventListener('touchstart', startDrag, { passive: false });
+                    });
+                    updateBreathingCards();
+                    updateMagneticSlots();
+                }, shuffledCards.length * 20 + 700);
+            }
+
+            function startDrag(e) {
+                e.preventDefault();
+                draggedCard = e.target.closest('.tarot-card');
+                if (draggedCard.classList.contains('is-dropped')) return;
+
+                initAudio(); playSound('cardClick'); vibrate(50);
+                
+                const rect = draggedCard.getBoundingClientRect();
+                const clientX = e.clientX || e.touches[0].clientX;
+                const clientY = e.clientY || e.touches[0].clientY;
+                dragOffset = { x: clientX - rect.left, y: clientY - rect.top };
+                
+                draggedCard.classList.add('is-dragging');
+                gsap.to(draggedCard, { scale: 1.1, duration: 0.2 });
+                createRipple(clientX - rect.left, clientY - rect.top, draggedCard);
+
+                document.addEventListener('mousemove', handleDrag);
+                document.addEventListener('mouseup', endDrag);
+                document.addEventListener('touchmove', handleDrag, { passive: false });
+                document.addEventListener('touchend', endDrag);
             }
             
-            function handleDrop(cardElement, slot, slotId) {
-                const cardData = tarotCardsData.find(c => c.id == cardElement.dataset.id);
-                chosenCards[slotId] = cardData;
+            function handleDrag(e) {
+                if (!draggedCard) return;
+                e.preventDefault();
+                const clientX = e.clientX || e.touches[0].clientX;
+                const clientY = e.clientY || e.touches[0].clientY;
+                const parentRect = containers.cardArea.getBoundingClientRect();
                 
-                cardElement.classList.add('is-dropped');
-                cardDraggables.find(d => d.target === cardElement).kill();
+                const newX = clientX - parentRect.left - dragOffset.x;
+                const newY = clientY - parentRect.top - dragOffset.y;
+                draggedCard.style.left = `${newX}px`;
+                draggedCard.style.top = `${newY}px`;
 
+                let closestSlot = null;
+                let minDistance = Infinity;
+                const cardRect = draggedCard.getBoundingClientRect();
+                const cardCenterX = cardRect.left + cardRect.width / 2;
+                const cardCenterY = cardRect.top + cardRect.height / 2;
+
+                containers.cardSlots.forEach(slot => {
+                    if (slot.classList.contains('filled')) return;
+                    const slotRect = slot.getBoundingClientRect();
+                    const slotCenterX = slotRect.left + slotRect.width / 2;
+                    const slotCenterY = slotRect.top + slotRect.height / 2;
+                    const distance = Math.hypot(cardCenterX - slotCenterX, cardCenterY - slotCenterY);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestSlot = slot;
+                    }
+                });
+
+                containers.cardSlots.forEach(slot => {
+                    const shouldActivate = (slot === closestSlot && minDistance < slot.clientWidth);
+                    slot.classList.toggle('drag-over', shouldActivate);
+                    slot.classList.toggle('attracting', shouldActivate && effects.magnetic);
+                });
+            }
+
+            function endDrag() {
+                if (!draggedCard) return;
+                document.removeEventListener('mousemove', handleDrag);
+                document.removeEventListener('mouseup', endDrag);
+                document.removeEventListener('touchmove', handleDrag);
+                document.removeEventListener('touchend', endDrag);
+                draggedCard.classList.remove('is-dragging');
+
+                let droppedSlot = document.querySelector('.card-slot.drag-over');
+                if (droppedSlot) {
+                    handleDrop(draggedCard, droppedSlot);
+                } else {
+                    gsap.to(draggedCard, { scale: 1, duration: 0.3, ease: 'back.out' });
+                }
+                
+                containers.cardSlots.forEach(slot => slot.classList.remove('drag-over', 'attracting'));
+                draggedCard = null;
+            }
+
+            function handleDrop(cardElement, slot) {
+                const cardData = tarotCardsData.find(c => c.id == cardElement.dataset.id);
+                const slotId = parseInt(slot.dataset.slotId);
+                const labels = ["Ваш Вызов", "Ваш Путь", "Ваш Исход"];
+                chosenCards[slotId] = cardData;
+
+                playSound('cardDrop'); vibrate(100);
+                cardElement.style.pointerEvents = 'none';
                 slot.classList.add('filled');
                 
-                const state = Flip.getState(cardElement);
-                slot.appendChild(cardElement);
-
-                Flip.from(state, {
-                    duration: 0.5 * getAnimSpeed(),
+                const slotRect = slot.getBoundingClientRect();
+                const areaRect = containers.cardArea.getBoundingClientRect();
+                
+                gsap.to(cardElement, {
+                    left: slotRect.left - areaRect.left, 
+                    top: slotRect.top - areaRect.top,
+                    scale: 1, 
+                    rotation: 0, 
+                    duration: 0.4, 
                     ease: 'power2.inOut',
                     onComplete: () => {
+                        cardElement.removeAttribute('style');
+                        
+                        slot.appendChild(cardElement);
                         cardElement.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>`;
+                        
                         gsap.to(cardElement, { 
-                            rotationY: 180, 
-                            duration: 1 * getAnimSpeed(), 
-                            ease: 'power2.inOut',
-                            onComplete: () => {
-                                if (chosenCards.filter(c => c !== null).length === 3) {
-                                    setTimeout(showResult, 500 * getAnimSpeed());
-                                }
-                            }
+                            rotationY: 180,
+                            duration: 0.7,
+                            ease: 'power2.inOut'
                         });
+
+                        showPlacementToast(labels[slotId], cardData.name);
+                        playSound('cardFlip');
+
+                        if (chosenCards.filter(c => c).length === 3) {
+                            playSound('complete'); vibrate([100, 50, 100]);
+                            if(effects.confetti) createConfettiParticles();
+                            setTimeout(showResult, 2500);
+                        }
                     }
                 });
             }
+            
+            function showPlacementToast(slotName, cardName) {
+                const toast = document.createElement('div');
+                toast.className = 'placement-toast';
+                toast.innerHTML = `<h4>${slotName}</h4><p>${cardName}</p>`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2500);
+            }
 
-            // --- Отображение результата ---
             function showResult() {
-                containers.modalSpread.innerHTML = ''; 
                 const labels = ["Вызов", "Путь", "Исход"];
-                for (let i = 0; i < 3; i++) {
-                    const cardData = chosenCards[i];
-                    if (!cardData) continue;
-
+                containers.modalSpread.innerHTML = chosenCards.map((cardData, i) => {
+                    if (!cardData) return '';
                     const keywordsHTML = cardData.keywords.split(',').map(k => `<span class="keyword">${k.trim()}</span>`).join('');
-
-                    const cardDisplayHTML = `
+                    return `
                         <div class="modal-card-display">
                             <img src="${cardData.image}" alt="${cardData.name}">
                             <div class="card-details">
                                 <h4>${labels[i]}: ${cardData.name}</h4>
                                 <p><em>${cardData.general}</em></p>
-                                <h5>Для проекта:</h5>
-                                <p>${cardData.project}</p>
-                                <h5>Для карьеры:</h5>
-                                <p>${cardData.career}</p>
+                                <h5>Для проекта:</h5> <p>${cardData.project}</p>
+                                <h5>Для карьеры:</h5> <p>${cardData.career}</p>
                                 <div class="keywords-container">${keywordsHTML}</div>
                             </div>
-                        </div>
-                    `;
-                    containers.modalSpread.innerHTML += cardDisplayHTML;
-                }
-                gemini.prompt.value = '';
-                gemini.response.textContent = '';
+                        </div>`;
+                }).join('');
                 modal.overlay.classList.add('active');
             }
 
-            // --- Gemini API ---
-            async function getGeminiPrediction() {
-                if (chosenCards.filter(c => c !== null).length < 3 || !gemini.prompt.value.trim()) {
-                    gemini.response.textContent = 'Пожалуйста, выберите три карты и введите ваш вопрос.';
-                    return;
-                }
-                gemini.loader.style.display = 'block';
-                gemini.response.textContent = '';
-                buttons.geminiSubmit.disabled = true;
-                
-                const promptText = `Ты - IT-оракул. Тебе сделали расклад на 3 карты Таро по вопросу: "${gemini.prompt.value}". 1. Вызов: "${chosenCards[0].name}" (${chosenCards[0].general}). 2. Путь к решению: "${chosenCards[1].name}" (${chosenCards[1].general}). 3. Потенциальный исход: "${chosenCards[2].name}" (${chosenCards[2].general}). Создай целостное, мудрое и краткое толкование (4-5 предложений), связав все три карты в единую историю, которая отвечает на вопрос пользователя.`;
-
-                try {
-                    const apiKey = ""; // Canvas will provide the key
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                    const payload = { contents: [{ role: "user", parts: [{ text: promptText }] }] };
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error(`API call failed: ${response.status}`);
-                    const result = await response.json();
-                    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-                        gemini.response.textContent = result.candidates[0].content.parts[0].text;
-                    } else { throw new Error("Invalid API response structure."); }
-                } catch (error) {
-                    console.error('Error calling Gemini API:', error);
-                    gemini.response.textContent = 'Произошел сбой в цифровых потоках. Попробуйте позже.';
-                } finally {
-                    gemini.loader.style.display = 'none';
-                    buttons.geminiSubmit.disabled = false;
-                }
+            function initConfetti() {
+                confettiCanvas = document.getElementById('confetti-canvas');
+                confettiContext = confettiCanvas.getContext('2d');
+                const resize = () => { confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight; };
+                window.addEventListener('resize', resize); resize();
             }
-
-            // --- Сброс и Dev Panel ---
-            function resetApp() {
-                modal.overlay.classList.remove('active');
-                setTimeout(() => switchScreen('start'), 500 * getAnimSpeed());
+            function createConfettiParticles() {
+                if (!effects.confetti) return;
+                for (let i = 0; i < 50; i++) confettiParticles.push({ x: Math.random() * confettiCanvas.width, y: -20, vx: Math.random() * 10 - 5, vy: Math.random() * 5 + 5, color: ['#00aaff', '#0078d7', '#ffffff'][Math.floor(Math.random() * 3)], size: Math.random() * 8 + 4 });
+                if (confettiParticles.length > 0) animateConfetti();
             }
-
-            function getAnimSpeed() { return parseFloat(document.documentElement.style.getPropertyValue('--anim-speed')) || 1; }
-
+            function animateConfetti() {
+                confettiContext.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                for (let i = confettiParticles.length - 1; i >= 0; i--) {
+                    const p = confettiParticles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.2;
+                    confettiContext.fillStyle = p.color; confettiContext.fillRect(p.x, p.y, p.size, p.size);
+                    if (p.y > confettiCanvas.height + 20) confettiParticles.splice(i, 1);
+                }
+                if (confettiParticles.length > 0) requestAnimationFrame(animateConfetti);
+            }
+            
             function setupDevPanel() {
                 devPanel.toggle.addEventListener('click', () => devPanel.content.classList.toggle('active'));
-                devPanel.themeSelect.addEventListener('change', (e) => {
-                    document.body.className = e.target.value;
-                    initParticles();
-                });
-                devPanel.bgTypeSelect.addEventListener('change', (e) => {
-                    const controls = document.querySelectorAll('.particles-control');
-                    if (e.target.value === 'gradient') {
-                        backgrounds.particles.style.opacity = '0';
-                        backgrounds.gradient.classList.add('active');
-                        controls.forEach(c => c.style.display = 'none');
-                    } else {
-                        backgrounds.particles.style.opacity = '1';
-                        backgrounds.gradient.classList.remove('active');
-                        controls.forEach(c => c.style.display = 'flex');
-                    }
-                });
-                devPanel.animSpeed.slider.addEventListener('input', (e) => {
-                    const speed = parseFloat(e.target.value);
-                    document.documentElement.style.setProperty('--anim-speed', speed);
-                    devPanel.animSpeed.value.textContent = speed.toFixed(1);
-                });
-                devPanel.dragSpeed.slider.addEventListener('input', (e) => {
-                    dragResistance = parseFloat(e.target.value);
-                    devPanel.dragSpeed.value.textContent = dragResistance.toFixed(2);
-                    makeCardsDraggable(); // Re-init with new resistance
-                });
-                devPanel.particlesCount.slider.addEventListener('input', (e) => { particleSettings.count = parseInt(e.target.value, 10); devPanel.particlesCount.value.textContent = particleSettings.count; initParticles(); });
-                devPanel.particlesSpeed.slider.addEventListener('input', (e) => { particleSettings.speed = parseFloat(e.target.value); devPanel.particlesSpeed.value.textContent = particleSettings.speed.toFixed(1); initParticles(); });
-                devPanel.particlesSize.slider.addEventListener('input', (e) => { particleSettings.size = parseFloat(e.target.value); devPanel.particlesSize.value.textContent = particleSettings.size.toFixed(1); initParticles(); });
+                devPanel.themeSelect.addEventListener('change', (e) => { document.body.className = e.target.value; initParticles(); });
+                devPanel.soundToggle.addEventListener('change', (e) => { effects.sounds.enabled = e.target.checked; saveEffectsToStorage(); });
+                devPanel.breathingToggle.addEventListener('change', (e) => { effects.breathing.enabled = e.target.checked; updateBreathingCards(); saveEffectsToStorage(); });
+                devPanel.rippleToggle.addEventListener('change', (e) => { effects.ripple.enabled = e.target.checked; saveEffectsToStorage(); });
+                devPanel.magneticToggle.addEventListener('change', (e) => { effects.magnetic.enabled = e.target.checked; updateMagneticSlots(); saveEffectsToStorage(); });
+                devPanel.confettiToggle.addEventListener('change', (e) => { effects.confetti.enabled = e.target.checked; saveEffectsToStorage(); });
+                devPanel.vibrationToggle.addEventListener('change', (e) => { effects.vibration.enabled = e.target.checked; saveEffectsToStorage(); });
+                devPanel.deckBreathingToggle.addEventListener('change', (e) => { effects.deckBreathing.enabled = e.target.checked; updateDeckBreathing(); saveEffectsToStorage(); });
+                devPanel.restartBtn.addEventListener('click', () => { saveEffectsToStorage(); location.reload(); });
             }
 
-            // --- Инициализация и обработчики событий ---
             function init() {
-                initParticles();
-                setupDevPanel();
-                
-                buttons.start.addEventListener('click', () => { switchScreen('shuffle'); setupShuffleInteraction(); });
-                buttons.deal.addEventListener('click', startSpread);
-                buttons.closeModal.addEventListener('click', resetApp);
-                buttons.geminiSubmit.addEventListener('click', getGeminiPrediction);
-                gemini.prompt.addEventListener('keydown', (e) => { if (e.key === 'Enter') getGeminiPrediction(); });
-                
-                containers.cardSlots.forEach(slot => { slot.dataset.slotLabel = slot.querySelector('.slot-label').textContent; });
-                
-                window.addEventListener('resize', () => {
-                    if(screens.choice.classList.contains('active')) {
-                        layoutCards();
-                    }
+                loadEffectsFromStorage(); applyEffectsToUI(); initParticles(); initConfetti(); setupDevPanel();
+                buttons.start.addEventListener('click', () => {
+                    switchScreen('focus'); containers.app.classList.add('focus-active');
                 });
-
+                screens.focus.addEventListener('click', () => {
+                    containers.app.classList.remove('focus-active');
+                    setupChoiceScreen();
+                });
+                buttons.closeModal.addEventListener('click', () => {
+                    modal.overlay.classList.remove('active');
+                    setTimeout(setupChoiceScreen, 500);
+                });
                 switchScreen('start');
             }
 

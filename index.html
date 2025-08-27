@@ -11,6 +11,10 @@
         :root {
             --font-main: 'Inter', sans-serif;
             --font-title: 'Orbitron', sans-serif;
+            --card-width: 80px;
+            --card-height: 128px;
+            --card-spacing: 20px;
+            --animation-duration: 0.7s;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -121,7 +125,7 @@
             border-radius: 10px; backdrop-filter: blur(10px); display: flex; gap: 10px;
         }
         .card-slot {
-            width: 80px; height: 128px; border: 2px dashed var(--primary-color);
+            width: var(--card-width); height: var(--card-height); border: 2px dashed var(--primary-color);
             border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center;
             color: var(--primary-color); transition: all 0.3s; font-size: 0.8rem;
         }
@@ -129,26 +133,21 @@
         .card-slot .slot-label { font-family: var(--font-title); text-align: center; }
 
         .tarot-card {
-            width: 80px; height: 128px; position: absolute; cursor: grab;
+            width: var(--card-width); height: var(--card-height); position: absolute; cursor: grab;
             transform-style: preserve-3d; border-radius: 6px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.4); touch-action: none;
-            transform: translateZ(0); /* Для улучшения рендеринга */
+            transform: translateZ(0);
+            will-change: transform;
         }
         .tarot-card:active { cursor: grabbing; }
         .tarot-card.is-dragging { z-index: 1000; box-shadow: 0 8px 25px rgba(0,0,0,0.6); }
         
-		.card-slot .tarot-card {
-		  width: 100%;
-		  height: 100%;
-		  cursor: default;
-		  position: relative;        
-		  box-shadow: none;
-		  display: block;
-		  left: auto;
-		  top: auto;
-          /* Сохраняем 3D-контекст после попадания в слот */
-          transform-style: preserve-3d;
-		}
+        .card-slot .tarot-card {
+            width: 100%; height: 100%; cursor: default;
+            position: relative; box-shadow: none;
+            display: block; left: auto; top: auto;
+            transform-style: preserve-3d;
+        }
 
         .card-face {
             position: absolute; width: 100%; height: 100%;
@@ -157,30 +156,16 @@
         }
         .card-back { background: var(--card-back-bg); }
         .card-front { transform: rotateY(180deg); }
-		
 
         /* --- АДАПТИВНОСТЬ --- */
         @media (max-width: 768px) and (orientation: portrait) { #spread-slots-sidebar { bottom: 20px; left: 50%; transform: translateX(-50%); flex-direction: row; padding: 15px; } }
-        @media (max-width: 768px) and (orientation: landscape) { #spread-slots-sidebar { right: 20px; top: 50%; transform: translateY(-50%); flex-direction: column; padding: 15px; } }
+        @media (max-width: 768px) and (orientation: landscape) { #spread-slots-sidebar { right: 20px; top: 50%; transform: translateY(-50%); flex-direction: column; padding: 15px; } .card-slot { width: 60px; height: 96px; font-size: 0.7rem; } :root { --card-width: 60px; --card-height: 96px; } }
         @media (min-width: 769px) { #spread-slots-sidebar { right: 30px; top: 50%; transform: translateY(-50%); flex-direction: column; padding: 20px; } }
-        @media (min-width: 1025px) { .card-slot { width: 100px; height: 160px; } #spread-slots-sidebar { right: 40px; } }
+        @media (min-width: 1025px) { .card-slot { width: 100px; height: 160px; } #spread-slots-sidebar { right: 40px; } :root { --card-width: 100px; --card-height: 160px; } }
         
-        /* --- МОДАЛЬНОЕ ОКНО И УВЕДОМЛЕНИЯ --- */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.5s; padding: 10px; }
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        .modal-content { background: rgba(10, 20, 40, 0.95); border: 1px solid var(--primary-color); border-radius: 16px; padding: 1rem; width: 100%; max-width: 1000px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 0 40px var(--primary-color); transform: scale(0.9); transition: transform 0.5s; }
-        .modal-overlay.active .modal-content { transform: scale(1); }
-        .close-button { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-color); font-size: 2rem; cursor: pointer; opacity: 0.7; transition: opacity 0.3s, transform 0.3s; z-index: 10; }
-        .close-button:hover { opacity: 1; transform: rotate(90deg); }
-        .modal-spread-container { display: flex; flex-direction: column; gap: 1rem; }
-        .modal-card-display { display: flex; gap: 1rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 10px; border-left: 4px solid var(--primary-color); }
-        .modal-card-display img { width: 80px; height: 128px; flex-shrink: 0; border-radius: 6px; border: 1px solid var(--card-border); object-fit: cover; }
-        .card-details h4 { font-family: var(--font-title); color: var(--highlight-color); font-size: 1.2rem; margin-bottom: 0.5rem; }
-        .card-details h5 { font-weight: bold; margin-top: 0.8rem; margin-bottom: 0.25rem; color: var(--secondary-color); font-size: 0.95rem; }
-        .card-details p { font-size: 0.85rem; opacity: 0.9; line-height: 1.4; }
-        .keywords-container { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; }
-        .keyword { background: rgba(0,0,0,0.3); border: 1px solid var(--primary-color); padding: 0.2rem 0.6rem; border-radius: 15px; font-size: 0.7rem; }
-
+        #slot-explanation { position: absolute; top: 5%; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; line-height: 1.8; transition: opacity 0.5s; }
+        #slot-explanation strong { color: var(--highlight-color); font-weight: normal;}
+        
         .placement-toast {
             position: fixed; bottom: 20%; left: 50%; background: rgba(10, 20, 40, 0.9);
             color: var(--text-color); padding: 1rem 2rem; border-radius: 8px;
@@ -189,19 +174,8 @@
             animation: toast-fade 2.5s ease-out forwards;
         }
         .placement-toast h4 { font-family: var(--font-title); color: var(--highlight-color); margin-bottom: 0.25rem; }
-        @keyframes toast-fade {
-            0% { opacity: 0; transform: translate(-50%, 20px); }
-            15%, 85% { opacity: 1; transform: translate(-50%, 0); }
-            100% { opacity: 0; transform: translate(-50%, -20px); }
-        }
+        @keyframes toast-fade { 0% { opacity: 0; transform: translate(-50%, 20px); } 15%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -20px); } }
 
-        #slot-explanation {
-            position: absolute; top: 5%; left: 50%;
-            transform: translateX(-50%); width: 90%; max-width: 500px;
-            line-height: 1.8; transition: opacity 0.5s;
-        }
-        #slot-explanation strong { color: var(--highlight-color); font-weight: normal;}
-        
         /* DEV PANEL */
         #dev-panel { position: fixed; bottom: 20px; left: 20px; z-index: 200; }
         #dev-panel-toggle { width: 50px; height: 50px; background: rgba(0,0,0,0.5); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 1px solid white; }
@@ -214,25 +188,129 @@
 
         /* ЭФФЕКТЫ */
         .tarot-card.breathing-glow { animation: cardGlow 3.5s ease-in-out infinite; }
-        
-        /* ИСПРАВЛЕННЫЙ КОД СВЕЧЕНИЯ */
-        @keyframes cardGlow {
-            0%, 100% {
-                box-shadow: 0 0 10px rgba(0, 170, 255, 0.4);
-            }
-            50% {
-                box-shadow: 0 0 25px rgba(0, 170, 255, 0.9);
-            }
-        }
-        
+        @keyframes cardGlow { 0%, 100% { box-shadow: 0 0 10px rgba(0, 170, 255, 0.4); } 50% { box-shadow: 0 0 25px rgba(0, 170, 255, 0.9); } }
         .ripple-v1 { position: absolute; pointer-events: none; border-radius: 50%; background: radial-gradient(circle, rgba(0, 170, 255, 0.4) 0%, transparent 70%); transform: scale(0); animation: rippleEffect 0.6s ease-out; }
         @keyframes rippleEffect { to { transform: scale(4); opacity: 0; } }
-
         .card-slot.magnetic-pulse.attracting { transform: scale(1.08); border-style: solid; animation: magneticPulse 0.5s ease-in-out infinite alternate; }
         @keyframes magneticPulse { from { box-shadow: 0 0 15px var(--highlight-color); } to { box-shadow: 0 0 25px var(--highlight-color), 0 0 35px rgba(0, 170, 255, 0.5); } }
-
         #initial-deck.deck-breathing-mystic { animation: deckMystic 2.5s ease-in-out infinite; }
         @keyframes deckMystic { 0%, 100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1) drop-shadow(0 0 10px rgba(0, 170, 255, 0.3)); } 50% { transform: translate(-50%, -50%) scale(1.08); filter: brightness(1.1) drop-shadow(0 0 20px rgba(0, 170, 255, 0.8)); } }
+        
+        /*
+        ==============================================
+        === СТИЛИ ДЛЯ ОКНА РЕЗУЛЬТАТОВ (ИНТЕГРАЦИЯ) ===
+        ==============================================
+        */
+        :root {
+            --challenge-primary: #ff6b35; --challenge-secondary: #ff8c42; --challenge-light: #ffb3a0; --challenge-bg: rgba(255, 107, 53, 0.15); --challenge-border: #ff6b35; --challenge-gradient: linear-gradient(135deg, #ff6b35, #ff8c42);
+            --path-primary: #0078d7; --path-secondary: #00aaff; --path-light: #66ccff; --path-bg: rgba(0, 120, 215, 0.15); --path-border: #0078d7; --path-gradient: linear-gradient(135deg, #0078d7, #00aaff);
+            --outcome-primary: #00d084; --outcome-secondary: #00e676; --outcome-light: #66ffb3; --outcome-bg: rgba(0, 208, 132, 0.15); --outcome-border: #00d084; --outcome-gradient: linear-gradient(135deg, #00d084, #00e676);
+            --ai-primary: #7c3aed; --ai-secondary: #a855f7; --ai-light: #c084fc; --ai-bg: rgba(124, 58, 237, 0.15); --ai-border: #7c3aed; --ai-gradient: linear-gradient(135deg, #7c3aed, #a855f7);
+        }
+
+        .modal-overlay { display: none; /* Скрыто по умолчанию */ position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); justify-content: center; align-items: center; z-index: 100; padding: 15px; }
+        .modal-overlay.active { display: flex; }
+        
+        .modal-content { background: #0a1428; border: 2px solid var(--primary-color); border-radius: 16px; width: 100%; height: 100%; max-width: 1200px; max-height: 95vh; position: relative; box-shadow: 0 0 40px var(--primary-color); overflow: hidden; transition: border-color 0.4s ease, box-shadow 0.4s ease; }
+        .modal-close-button { position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.5); border: 2px solid var(--primary-color); border-radius: 50%; color: #fff; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; transition: all 0.3s ease; z-index: 10; }
+        .modal-close-button:hover { transform: rotate(90deg) scale(1.1); background: rgba(255,0,0,0.3); border-color: #ff4444; }
+
+        .side-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 80px; background: rgba(0,0,0,0.6); border: 2px solid var(--primary-color); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; z-index: 10; }
+        .side-nav.left { left: -2px; border-radius: 0 25px 25px 0; border-left: none; }
+        .side-nav.right { right: -2px; border-radius: 25px 0 0 25px; border-right: none; }
+        .side-nav svg { width: 24px; height: 24px; fill: var(--highlight-color); transition: fill 0.3s ease; }
+        .side-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+        
+        .modal-content.challenge-theme { border-color: var(--challenge-primary); }
+        .challenge-theme .side-nav { border-color: var(--challenge-primary); } .challenge-theme .side-nav svg { fill: var(--challenge-secondary); }
+        .modal-content.path-theme { border-color: var(--path-primary); }
+        .path-theme .side-nav { border-color: var(--path-primary); } .path-theme .side-nav svg { fill: var(--path-secondary); }
+        .modal-content.outcome-theme { border-color: var(--outcome-primary); }
+        .outcome-theme .side-nav { border-color: var(--outcome-primary); } .outcome-theme .side-nav svg { fill: var(--outcome-secondary); }
+        .modal-content.ai-theme { border-color: var(--ai-primary); }
+        .ai-theme .side-nav { border-color: var(--ai-primary); } .ai-theme .side-nav svg { fill: var(--ai-secondary); }
+
+        .screens-container { width: 100%; height: 100%; position: relative; overflow: hidden; z-index: 2; }
+        .result-screen { position: absolute; width: 100%; height: 100%; padding: 1.5rem; display: flex; opacity: 0; transform: translateX(100%); transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .result-screen.active { opacity: 1; transform: translateX(0); }
+        .result-screen.prev { transform: translateX(-100%); }
+
+        .result-image-section { flex: 1.2; display: flex; align-items: center; justify-content: center; padding-right: 1.5rem; }
+        .result-image-wrapper { width: 100%; max-width: 380px; aspect-ratio: 5/8; border-radius: 15px; border: 3px solid; position: relative; cursor: zoom-in; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden; }
+        .result-image { width: 100%; height: 100%; object-fit: cover; }
+        .result-image-wrapper:hover .result-image { transform: scale(1.05); }
+
+        .result-image-wrapper::after { content: ''; position: absolute; inset: -5px; border-radius: 20px; opacity: 0.6; z-index: -1; animation: glow-pulse 4s ease-in-out infinite; }
+        .challenge-theme .result-image-wrapper { border-color: var(--challenge-border); }
+        .challenge-theme .result-image-wrapper::after { box-shadow: 0 0 60px 10px var(--challenge-primary); }
+        .path-theme .result-image-wrapper { border-color: var(--path-border); }
+        .path-theme .result-image-wrapper::after { box-shadow: 0 0 60px 10px var(--path-primary); }
+        .outcome-theme .result-image-wrapper { border-color: var(--outcome-border); }
+        .outcome-theme .result-image-wrapper::after { box-shadow: 0 0 60px 10px var(--outcome-primary); }
+        .ai-theme .result-image-wrapper { border-color: var(--ai-border); }
+        .ai-theme .result-image-wrapper::after { box-shadow: 0 0 60px 10px var(--ai-primary); }
+        @keyframes glow-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+        .result-content-section { flex: 1; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; padding: 0.5rem; }
+        .result-title-section { text-align: center; margin-bottom: 1rem; }
+        .result-aspect-label { font-family: var(--font-title); font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+        .result-card-name { font-family: var(--font-title); font-size: 1.8rem; color: var(--secondary-color); margin-top: 0.5rem; }
+        .challenge-theme .result-aspect-label { background: var(--challenge-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .path-theme .result-aspect-label { background: var(--path-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .outcome-theme .result-aspect-label { background: var(--outcome-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .ai-theme .result-aspect-label { background: var(--ai-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .guidance-text { font-style: italic; line-height: 1.6; color: var(--text-color); font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem; border-left: 3px solid; padding-left: 1rem; }
+        .challenge-theme .guidance-text { border-color: var(--challenge-primary); }
+        .path-theme .guidance-text { border-color: var(--path-primary); }
+        .outcome-theme .guidance-text { border-color: var(--outcome-primary); }
+
+        .content-block { border-radius: 12px; padding: 1.2rem; backdrop-filter: blur(5px); }
+        .challenge-theme .content-block { background: rgba(255,107,53,0.1); border: 1px solid rgba(255,107,53,0.2); }
+        .path-theme .content-block { background: rgba(0,120,215,0.1); border: 1px solid rgba(0,120,215,0.2); }
+        .outcome-theme .content-block { background: rgba(0,208,132,0.1); border: 1px solid rgba(0,208,132,0.2); }
+        .content-block-header { display: flex; align-items: center; gap: 0.8rem; font-family: var(--font-title); font-size: 1.1rem; color: var(--secondary-color); cursor: pointer; }
+        .content-block-details { max-height: 0; overflow: hidden; transition: max-height 0.6s ease-in-out; }
+        .content-block.open .content-block-details { max-height: 500px; padding-top: 1rem; }
+        .content-text { color: var(--text-color); line-height: 1.6; font-size: 0.95rem; }
+
+        .keywords { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+        .keyword { padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.75rem; font-weight: 500; }
+        .challenge-theme .keyword { background: var(--challenge-bg); border: 1px solid var(--challenge-primary); color: var(--challenge-light); }
+        .path-theme .keyword { background: var(--path-bg); border: 1px solid var(--path-primary); color: var(--path-light); }
+        .outcome-theme .keyword { background: var(--outcome-bg); border: 1px solid var(--outcome-primary); color: var(--outcome-light); }
+        
+        #ai-screen-content { text-align: center; max-width: 500px; margin: 0 auto; }
+        #ai-screen-content .ai-title { font-size: 2.5rem; background: var(--ai-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        #ai-screen-content .ai-subtitle { font-size: 1.1rem; margin: 1rem 0 2rem; }
+        .ai-action-btn { padding: 1.2rem 3rem; border-radius: 50px; font-family: var(--font-title); font-size: 1.2rem; cursor: pointer; transition: all 0.4s ease; border: none; background: var(--ai-gradient); color: white; box-shadow: 0 8px 30px rgba(124, 58, 237, 0.4); }
+        .ai-action-btn:hover { transform: translateY(-4px) scale(1.05); }
+
+        .fullscreen-overlay, .ai-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 10000; opacity: 0; transition: opacity 0.4s ease; backdrop-filter: blur(20px); }
+        .fullscreen-overlay.active, .ai-overlay.active { display: flex; opacity: 1; }
+        .fullscreen-image { max-width: 90vw; max-height: 90vh; border-radius: 20px; box-shadow: 0 0 100px rgba(0,170,255,0.5); }
+        .ai-panel { background: linear-gradient(135deg, rgba(10,20,40,0.95), rgba(30,50,80,0.95)); border: 2px solid var(--ai-primary); border-radius: 20px; padding: 2.5rem; max-width: 700px; width: 90%; animation: aiPanelAppear 0.6s ease; }
+        @keyframes aiPanelAppear { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        .ai-panel .ai-title { font-family: var(--font-title); font-size: 1.5rem; background: var(--ai-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+        .ai-input-group { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+        .ai-input { flex: 1; padding: 1.2rem; background: rgba(0,0,0,0.4); border: 2px solid var(--ai-primary); border-radius: 25px; color: #fff; font-size: 1rem; }
+        .ai-btn { padding: 1rem; border: none; border-radius: 25px; background: var(--ai-gradient); color: white; cursor: pointer; }
+        .ai-response { background: rgba(0,0,0,0.4); border: 1px solid var(--ai-secondary); border-radius: 15px; padding: 1.5rem; margin-top: 1rem; min-height: 120px; display: none; }
+        .ai-response.visible { display: block; }
+
+        @media (max-width: 768px) {
+            .result-screen { flex-direction: column; padding: 1rem; }
+            .result-image-section { flex: 0; padding-right: 0; padding-bottom: 1rem; align-self: center; }
+            .result-image-wrapper { max-width: 250px; }
+            .result-content-section { flex: 1; max-height: 50vh; }
+        }
+        
+        .result-content-section::-webkit-scrollbar { width: 6px; }
+        .result-content-section::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .result-content-section::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 3px; }
+        .challenge-theme .result-content-section::-webkit-scrollbar-thumb { background: var(--challenge-primary); }
+        .path-theme .result-content-section::-webkit-scrollbar-thumb { background: var(--path-primary); }
+        .outcome-theme .result-content-section::-webkit-scrollbar-thumb { background: var(--outcome-primary); }
     </style>
 </head>
 <body class="theme-gazprom-classic">
@@ -269,20 +347,34 @@
     </div>
 
     <div id="result-modal" class="modal-overlay">
-        <div class="modal-content">
-             <button id="close-modal-btn" class="close-button">&times;</button>
-            <div class="modal-spread-container"></div>
-            <div class="gemini-section">
-                <h3>Персональное толкование от AI</h3>
-                <p>Задайте уточняющий вопрос, чтобы получить более глубокое предсказание.</p>
-                <div class="gemini-input-group">
-                    <input type="text" id="gemini-prompt" placeholder="Например: Какие скрытые риски есть в этом проекте?">
-                    <button id="gemini-submit">Получить ответ</button>
+        <div class="modal-content" id="modal-content">
+            <button id="close-modal-btn" class="modal-close-button">&times;</button>
+            <button class="side-nav left" id="prev-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            </button>
+            <button class="side-nav right" id="next-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+            </button>
+            <div class="screens-container" id="screens-container">
                 </div>
-                <div id="gemini-response-container">
-                    <div id="gemini-loader" class="loader" style="display: none;"></div>
-                    <p id="gemini-response"></p>
-                </div>
+        </div>
+    </div>
+
+    <div class="fullscreen-overlay" id="fullscreen-overlay">
+        <img id="fullscreen-image" class="fullscreen-image" src="" alt="">
+    </div>
+
+    <div class="ai-overlay" id="ai-overlay">
+        <div class="ai-panel">
+            <div class="ai-title">🤖 Персональный анализ</div>
+            <p>Задайте уточняющий вопрос по вашему раскладу, чтобы получить глубокую интерпретацию.</p>
+            <div class="ai-input-group">
+                <input type="text" class="ai-input" id="ai-question" placeholder="Например: какие риски в проекте?">
+                <button class="ai-btn" onclick="ResultScreen.requestAI()"><span id="ai-btn-text">Спросить</span></button>
+            </div>
+            <div class="ai-response" id="ai-response"></div>
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <button class="ai-btn" onclick="ResultScreen.hideAI()" style="padding: 0.8rem 2rem;">Закрыть</button>
             </div>
         </div>
     </div>
@@ -301,27 +393,13 @@
                     <option value="theme-gazprom-light">Полярный день</option>
                 </select>
             </div>
-            <div class="dev-group">
-                <label>Звуки (Органичные)<input type="checkbox" id="sound-effects-toggle"></label>
-            </div>
-            <div class="dev-group">
-                <label>Дышащие карты (свечение)<input type="checkbox" id="breathing-cards-toggle"></label>
-            </div>
-            <div class="dev-group">
-                <label>Ripple эффект (заливка)<input type="checkbox" id="ripple-effects-toggle"></label>
-            </div>
-            <div class="dev-group">
-                <label>Магнитное притяжение<input type="checkbox" id="magnetic-snap-toggle"></label>
-            </div>
-            <div class="dev-group">
-                <label>Confetti анимация<input type="checkbox" id="confetti-toggle"></label>
-            </div>
-            <div class="dev-group">
-                <label>Вибрация телефона<input type="checkbox" id="vibration-toggle"></label>
-            </div>
-            <div class="dev-group">
-                <label>Дыхание колоды<input type="checkbox" id="deck-breathing-toggle"></label>
-            </div>
+            <div class="dev-group"><label>Звуки<input type="checkbox" id="sound-effects-toggle"></label></div>
+            <div class="dev-group"><label>Свечение карт<input type="checkbox" id="breathing-cards-toggle"></label></div>
+            <div class="dev-group"><label>Ripple эффект<input type="checkbox" id="ripple-effects-toggle"></label></div>
+            <div class="dev-group"><label>Магнитное притяжение<input type="checkbox" id="magnetic-snap-toggle"></label></div>
+            <div class="dev-group"><label>Confetti<input type="checkbox" id="confetti-toggle"></label></div>
+            <div class="dev-group"><label>Вибрация<input type="checkbox" id="vibration-toggle"></label></div>
+            <div class="dev-group"><label>Дыхание колоды<input type="checkbox" id="deck-breathing-toggle"></label></div>
             <button id="restart-app-btn">Перезапустить</button>
         </div>
     </div>
@@ -329,386 +407,302 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script src="data.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const screens = { start: document.getElementById('start-screen'), focus: document.getElementById('focus-screen'), choice: document.getElementById('choice-screen') };
-            const buttons = { start: document.getElementById('start-btn'), closeModal: document.getElementById('close-modal-btn'), geminiSubmit: document.getElementById('gemini-submit') };
-            const containers = { cardSlots: document.querySelectorAll('.card-slot'), cardArea: document.getElementById('card-selection-area'), modalSpread: document.querySelector('.modal-spread-container'), app: document.querySelector('.app-container') };
-            const modal = { overlay: document.getElementById('result-modal') };
-            const devPanel = {
-                toggle: document.getElementById('dev-panel-toggle'), content: document.getElementById('dev-panel-content'),
-                themeSelect: document.getElementById('theme-select'), soundToggle: document.getElementById('sound-effects-toggle'),
-                breathingToggle: document.getElementById('breathing-cards-toggle'), rippleToggle: document.getElementById('ripple-effects-toggle'),
-                magneticToggle: document.getElementById('magnetic-snap-toggle'), confettiToggle: document.getElementById('confetti-toggle'),
-                vibrationToggle: document.getElementById('vibration-toggle'), deckBreathingToggle: document.getElementById('deck-breathing-toggle'),
-                restartBtn: document.getElementById('restart-app-btn')
+            const CONSTANTS = { CARD_SPACING: 20, ANIMATION_DURATION: 700, TOAST_DURATION: 2500, MIN_CARD_DISTANCE: 100, CONFETTI_COUNT: 50 };
+            const UI = {
+                screens: { start: document.getElementById('start-screen'), focus: document.getElementById('focus-screen'), choice: document.getElementById('choice-screen') },
+                buttons: { start: document.getElementById('start-btn') },
+                containers: { cardSlots: document.querySelectorAll('.card-slot'), cardArea: document.getElementById('card-selection-area'), app: document.querySelector('.app-container') },
+                devPanel: {
+                    toggle: document.getElementById('dev-panel-toggle'), content: document.getElementById('dev-panel-content'),
+                    elements: { themeSelect: document.getElementById('theme-select'), soundToggle: document.getElementById('sound-effects-toggle'), breathingToggle: document.getElementById('breathing-cards-toggle'), rippleToggle: document.getElementById('ripple-effects-toggle'), magneticToggle: document.getElementById('magnetic-snap-toggle'), confettiToggle: document.getElementById('confetti-toggle'), vibrationToggle: document.getElementById('vibration-toggle'), deckBreathingToggle: document.getElementById('deck-breathing-toggle'), restartBtn: document.getElementById('restart-app-btn') }
+                }
+            };
+            let appState = { chosenCards: new Array(3).fill(null), draggedCard: null, dragOffset: { x: 0, y: 0 }, audioContext: null, sounds: {}, confettiCanvas: null, confettiContext: null, confettiParticles: [] };
+            let effects = { sounds: { enabled: true }, breathing: { enabled: true }, ripple: { enabled: true }, magnetic: { enabled: true }, confetti: { enabled: true }, vibration: { enabled: false }, deckBreathing: { enabled: false } };
+
+            const Settings = {
+                load() { const saved = localStorage.getItem('tarot-effects'); if (saved) { try { effects = { ...effects, ...JSON.parse(saved) }; } catch (e) { console.error('Ошибка загрузки настроек:', e); } } },
+                save() { localStorage.setItem('tarot-effects', JSON.stringify(effects)); },
+                applyToUI() { Object.entries(UI.devPanel.elements).forEach(([key, element]) => { if (element && element.type === 'checkbox') { const effectName = key.replace('Toggle', ''); if (effects[effectName]) { element.checked = effects[effectName].enabled; } } }); }
             };
 
-            let chosenCards = new Array(3).fill(null);
-            let draggedCard = null, dragOffset = { x: 0, y: 0 };
-            let confettiCanvas, confettiContext, confettiParticles = [];
-            let audioContext, sounds = {};
-
-            let effects = {
-                sounds: { enabled: true }, breathing: { enabled: true }, ripple: { enabled: true },
-                magnetic: { enabled: true }, confetti: { enabled: true }, vibration: { enabled: false },
-                deckBreathing: { enabled: false }
+            const Audio = {
+                init() { if (!appState.audioContext && effects.sounds.enabled) { try { const AudioContext = window.AudioContext || window.webkitAudioContext; appState.audioContext = new AudioContext(); this.createSounds(); } catch (e) { console.warn('Audio not supported:', e); effects.sounds.enabled = false; } } },
+                createSounds() { const createTone = (frequency, duration, volume, type = 'sine') => () => { if (!appState.audioContext || !effects.sounds.enabled) return; try { const oscillator = appState.audioContext.createOscillator(); const gainNode = appState.audioContext.createGain(); oscillator.connect(gainNode); gainNode.connect(appState.audioContext.destination); oscillator.type = type; oscillator.frequency.setValueAtTime(frequency, appState.audioContext.currentTime); gainNode.gain.setValueAtTime(0, appState.audioContext.currentTime); gainNode.gain.linearRampToValueAtTime(volume, appState.audioContext.currentTime + 0.01); gainNode.gain.exponentialRampToValueAtTime(0.001, appState.audioContext.currentTime + duration); oscillator.start(appState.audioContext.currentTime); oscillator.stop(appState.audioContext.currentTime + duration); } catch (e) { console.warn('Ошибка воспроизведения звука:', e); } }; appState.sounds = { cardClick: createTone(659, 0.5, 0.15), cardDrop: createTone(523, 0.8, 0.2), cardFlip: createTone(784, 0.6, 0.12), complete: () => { createTone(523, 0.5, 0.1)(); setTimeout(() => createTone(659, 0.5, 0.1)(), 100); setTimeout(() => createTone(784, 0.5, 0.1)(), 200); } }; },
+                play(soundName) { if (appState.sounds[soundName]) { appState.sounds[soundName](); } }
             };
 
-            function loadEffectsFromStorage() {
-                const saved = localStorage.getItem('tarot-effects');
-                if (saved) { try { effects = { ...effects, ...JSON.parse(saved) }; } catch (e) { console.error(e); } }
-            }
-            function saveEffectsToStorage() { localStorage.setItem('tarot-effects', JSON.stringify(effects)); }
+            const Vibration = { trigger(pattern) { if (effects.vibration.enabled && 'vibrate' in navigator) { try { navigator.vibrate(pattern); } catch (e) { console.warn('Vibration failed:', e); } } } };
+            const Effects = {
+                createRipple(x, y, element) { if (!effects.ripple.enabled) return; const ripple = document.createElement('div'); ripple.className = 'ripple-v1'; const size = 100; Object.assign(ripple.style, { width: `${size}px`, height: `${size}px`, left: `${x - size / 2}px`, top: `${y - size / 2}px` }); element.appendChild(ripple); setTimeout(() => ripple.remove(), 600); },
+                updateBreathingCards() { document.querySelectorAll('.tarot-card:not(.is-dropped)').forEach(card => card.classList.toggle('breathing-glow', effects.breathing.enabled)); },
+                updateMagneticSlots() { UI.containers.cardSlots.forEach(slot => slot.classList.toggle('magnetic-pulse', effects.magnetic.enabled)); },
+                updateDeckBreathing() { const deck = document.getElementById('initial-deck'); if (deck) { deck.classList.toggle('deck-breathing-mystic', effects.deckBreathing.enabled); } }
+            };
 
-            function applyEffectsToUI() {
-                devPanel.soundToggle.checked = effects.sounds.enabled;
-                devPanel.breathingToggle.checked = effects.breathing.enabled;
-                devPanel.rippleToggle.checked = effects.ripple.enabled;
-                devPanel.magneticToggle.checked = effects.magnetic.enabled;
-                devPanel.confettiToggle.checked = effects.confetti.enabled;
-                devPanel.vibrationToggle.checked = effects.vibration.enabled;
-                devPanel.deckBreathingToggle.checked = effects.deckBreathing.enabled;
-            }
-
-            function initAudio() {
-                if (!audioContext && effects.sounds.enabled) {
-                    try {
-                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                        const sine = (freq, vol, dur) => createTone(freq, dur, vol);
-                        sounds = {
-                            cardClick: () => sine(659, 0.15, 0.5), cardDrop: () => sine(523, 0.2, 0.8), cardFlip: () => sine(784, 0.12, 0.6),
-                            complete: () => { sine(523, 0.1, 0.5)(); setTimeout(() => sine(659, 0.1, 0.5)(), 100); setTimeout(() => sine(784, 0.1, 0.5)(), 200); }
-                        };
-                    } catch (e) { console.warn('Audio not supported'); effects.sounds.enabled = false; }
-                }
-            }
-
-            function createTone(frequency, duration, volume, type = 'sine') {
-                return () => {
-                    if (!audioContext || !effects.sounds.enabled) return;
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    oscillator.connect(gainNode); gainNode.connect(audioContext.destination);
-                    oscillator.type = type;
-                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
-                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + duration);
-                };
-            }
-            function playSound(soundName) { if (sounds[soundName]) sounds[soundName](); }
-            function vibrate(pattern) { if (effects.vibration.enabled && 'vibrate' in navigator) navigator.vibrate(pattern); }
-
-            function createRipple(x, y, element) {
-                if (!effects.ripple.enabled) return;
-                const ripple = document.createElement('div');
-                ripple.className = 'ripple-v1';
-                const size = 100;
-                ripple.style.width = `${size}px`;
-                ripple.style.height = `${size}px`;
-                ripple.style.left = `${x - size / 2}px`;
-                ripple.style.top = `${y - size / 2}px`;
-                element.appendChild(ripple);
-                setTimeout(() => ripple.remove(), 600);
-            }
-
-            function updateBreathingCards() {
-                document.querySelectorAll('.tarot-card:not(.is-dropped)').forEach(c => c.classList.toggle('breathing-glow', effects.breathing.enabled));
-            }
-            function updateMagneticSlots() {
-                containers.cardSlots.forEach(s => s.classList.toggle('magnetic-pulse', effects.magnetic.enabled));
-            }
-            function updateDeckBreathing() {
-                const deck = document.getElementById('initial-deck');
-                if (deck) deck.classList.toggle('deck-breathing-mystic', effects.deckBreathing.enabled);
-            }
-
-            function switchScreen(screenName) {
-                Object.values(screens).forEach(s => s.classList.remove('active'));
-                screens[screenName].classList.add('active');
-            }
-
-            function initParticles() {
-                const theme = document.body.className || 'theme-gazprom-classic';
-                const colors = { 'theme-gazprom-classic': { p: "#00aaff", l: "#0078d7" }, 'theme-gazprom-dark': { p: "#3399ff", l: "#005f9e" }, 'theme-gazprom-light': { p: "#0078d7", l: "#005a9e" } };
-                const color = colors[theme] || colors['theme-gazprom-classic'];
-                if (window.particlesJS) particlesJS('particles-js', { particles: { number: { value: 60 }, color: { value: color.p }, size: { value: 3, random: true }, move: { enable: true, speed: 2 }, line_linked: { color: color.l, distance: 150 } }, interactivity: { events: { onhover: { enable: true, mode: "repulse" } } } });
-            }
-
-            function setupChoiceScreen() {
-                switchScreen('choice');
-                const explanation = document.getElementById('slot-explanation');
-                if(explanation) explanation.style.opacity = 1;
-
-                chosenCards.fill(null);
-                containers.cardSlots.forEach((slot, index) => {
-                    slot.innerHTML = `<span class="slot-label">${["Вызов", "Путь", "Исход"][index]}</span>`;
-                    slot.classList.remove('filled');
-                });
-                containers.cardArea.innerHTML = '';
-                const initialDeck = document.createElement('div');
-                initialDeck.id = 'initial-deck';
-                for (let i = 0; i < 5; i++) {
-                    const card = document.createElement('div');
-                    card.className = 'shuffle-card';
-                    card.style.transform = `translateZ(${i * -2}px)`;
-                    initialDeck.appendChild(card);
-                }
-                containers.cardArea.appendChild(initialDeck);
-                updateDeckBreathing();
-                initialDeck.addEventListener('click', dealCardsFromDeck, { once: true });
-            }
-
-            function dealCardsFromDeck() {
-                const deck = document.getElementById('initial-deck');
-                if (!deck) return;
-
-                gsap.to('#slot-explanation', { opacity: 0, duration: 0.3, pointerEvents: 'none' });
-
-                const shuffledCards = [...tarotCardsData].sort(() => 0.5 - Math.random());
-                const deckRect = deck.getBoundingClientRect();
-                const areaRect = containers.cardArea.getBoundingClientRect();
-
-                shuffledCards.forEach((cardData, index) => {
-                    const cardElement = document.createElement('div');
-                    cardElement.className = 'tarot-card';
-                    cardElement.dataset.id = cardData.id;
-                    cardElement.innerHTML = `<div class="card-face card-back"></div>`;
-                    
-                    cardElement.style.left = `${deckRect.left - areaRect.left}px`;
-                    cardElement.style.top = `${deckRect.top - areaRect.top}px`;
-                    containers.cardArea.appendChild(cardElement);
-
-                    const slotRect = containers.cardSlots[0].getBoundingClientRect();
-                    const availableWidth = slotRect.left - areaRect.left - cardElement.clientWidth - 20;
-                    
-                    const finalX = Math.random() * availableWidth + 10;
-                    const finalY = Math.random() * (areaRect.height - cardElement.clientHeight - 20) + 10;
-                    const finalRotation = Math.random() * 40 - 20;
-
-                    gsap.to(cardElement, { 
-                        left: finalX, top: finalY, rotation: finalRotation,
-                        duration: 0.7, delay: index * 0.02, ease: 'power2.out' 
-                    });
-                });
-                
-                gsap.to(deck, { opacity: 0, duration: 0.5, onComplete: () => deck.remove() });
-
-                setTimeout(() => {
-                    document.querySelectorAll('.tarot-card').forEach(card => {
-                        card.addEventListener('mousedown', startDrag);
-                        card.addEventListener('touchstart', startDrag, { passive: false });
-                    });
-                    updateBreathingCards();
-                    updateMagneticSlots();
-                }, shuffledCards.length * 20 + 700);
-            }
-
-            function startDrag(e) {
-                e.preventDefault();
-                draggedCard = e.target.closest('.tarot-card');
-                if (draggedCard.classList.contains('is-dropped')) return;
-
-                initAudio(); playSound('cardClick'); vibrate(50);
-                
-                const rect = draggedCard.getBoundingClientRect();
-                const clientX = e.clientX || e.touches[0].clientX;
-                const clientY = e.clientY || e.touches[0].clientY;
-                dragOffset = { x: clientX - rect.left, y: clientY - rect.top };
-                
-                draggedCard.classList.add('is-dragging');
-                gsap.to(draggedCard, { scale: 1.1, duration: 0.2 });
-                createRipple(clientX - rect.left, clientY - rect.top, draggedCard);
-
-                document.addEventListener('mousemove', handleDrag);
-                document.addEventListener('mouseup', endDrag);
-                document.addEventListener('touchmove', handleDrag, { passive: false });
-                document.addEventListener('touchend', endDrag);
-            }
+            const Navigation = { switchScreen(screenName) { Object.values(UI.screens).forEach(screen => screen.classList.remove('active')); if (UI.screens[screenName]) { UI.screens[screenName].classList.add('active'); } } };
+            const Particles = { init() { if (!window.particlesJS) return; const theme = document.body.className || 'theme-gazprom-classic'; const colors = { 'theme-gazprom-classic': { p: "#00aaff", l: "#0078d7" }, 'theme-gazprom-dark': { p: "#3399ff", l: "#005f9e" }, 'theme-gazprom-light': { p: "#0078d7", l: "#005a9e" } }; const color = colors[theme] || colors['theme-gazprom-classic']; particlesJS('particles-js', { particles: { number: { value: 60 }, color: { value: color.p }, size: { value: 3, random: true }, move: { enable: true, speed: 2 }, line_linked: { color: color.l, distance: 150 } }, interactivity: { events: { onhover: { enable: true, mode: "repulse" } } } }); } };
+            const Confetti = { init() { appState.confettiCanvas = document.getElementById('confetti-canvas'); appState.confettiContext = appState.confettiCanvas.getContext('2d'); const resize = () => { appState.confettiCanvas.width = window.innerWidth; appState.confettiCanvas.height = window.innerHeight; }; window.addEventListener('resize', resize); resize(); }, create() { if (!effects.confetti.enabled || !appState.confettiContext) return; const colors = ['#00aaff', '#0078d7', '#ffffff']; for (let i = 0; i < CONSTANTS.CONFETTI_COUNT; i++) { appState.confettiParticles.push({ x: Math.random() * appState.confettiCanvas.width, y: -20, vx: Math.random() * 10 - 5, vy: Math.random() * 5 + 5, color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 8 + 4 }); } if (appState.confettiParticles.length > 0) { this.animate(); } }, animate() { if (!appState.confettiContext) return; appState.confettiContext.clearRect(0, 0, appState.confettiCanvas.width, appState.confettiCanvas.height); for (let i = appState.confettiParticles.length - 1; i >= 0; i--) { const particle = appState.confettiParticles[i]; particle.x += particle.vx; particle.y += particle.vy; particle.vy += 0.2; appState.confettiContext.fillStyle = particle.color; appState.confettiContext.fillRect(particle.x, particle.y, particle.size, particle.size); if (particle.y > appState.confettiCanvas.height + 20) { appState.confettiParticles.splice(i, 1); } } if (appState.confettiParticles.length > 0) { requestAnimationFrame(() => this.animate()); } } };
             
-            function handleDrag(e) {
-                if (!draggedCard) return;
-                e.preventDefault();
-                const clientX = e.clientX || e.touches[0].clientX;
-                const clientY = e.clientY || e.touches[0].clientY;
-                const parentRect = containers.cardArea.getBoundingClientRect();
-                
-                const newX = clientX - parentRect.left - dragOffset.x;
-                const newY = clientY - parentRect.top - dragOffset.y;
-                draggedCard.style.left = `${newX}px`;
-                draggedCard.style.top = `${newY}px`;
-
-                let closestSlot = null;
-                let minDistance = Infinity;
-                const cardRect = draggedCard.getBoundingClientRect();
-                const cardCenterX = cardRect.left + cardRect.width / 2;
-                const cardCenterY = cardRect.top + cardRect.height / 2;
-
-                containers.cardSlots.forEach(slot => {
-                    if (slot.classList.contains('filled')) return;
-                    const slotRect = slot.getBoundingClientRect();
-                    const slotCenterX = slotRect.left + slotRect.width / 2;
-                    const slotCenterY = slotRect.top + slotRect.height / 2;
-                    const distance = Math.hypot(cardCenterX - slotCenterX, cardCenterY - slotCenterY);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        closestSlot = slot;
+            const CardDealing = {
+                calculateSafeArea() {
+                    const areaRect = UI.containers.cardArea.getBoundingClientRect();
+                    const slots = Array.from(UI.containers.cardSlots);
+                    const slotBounds = slots.reduce((bounds, slot) => { const rect = slot.getBoundingClientRect(); return { minX: Math.min(bounds.minX, rect.left - areaRect.left), maxX: Math.max(bounds.maxX, rect.right - areaRect.left), minY: Math.min(bounds.minY, rect.top - areaRect.top), maxY: Math.max(bounds.maxY, rect.bottom - areaRect.top) }; }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+                    const isPortrait = window.innerHeight > window.innerWidth;
+                    const isMobile = window.innerWidth <= 768;
+                    if (isMobile && !isPortrait) return { x: CONSTANTS.CARD_SPACING, y: CONSTANTS.CARD_SPACING, width: Math.max(200, slotBounds.minX - CONSTANTS.CARD_SPACING * 3), height: areaRect.height - CONSTANTS.CARD_SPACING * 2 };
+                    if (isMobile && isPortrait) return { x: CONSTANTS.CARD_SPACING, y: CONSTANTS.CARD_SPACING, width: areaRect.width - CONSTANTS.CARD_SPACING * 2, height: Math.max(200, slotBounds.minY - CONSTANTS.CARD_SPACING * 3) };
+                    return { x: CONSTANTS.CARD_SPACING, y: CONSTANTS.CARD_SPACING, width: Math.max(300, slotBounds.minX - CONSTANTS.CARD_SPACING * 3), height: areaRect.height - CONSTANTS.CARD_SPACING * 2 };
+                },
+                generateCardPositions(cardCount, cardWidth, cardHeight) {
+                    const safeArea = this.calculateSafeArea();
+                    const positions = [];
+                    for (let i = 0; i < cardCount; i++) {
+                        let position, attempts = 0;
+                        do { position = { x: safeArea.x + Math.random() * (safeArea.width - cardWidth), y: safeArea.y + Math.random() * (safeArea.height - cardHeight), rotation: Math.random() * 40 - 20 }; attempts++; } while (this.checkCollision(position, positions) && attempts < 50);
+                        positions.push(position);
                     }
-                });
+                    return positions;
+                },
+                checkCollision(newPos, existingPositions) { return existingPositions.some(pos => Math.hypot(newPos.x - pos.x, newPos.y - pos.y) < CONSTANTS.MIN_CARD_DISTANCE); }
+            };
 
-                containers.cardSlots.forEach(slot => {
-                    const shouldActivate = (slot === closestSlot && minDistance < slot.clientWidth);
-                    slot.classList.toggle('drag-over', shouldActivate);
-                    slot.classList.toggle('attracting', shouldActivate && effects.magnetic);
-                });
-            }
+            const GameLogic = {
+                setupChoiceScreen() {
+                    Navigation.switchScreen('choice');
+                    const explanation = document.getElementById('slot-explanation');
+                    if (explanation) explanation.style.opacity = '1';
+                    appState.chosenCards.fill(null);
+                    UI.containers.cardSlots.forEach((slot, index) => { slot.innerHTML = `<span class="slot-label">${["Вызов", "Путь", "Исход"][index]}</span>`; slot.classList.remove('filled'); });
+                    UI.containers.cardArea.innerHTML = '';
+                    const initialDeck = document.createElement('div');
+                    initialDeck.id = 'initial-deck';
+                    for (let i = 0; i < 5; i++) { const card = document.createElement('div'); card.className = 'shuffle-card'; card.style.transform = `translateZ(${i * -2}px)`; initialDeck.appendChild(card); }
+                    UI.containers.cardArea.appendChild(initialDeck);
+                    Effects.updateDeckBreathing();
+                    initialDeck.addEventListener('click', this.dealCards.bind(this), { once: true });
+                },
+                dealCards() {
+                    const deck = document.getElementById('initial-deck');
+                    if (!deck) return;
+                    gsap.to('#slot-explanation', { opacity: 0, duration: 0.3, pointerEvents: 'none' });
+                    const shuffledCards = [...tarotCardsData].sort(() => 0.5 - Math.random());
+                    const deckRect = deck.getBoundingClientRect();
+                    const areaRect = UI.containers.cardArea.getBoundingClientRect();
+                    const cardWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--card-width'));
+                    const cardHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--card-height'));
+                    const positions = CardDealing.generateCardPositions(shuffledCards.length, cardWidth, cardHeight);
+                    shuffledCards.forEach((cardData, index) => {
+                        const cardElement = document.createElement('div');
+                        cardElement.className = 'tarot-card';
+                        cardElement.dataset.id = cardData.id;
+                        cardElement.innerHTML = '<div class="card-face card-back"></div>';
+                        Object.assign(cardElement.style, { left: `${deckRect.left - areaRect.left}px`, top: `${deckRect.top - areaRect.top}px` });
+                        UI.containers.cardArea.appendChild(cardElement);
+                        const position = positions[index];
+                        gsap.to(cardElement, { left: position.x, top: position.y, rotation: position.rotation, duration: CONSTANTS.ANIMATION_DURATION / 1000, delay: index * 0.02, ease: 'power2.out' });
+                    });
+                    gsap.to(deck, { opacity: 0, duration: 0.5, onComplete: () => deck.remove() });
+                    setTimeout(() => { document.querySelectorAll('.tarot-card').forEach(card => { card.addEventListener('mousedown', DragDrop.startDrag); card.addEventListener('touchstart', DragDrop.startDrag, { passive: false }); }); Effects.updateBreathingCards(); Effects.updateMagneticSlots(); }, shuffledCards.length * 20 + CONSTANTS.ANIMATION_DURATION);
+                },
+                showPlacementToast(slotName, cardName) { const toast = document.createElement('div'); toast.className = 'placement-toast'; toast.innerHTML = `<h4>${slotName}</h4><p>${cardName}</p>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), CONSTANTS.TOAST_DURATION); }
+            };
 
-            function endDrag() {
-                if (!draggedCard) return;
-                document.removeEventListener('mousemove', handleDrag);
-                document.removeEventListener('mouseup', endDrag);
-                document.removeEventListener('touchmove', handleDrag);
-                document.removeEventListener('touchend', endDrag);
-                draggedCard.classList.remove('is-dragging');
+            const DragDrop = {
+                startDrag(e) { e.preventDefault(); const card = e.target.closest('.tarot-card'); if (card.classList.contains('is-dropped')) return; appState.draggedCard = card; Audio.init(); Audio.play('cardClick'); Vibration.trigger(50); const rect = card.getBoundingClientRect(); const clientX = e.clientX || e.touches[0].clientX; const clientY = e.clientY || e.touches[0].clientY; appState.dragOffset = { x: clientX - rect.left, y: clientY - rect.top }; card.classList.add('is-dragging'); gsap.to(card, { scale: 1.1, duration: 0.2 }); Effects.createRipple(clientX - rect.left, clientY - rect.top, card); document.addEventListener('mousemove', DragDrop.handleDrag); document.addEventListener('mouseup', DragDrop.endDrag); document.addEventListener('touchmove', DragDrop.handleDrag, { passive: false }); document.addEventListener('touchend', DragDrop.endDrag); },
+                handleDrag(e) { if (!appState.draggedCard) return; e.preventDefault(); const clientX = e.clientX || e.touches[0].clientX; const clientY = e.clientY || e.touches[0].clientY; const parentRect = UI.containers.cardArea.getBoundingClientRect(); const newX = clientX - parentRect.left - appState.dragOffset.x; const newY = clientY - parentRect.top - appState.dragOffset.y; Object.assign(appState.draggedCard.style, { left: `${newX}px`, top: `${newY}px` }); DragDrop.checkSlotProximity(); },
+                checkSlotProximity() { const cardRect = appState.draggedCard.getBoundingClientRect(); const cardCenterX = cardRect.left + cardRect.width / 2; const cardCenterY = cardRect.top + cardRect.height / 2; let closestSlot = null, minDistance = Infinity; UI.containers.cardSlots.forEach(slot => { if (slot.classList.contains('filled')) return; const slotRect = slot.getBoundingClientRect(); const slotCenterX = slotRect.left + slotRect.width / 2; const slotCenterY = slotRect.top + slotRect.height / 2; const distance = Math.hypot(cardCenterX - slotCenterX, cardCenterY - slotCenterY); if (distance < minDistance) { minDistance = distance; closestSlot = slot; } }); UI.containers.cardSlots.forEach(slot => { const shouldActivate = (slot === closestSlot && minDistance < slot.clientWidth); slot.classList.toggle('drag-over', shouldActivate); slot.classList.toggle('attracting', shouldActivate && effects.magnetic.enabled); }); },
+                endDrag() { if (!appState.draggedCard) return; document.removeEventListener('mousemove', DragDrop.handleDrag); document.removeEventListener('mouseup', DragDrop.endDrag); document.removeEventListener('touchmove', DragDrop.handleDrag); document.removeEventListener('touchend', DragDrop.endDrag); appState.draggedCard.classList.remove('is-dragging'); const droppedSlot = document.querySelector('.card-slot.drag-over'); if (droppedSlot) { DragDrop.handleDrop(appState.draggedCard, droppedSlot); } else { gsap.to(appState.draggedCard, { scale: 1, duration: 0.3, ease: 'back.out' }); } UI.containers.cardSlots.forEach(slot => slot.classList.remove('drag-over', 'attracting')); appState.draggedCard = null; },
+                handleDrop(cardElement, slot) { const cardData = tarotCardsData.find(c => c.id == cardElement.dataset.id); const slotId = parseInt(slot.dataset.slotId); const labels = ["Ваш Вызов", "Ваш Путь", "Ваш Исход"]; appState.chosenCards[slotId] = cardData; Audio.play('cardDrop'); Vibration.trigger(100); cardElement.style.pointerEvents = 'none'; cardElement.classList.add('is-dropped'); slot.classList.add('filled'); const slotRect = slot.getBoundingClientRect(); const areaRect = UI.containers.cardArea.getBoundingClientRect(); gsap.to(cardElement, { left: slotRect.left - areaRect.left, top: slotRect.top - areaRect.top, scale: 1, rotation: 0, duration: 0.4, ease: 'power2.inOut', onComplete: () => { cardElement.removeAttribute('style'); slot.innerHTML = ''; slot.appendChild(cardElement); cardElement.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>`; gsap.to(cardElement, { rotationY: 180, duration: 0.7, ease: 'power2.inOut' }); GameLogic.showPlacementToast(labels[slotId], cardData.name); Audio.play('cardFlip'); if (appState.chosenCards.filter(c => c).length === 3) { Audio.play('complete'); Vibration.trigger([100, 50, 100]); if (effects.confetti.enabled) Confetti.create(); setTimeout(() => ResultScreen.initialize(appState.chosenCards), CONSTANTS.TOAST_DURATION); } } }); }
+            };
 
-                let droppedSlot = document.querySelector('.card-slot.drag-over');
-                if (droppedSlot) {
-                    handleDrop(draggedCard, droppedSlot);
-                } else {
-                    gsap.to(draggedCard, { scale: 1, duration: 0.3, ease: 'back.out' });
+            const DevPanel = {
+                setup() {
+                    UI.devPanel.toggle.addEventListener('click', () => UI.devPanel.content.classList.toggle('active'));
+                    UI.devPanel.elements.themeSelect.addEventListener('change', (e) => { document.body.className = e.target.value; Particles.init(); });
+                    Object.entries(UI.devPanel.elements).forEach(([key, element]) => { if (element && element.type === 'checkbox') { element.addEventListener('change', (e) => { const effectName = key.replace('Toggle', ''); if (effects[effectName]) { effects[effectName].enabled = e.target.checked; this.updateEffect(effectName); Settings.save(); } }); } });
+                    UI.devPanel.elements.restartBtn.addEventListener('click', () => { Settings.save(); location.reload(); });
+                },
+                updateEffect(effectName) {
+                    switch (effectName) {
+                        case 'breathing': Effects.updateBreathingCards(); break;
+                        case 'magnetic': Effects.updateMagneticSlots(); break;
+                        case 'deckBreathing': Effects.updateDeckBreathing(); break;
+                    }
                 }
-                
-                containers.cardSlots.forEach(slot => slot.classList.remove('drag-over', 'attracting'));
-                draggedCard = null;
-            }
-
-            function handleDrop(cardElement, slot) {
-                const cardData = tarotCardsData.find(c => c.id == cardElement.dataset.id);
-                const slotId = parseInt(slot.dataset.slotId);
-                const labels = ["Ваш Вызов", "Ваш Путь", "Ваш Исход"];
-                chosenCards[slotId] = cardData;
-
-                playSound('cardDrop'); vibrate(100);
-                cardElement.style.pointerEvents = 'none';
-                slot.classList.add('filled');
-                
-                const slotRect = slot.getBoundingClientRect();
-                const areaRect = containers.cardArea.getBoundingClientRect();
-                
-                gsap.to(cardElement, {
-                    left: slotRect.left - areaRect.left, 
-                    top: slotRect.top - areaRect.top,
-                    scale: 1, 
-                    rotation: 0, 
-                    duration: 0.4, 
-                    ease: 'power2.inOut',
-                    onComplete: () => {
-                        cardElement.removeAttribute('style');
-                        
-                        slot.appendChild(cardElement);
-                        cardElement.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>`;
-                        
-                        gsap.to(cardElement, { 
-                            rotationY: 180,
-                            duration: 0.7,
-                            ease: 'power2.inOut'
-                        });
-
-                        showPlacementToast(labels[slotId], cardData.name);
-                        playSound('cardFlip');
-
-                        if (chosenCards.filter(c => c).length === 3) {
-                            playSound('complete'); vibrate([100, 50, 100]);
-                            if(effects.confetti) createConfettiParticles();
-                            setTimeout(showResult, 2500);
-                        }
-                    }
-                });
-            }
+            };
             
-            function showPlacementToast(slotName, cardName) {
-                const toast = document.createElement('div');
-                toast.className = 'placement-toast';
-                toast.innerHTML = `<h4>${slotName}</h4><p>${cardName}</p>`;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 2500);
+            function init() {
+                try { Settings.load(); Settings.applyToUI(); Particles.init(); Confetti.init(); DevPanel.setup(); UI.buttons.start.addEventListener('click', () => { Navigation.switchScreen('focus'); UI.containers.app.classList.add('focus-active'); }); UI.screens.focus.addEventListener('click', () => { UI.containers.app.classList.remove('focus-active'); GameLogic.setupChoiceScreen(); }); Navigation.switchScreen('start'); } catch (error) { console.error('Ошибка инициализации приложения:', error); }
             }
+            init();
 
-            function showResult() {
-                const labels = ["Вызов", "Путь", "Исход"];
-                containers.modalSpread.innerHTML = chosenCards.map((cardData, i) => {
-                    if (!cardData) return '';
-                    const keywordsHTML = cardData.keywords.split(',').map(k => `<span class="keyword">${k.trim()}</span>`).join('');
-                    return `
-                        <div class="modal-card-display">
-                            <img src="${cardData.image}" alt="${cardData.name}">
-                            <div class="card-details">
-                                <h4>${labels[i]}: ${cardData.name}</h4>
-                                <p><em>${cardData.general}</em></p>
-                                <h5>Для проекта:</h5> <p>${cardData.project}</p>
-                                <h5>Для карьеры:</h5> <p>${cardData.career}</p>
-                                <div class="keywords-container">${keywordsHTML}</div>
+            // ===================================
+            // === ЛОГИКА ОКНА РЕЗУЛЬТАТОВ (ИНТЕГРАЦИЯ) ===
+            // ===================================
+            const ResultScreen = {
+                currentCard: 0,
+                cardData: [],
+                touchStartX: 0,
+
+                initialize(chosenCards) {
+                    this.currentCard = 0;
+                    const aspects = ["Вызов", "Путь", "Исход"];
+                    const themes = ["challenge", "path", "outcome"];
+                    this.cardData = chosenCards.map((card, index) => ({ ...card, aspect: aspects[index], theme: themes[index] }));
+                    this.render();
+                    this.update();
+                    this.setupEventListeners();
+                    document.getElementById('result-modal').classList.add('active');
+                },
+
+                render() {
+                    const container = document.getElementById('screens-container');
+                    container.innerHTML = ''; 
+
+                    this.cardData.forEach((card, index) => {
+                        const keywordsHTML = card.keywords.split(',').map(k => `<span class="keyword">${k.trim()}</span>`).join('');
+                        const screen = document.createElement('div');
+                        screen.className = 'result-screen';
+                        screen.dataset.index = index;
+                        screen.innerHTML = `
+                            <div class="result-image-section">
+                                <div class="result-image-wrapper" onclick="ResultScreen.openFullscreen('${card.image}')">
+                                    <img src="${card.image}" alt="${card.name}" class="result-image">
+                                </div>
+                            </div>
+                            <div class="result-content-section">
+                                <div class="result-title-section">
+                                    <div class="result-aspect-label">${card.aspect}</div>
+                                    <div class="result-card-name">${card.name}</div>
+                                </div>
+                                <div class="guidance-text">${this.getGuidanceText(card.aspect)}</div>
+                                <div class="content-block"><div class="content-text">${card.general}</div></div>
+                                <div class="content-block" onclick="this.classList.toggle('open')">
+                                    <div class="content-block-header"><span>💻</span> Для проекта</div>
+                                    <div class="content-block-details"><div class="content-text">${card.project}</div></div>
+                                </div>
+                                <div class="content-block" onclick="this.classList.toggle('open')">
+                                    <div class="content-block-header"><span>🚀</span> Для карьеры</div>
+                                    <div class="content-block-details"><div class="content-text">${card.career}</div></div>
+                                </div>
+                                <div class="content-block"><div class="keywords">${keywordsHTML}</div></div>
+                            </div>`;
+                        container.appendChild(screen);
+                    });
+
+                    const aiScreen = document.createElement('div');
+                    aiScreen.className = 'result-screen';
+                    aiScreen.dataset.index = 3;
+                    aiScreen.innerHTML = `
+                        <div class="result-image-section">
+                            <div class="result-image-wrapper">
+                                <img src="images/oracul.png" alt="AI Oracle" class="result-image">
+                            </div>
+                        </div>
+                        <div class="result-content-section" style="justify-content: center;">
+                             <div id="ai-screen-content">
+                                 <div class="result-aspect-label">Оракул</div>
+                                 <h2 class="ai-title">Глубинный Анализ</h2>
+                                 <p class="ai-subtitle">Нейросеть может заглянуть глубже. Получите персональную трактовку вашего IT-расклада.</p>
+                                 <button class="ai-action-btn" onclick="ResultScreen.showAI()">Раскрыть предсказание</button>
                             </div>
                         </div>`;
-                }).join('');
-                modal.overlay.classList.add('active');
-            }
+                    container.appendChild(aiScreen);
+                },
 
-            function initConfetti() {
-                confettiCanvas = document.getElementById('confetti-canvas');
-                confettiContext = confettiCanvas.getContext('2d');
-                const resize = () => { confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight; };
-                window.addEventListener('resize', resize); resize();
-            }
-            function createConfettiParticles() {
-                if (!effects.confetti) return;
-                for (let i = 0; i < 50; i++) confettiParticles.push({ x: Math.random() * confettiCanvas.width, y: -20, vx: Math.random() * 10 - 5, vy: Math.random() * 5 + 5, color: ['#00aaff', '#0078d7', '#ffffff'][Math.floor(Math.random() * 3)], size: Math.random() * 8 + 4 });
-                if (confettiParticles.length > 0) animateConfetti();
-            }
-            function animateConfetti() {
-                confettiContext.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-                for (let i = confettiParticles.length - 1; i >= 0; i--) {
-                    const p = confettiParticles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.2;
-                    confettiContext.fillStyle = p.color; confettiContext.fillRect(p.x, p.y, p.size, p.size);
-                    if (p.y > confettiCanvas.height + 20) confettiParticles.splice(i, 1);
+                update() {
+                    const screens = document.querySelectorAll('.result-screen');
+                    const modalContent = document.getElementById('modal-content');
+                    const prevBtn = document.getElementById('prev-btn');
+                    const nextBtn = document.getElementById('next-btn');
+                    if (!screens.length) return;
+                    
+                    const currentTheme = (this.currentCard < 3) ? this.cardData[this.currentCard].theme : 'ai';
+                    modalContent.className = `modal-content ${currentTheme}-theme`;
+
+                    screens.forEach((screen, index) => {
+                        screen.classList.remove('active', 'prev');
+                        if (index == this.currentCard) screen.classList.add('active');
+                        else if (index < this.currentCard) screen.classList.add('prev');
+                    });
+                    
+                    prevBtn.disabled = this.currentCard === 0;
+                    nextBtn.disabled = this.currentCard === screens.length - 1;
+                },
+                
+                setupEventListeners() {
+                    document.getElementById('close-modal-btn').onclick = () => {
+                        document.getElementById('result-modal').classList.remove('active');
+                        GameLogic.setupChoiceScreen(); 
+                    };
+                    document.getElementById('prev-btn').onclick = () => this.prevCard();
+                    document.getElementById('next-btn').onclick = () => this.nextCard();
+                    
+                    const container = document.getElementById('result-modal');
+                    container.addEventListener('touchstart', (e) => { this.touchStartX = e.touches[0].clientX; });
+                    container.addEventListener('touchend', (e) => {
+                        const touchEndX = e.changedTouches[0].clientX;
+                        const diff = this.touchStartX - touchEndX;
+                        if (Math.abs(diff) > 50) { if (diff > 0) this.nextCard(); else this.prevCard(); }
+                    });
+                    
+                    document.addEventListener('keydown', (e) => {
+                        if (document.getElementById('ai-overlay').classList.contains('active')) {
+                            if (e.key === 'Escape') this.hideAI();
+                            return;
+                        }
+                        if (!document.getElementById('result-modal').classList.contains('active')) return;
+                        
+                        if (e.key === 'ArrowLeft') this.prevCard();
+                        if (e.key === 'ArrowRight') this.nextCard();
+                        if (e.key === 'Escape') {
+                            if (document.getElementById('fullscreen-overlay').classList.contains('active')) this.closeFullscreen();
+                            else document.getElementById('close-modal-btn').click();
+                        }
+                    });
+                },
+                
+                nextCard() { if (this.currentCard < 3) { this.currentCard++; this.update(); } },
+                prevCard() { if (this.currentCard > 0) { this.currentCard--; this.update(); } },
+
+                getGuidanceText(aspect) {
+                    const texts = { 'Вызов': 'Ваше главное испытание. Не враг, а учитель, указывающий путь к росту.', 'Путь': 'Ваша стратегия. Методы и ресурсы для преодоления вызовов.', 'Исход': 'Вероятный результат. Сценарий, который вы можете формировать.' };
+                    return texts[aspect] || '';
+                },
+
+                openFullscreen(src) { document.getElementById('fullscreen-image').src = src; document.getElementById('fullscreen-overlay').classList.add('active'); },
+                closeFullscreen() { document.getElementById('fullscreen-overlay').classList.remove('active'); },
+                showAI() { document.getElementById('ai-overlay').classList.add('active'); },
+                hideAI() { document.getElementById('ai-overlay').classList.remove('active'); },
+                requestAI() {
+                    const question = document.getElementById('ai-question').value;
+                    const responseEl = document.getElementById('ai-response');
+                    const btnText = document.getElementById('ai-btn-text');
+                    if (!question.trim()){ alert("Введите ваш вопрос."); return; }
+                    btnText.textContent = 'Анализ...';
+                    responseEl.classList.add('visible');
+                    responseEl.innerHTML = `<em style="color: var(--ai-light);">🔮 Соединяюсь с цифровым потоком...</em>`;
+                    
+                    setTimeout(() => {
+                        let summary = `<div style="border-left: 4px solid var(--ai-secondary); padding-left: 1rem;">
+                            <strong style="color: var(--ai-light);">🤖 Комплексный анализ расклада:</strong><br><br>
+                            <strong style="color: white;">Ваш вопрос:</strong> "${question}"<br><br>
+                            Ваш путь начинается с <strong>Вызова (${this.cardData[0].name})</strong>, что говорит о необходимости ${this.cardData[0].general.toLowerCase()}. 
+                            Для его преодоления, ваш <strong>Путь (${this.cardData[1].name})</strong> лежит через ${this.cardData[1].general.toLowerCase()}.
+                            Если вы последуете этому пути, вероятный <strong>Исход (${this.cardData[2].name})</strong> — это ${this.cardData[2].general.toLowerCase()}.
+                            <br><br>
+                            <em style="color: #ccc;">Этот анализ основан на синергии карт и вашем вопросе.</em>
+                            </div>`;
+                        responseEl.innerHTML = summary;
+                        btnText.textContent = 'Спросить';
+                    }, 2500);
                 }
-                if (confettiParticles.length > 0) requestAnimationFrame(animateConfetti);
-            }
-            
-            function setupDevPanel() {
-                devPanel.toggle.addEventListener('click', () => devPanel.content.classList.toggle('active'));
-                devPanel.themeSelect.addEventListener('change', (e) => { document.body.className = e.target.value; initParticles(); });
-                devPanel.soundToggle.addEventListener('change', (e) => { effects.sounds.enabled = e.target.checked; saveEffectsToStorage(); });
-                devPanel.breathingToggle.addEventListener('change', (e) => { effects.breathing.enabled = e.target.checked; updateBreathingCards(); saveEffectsToStorage(); });
-                devPanel.rippleToggle.addEventListener('change', (e) => { effects.ripple.enabled = e.target.checked; saveEffectsToStorage(); });
-                devPanel.magneticToggle.addEventListener('change', (e) => { effects.magnetic.enabled = e.target.checked; updateMagneticSlots(); saveEffectsToStorage(); });
-                devPanel.confettiToggle.addEventListener('change', (e) => { effects.confetti.enabled = e.target.checked; saveEffectsToStorage(); });
-                devPanel.vibrationToggle.addEventListener('change', (e) => { effects.vibration.enabled = e.target.checked; saveEffectsToStorage(); });
-                devPanel.deckBreathingToggle.addEventListener('change', (e) => { effects.deckBreathing.enabled = e.target.checked; updateDeckBreathing(); saveEffectsToStorage(); });
-                devPanel.restartBtn.addEventListener('click', () => { saveEffectsToStorage(); location.reload(); });
-            }
+            };
 
-            function init() {
-                loadEffectsFromStorage(); applyEffectsToUI(); initParticles(); initConfetti(); setupDevPanel();
-                buttons.start.addEventListener('click', () => {
-                    switchScreen('focus'); containers.app.classList.add('focus-active');
-                });
-                screens.focus.addEventListener('click', () => {
-                    containers.app.classList.remove('focus-active');
-                    setupChoiceScreen();
-                });
-                buttons.closeModal.addEventListener('click', () => {
-                    modal.overlay.classList.remove('active');
-                    setTimeout(setupChoiceScreen, 500);
-                });
-                switchScreen('start');
-            }
-
-            init();
         });
     </script>
 </body>

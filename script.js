@@ -28,12 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.chosenCards.fill(null);
             appState.currentStep = 0;
             UI.containers.cardSlots.forEach((slot, index) => {
-                const labels = ["Вызов", "Путь", "Исход"];
-                slot.innerHTML = `<span class="slot-label">${labels[index]}</span>`;
-                slot.classList.remove('filled', 'slot-active', 'challenge-theme', 'path-theme', 'outcome-theme');
+                slot.innerHTML = `<span class="slot-label">${uiTexts.slots.labels[index]}</span>`;
+                slot.classList.remove('filled');
+                const cardEl = slot.querySelector('.tarot-card');
+                if (cardEl) cardEl.remove();
             });
             UI.containers.cardArea.innerHTML = '';
-            UI.instructionText.innerHTML = "Коснитесь колоды, чтобы явить судьбу.";
+            UI.instructionText.innerHTML = uiTexts.deck;
             UI.instructionText.classList.add('shining-text');
             gsap.fromTo(UI.instructionText, {opacity: 0}, {opacity: 1, duration: 1});
 
@@ -79,19 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
         startNextStep() {
             UI.containers.cardSlots.forEach(slot => slot.classList.remove('slot-active', 'challenge-theme', 'path-theme', 'outcome-theme'));
 
-            const instructions = [
-                "Переместите карту на подсвеченный слот.<br>Ваш <strong>Вызов</strong> — это скрытый баг в системе.",
-                "Ваша вторая карта укажет <strong>Путь</strong> — верный алгоритм для решения.",
-                "Последняя карта предскажет <strong>Исход</strong> — результат вашего деплоя."
-            ];
-
             if (appState.currentStep < 3) {
                 const activeSlot = UI.containers.cardSlots[appState.currentStep];
                 const themes = ['challenge-theme', 'path-theme', 'outcome-theme'];
                 if (activeSlot) {
                     activeSlot.classList.add('slot-active', themes[appState.currentStep]);
                 }
-                UI.instructionText.innerHTML = instructions[appState.currentStep];
+                UI.instructionText.innerHTML = uiTexts.slots.instructions[appState.currentStep];
                 UI.instructionText.style.top = '50%';
                 gsap.to(UI.instructionText, { opacity: 1, duration: 0.5 });
 
@@ -99,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 appState.instructionTimeout = setTimeout(() => {
                     gsap.to(UI.instructionText, { opacity: 0, duration: 0.5 });
                 }, 4000);
-
             } else {
                 Vibration.trigger([100, 50, 100]);
                 gsap.to(UI.instructionText, { opacity: 0, duration: 0.3 });
@@ -190,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         handleDrop(cardElement, slot) {
             const cardId = parseInt(cardElement.dataset.id);
             const cardData = tarotCardsData.find(c => c.id === cardId);
-            if (!cardData) { console.error("Card data not found for ID:", cardId); return; }
+            if (!cardData) return;
             
             const slotId = parseInt(slot.dataset.slotId);
             appState.chosenCards[slotId] = cardData;
@@ -211,22 +205,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     cardElement.removeAttribute('style');
                     slot.innerHTML = '';
                     slot.appendChild(cardElement);
-                    
-                    // ИСПРАВЛЕНО: Создаем внутреннюю структуру для переворота и сразу показываем картинку
-                    cardElement.innerHTML = `
-                        <div class="card-inner" style="transform: rotateY(180deg);">
-                            <div class="card-face card-back"></div>
-                            <div class="card-face card-front" style="background-image: url('${cardData.image}');"></div>
-                        </div>`;
+                    cardElement.innerHTML = `<div class="card-inner"><div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}');"></div></div>`;
 
                     if (window.TarotCarousel) {
-                        window.TarotCarousel.showOrUpdate(appState.chosenCards, appState.currentStep, () => {
+                        window.TarotCarousel.showOrUpdate(appState.chosenCards, appState.currentStep, (lastViewedStep) => {
+                            const finishedCardSlot = UI.containers.cardSlots[lastViewedStep];
+                            const finishedCard = finishedCardSlot.querySelector('.card-inner');
+                            if (finishedCard) {
+                                gsap.to(finishedCard, { rotationY: 180, duration: 0.6, ease: 'power2.inOut' });
+                            }
+                            
                             appState.currentStep++;
                             GameLogic.startNextStep();
                             document.querySelectorAll('.tarot-card:not(.is-dropped)').forEach(c => c.style.display = 'block');
                         });
-                    } else {
-                        console.error("TarotCarousel is not defined.");
                     }
                 }
             });

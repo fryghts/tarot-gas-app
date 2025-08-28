@@ -1,9 +1,15 @@
 /* --- ОБЩИЕ СТИЛИ --- */
 :root {
+    /* Глобальное масштабирование через базовый размер шрифта */
+    font-size: clamp(0.625rem, 0.5208rem + 0.5208vw, 1rem); /* 10px -> 16px */
+
     --font-main: 'Inter', sans-serif;
     --font-title: 'Orbitron', sans-serif;
-    --card-width: 80px;
-    --card-height: 128px;
+    
+    /* ИСПРАВЛЕНО: Увеличены базовые размеры карт в rem */
+    --card-width: 6.25rem;    /* ~100px при 16px */
+    --card-height: 10rem;   /* ~160px при 16px */
+    
     --challenge-color: #ff6b35;
     --path-color: #f7b801;
     --outcome-color: #00d084;
@@ -22,7 +28,7 @@ body {
     touch-action: none;
 }
 
-.app-container { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; perspective: 2000px; position: relative; z-index: 1; }
+.app-container { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; perspective: 125rem; position: relative; z-index: 1; }
 .app-container::before { content: ''; position: absolute; inset: 0; background-color: #000; opacity: 0; z-index: 1; pointer-events: none; transition: opacity 2s ease-in-out; }
 .app-container.focus-active::before { opacity: 0.6; }
 #particles-js { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; }
@@ -30,31 +36,35 @@ body {
 .screen { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.8s; padding: 1rem; text-align: center; z-index: 2; }
 .screen.active { opacity: 1; pointer-events: auto; }
 #focus-screen .title, #focus-screen .subtitle { opacity: 0; }
-.title { font-family: var(--font-title); font-size: clamp(2rem, 6vw, 4rem); font-weight: 700; margin-bottom: 1rem; }
-.subtitle { font-size: clamp(0.9rem, 2.5vw, 1.2rem); max-width: 600px; margin: 1rem 0; line-height: 1.6; }
-.shining-text { color: var(--secondary-color); text-shadow: 0 0 7px var(--highlight-color), 0 0 12px var(--highlight-color); animation: text-glow 3s ease-in-out infinite alternate; }
-@keyframes text-glow { from { text-shadow: 0 0 7px var(--highlight-color); } to { text-shadow: 0 0 12px var(--highlight-color), 0 0 24px var(--highlight-color); } }
+.title { font-family: var(--font-title); font-size: 3rem; font-weight: 700; margin-bottom: 1rem; }
+.subtitle { font-size: 1.1rem; max-width: 37.5rem; margin: 1rem 0; line-height: 1.6; }
+.shining-text { color: var(--secondary-color); text-shadow: 0 0 0.4rem var(--highlight-color), 0 0 0.75rem var(--highlight-color); animation: text-glow 3s ease-in-out infinite alternate; }
+@keyframes text-glow { from { text-shadow: 0 0 0.4rem var(--highlight-color); } to { text-shadow: 0 0 0.75rem var(--highlight-color), 0 0 1.5rem var(--highlight-color); } }
 
-.action-button { font-family: var(--font-title); padding: 1rem 2.5rem; border-radius: 50px; border: none; font-size: 1.1rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-.action-button:hover { transform: translateY(-3px); box-shadow: 0 6px 25px rgba(0,0,0,0.4); }
-#logo-container { position: absolute; top: 1rem; left: 50%; transform: translateX(-50%); width: clamp(100px, 15vw, 150px); }
+.action-button { font-family: var(--font-title); padding: 1rem 2.5rem; border-radius: 3.125rem; border: none; font-size: 1.1rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 0.25rem 1.25rem rgba(0,0,0,0.3); }
+.action-button:hover { transform: translateY(-0.2rem); box-shadow: 0 0.4rem 1.5rem rgba(0,0,0,0.4); }
+
+#logo-container {
+    width: 9rem;
+    margin-bottom: 1.5rem;
+}
 #logo-container img { max-width: 100%; height: auto; filter: brightness(0) saturate(100%) invert(39%) sepia(82%) saturate(1347%) hue-rotate(191deg) brightness(96%) contrast(101%); }
 
 /* --- ТЕМЫ --- */
 .theme-gazprom-classic { --bg-color: #011d3a; --primary-color: #0078d7; --secondary-color: #ffffff; --text-color: #e0f7ff; --highlight-color: #00aaff; --card-back-bg: linear-gradient(145deg, #002f5c, #004b8f); --card-border: #00aaff; }
 .theme-gazprom-dark { --bg-color: #000814; --primary-color: #005f9e; --secondary-color: #ccdeeb; --text-color: #a9c7e0; --highlight-color: #3399ff; --card-back-bg: linear-gradient(145deg, #001a33, #002b52); --card-border: #0078d7; }
 .theme-gazprom-light { --bg-color: #e6f2ff; --primary-color: #005a9e; --secondary-color: #002d4f; --text-color: #004375; --highlight-color: #0078d7; --card-back-bg: linear-gradient(145deg, #cce5ff, #a3d1ff); --card-border: #005a9e; }
-.title { color: var(--secondary-color); text-shadow: 0 0 15px var(--primary-color); }
+.title { color: var(--secondary-color); text-shadow: 0 0 1rem var(--primary-color); }
 .action-button { background-color: var(--primary-color); color: var(--bg-color) !important; }
 .action-button:hover { background-color: var(--highlight-color); }
 
 /* --- ЭКРАН ВЫБОРА (DRAG & DROP) --- */
 #choice-screen, #card-selection-area { position: absolute; inset: 0; overflow: hidden;}
-#initial-deck { position: absolute; top: 50%; left: 50%; width: 100px; height: 160px; transform: translate(-50%, -50%); cursor: pointer; transform-style: preserve-3d; transition: transform 0.3s, opacity 0.5s; }
+#initial-deck { position: absolute; top: 50%; left: 50%; width: 6.25rem; height: 10rem; transform: translate(-50%, -50%); cursor: pointer; transform-style: preserve-3d; transition: transform 0.3s, opacity 0.5s; }
 #initial-deck:hover { transform: translate(-50%, -50%) scale(1.05); }
-#initial-deck .shuffle-card { position: absolute; width: 100%; height: 100%; border-radius: 8px; background: var(--card-back-bg); border: 2px solid var(--card-border); box-shadow: 0 0 15px rgba(0,0,0,0.5); }
-#spread-slots-sidebar { position: fixed; z-index: 20; background: rgba(0,0,0,0.3); border-radius: 10px; backdrop-filter: blur(10px); display: flex; gap: 10px; }
-.card-slot { width: var(--card-width); height: var(--card-height); border: 2px dashed var(--primary-color); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary-color); transition: all 0.3s; font-size: 0.8rem; }
+#initial-deck .shuffle-card { position: absolute; width: 100%; height: 100%; border-radius: 0.5rem; background: var(--card-back-bg); border: 0.125rem solid var(--card-border); box-shadow: 0 0 1rem rgba(0,0,0,0.5); }
+#spread-slots-sidebar { position: fixed; z-index: 20; background: rgba(0,0,0,0.3); border-radius: 0.625rem; backdrop-filter: blur(0.625rem); display: flex; gap: 0.625rem; }
+.card-slot { width: var(--card-width); height: var(--card-height); border: 0.125rem dashed var(--primary-color); border-radius: 0.5rem; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary-color); transition: all 0.3s; font-size: 0.8rem; }
 .card-slot.drag-over { border-style: solid; transform: scale(1.05); }
 .card-slot .slot-label { font-family: var(--font-title); text-align: center; }
 
@@ -66,27 +76,47 @@ body {
 .card-slot.slot-active.path-theme { border-color: var(--path-color); animation-name: active-slot-pulse-path; }
 .card-slot.slot-active.outcome-theme { border-color: var(--outcome-color); animation-name: active-slot-pulse-outcome; }
 
-@keyframes active-slot-pulse-challenge { from { box-shadow: 0 0 15px var(--challenge-color); } to { box-shadow: 0 0 35px var(--challenge-color), 0 0 45px var(--challenge-color); } }
-@keyframes active-slot-pulse-path { from { box-shadow: 0 0 15px var(--path-color); } to { box-shadow: 0 0 35px var(--path-color), 0 0 45px var(--path-color); } }
-@keyframes active-slot-pulse-outcome { from { box-shadow: 0 0 15px var(--outcome-color); } to { box-shadow: 0 0 35px var(--outcome-color), 0 0 45px var(--outcome-color); } }
+@keyframes active-slot-pulse-challenge { from { box-shadow: 0 0 1rem var(--challenge-color); } to { box-shadow: 0 0 2.2rem var(--challenge-color), 0 0 2.8rem var(--challenge-color); } }
+@keyframes active-slot-pulse-path { from { box-shadow: 0 0 1rem var(--path-color); } to { box-shadow: 0 0 2.2rem var(--path-color), 0 0 2.8rem var(--path-color); } }
+@keyframes active-slot-pulse-outcome { from { box-shadow: 0 0 1rem var(--outcome-color); } to { box-shadow: 0 0 2.2rem var(--outcome-color), 0 0 2.8rem var(--outcome-color); } }
 
 
 #initial-deck.deck-breathing-mystic { animation: deckMystic 2.5s ease-in-out infinite; }
-@keyframes deckMystic { 0%, 100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1) drop-shadow(0 0 10px var(--highlight-color)); } 50% { transform: translate(-50%, -50%) scale(1.08); filter: brightness(1.1) drop-shadow(0 0 20px var(--highlight-color)); } }
+@keyframes deckMystic { 0%, 100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1) drop-shadow(0 0 0.6rem var(--highlight-color)); } 50% { transform: translate(-50%, -50%) scale(1.08); filter: brightness(1.1) drop-shadow(0 0 1.25rem var(--highlight-color)); } }
 
-.tarot-card { width: var(--card-width); height: var(--card-height); position: absolute; cursor: grab; transform-style: preserve-3d; border-radius: 6px; box-shadow: 0 3px 10px rgba(0,0,0,0.4); touch-action: none; transform: translateZ(0); will-change: transform; }
+.tarot-card { width: var(--card-width); height: var(--card-height); position: absolute; cursor: grab; transform-style: preserve-3d; border-radius: 0.4rem; box-shadow: 0 0.2rem 0.6rem rgba(0,0,0,0.4); touch-action: none; transform: translateZ(0); will-change: transform; }
 .tarot-card:active { cursor: grabbing; }
-.tarot-card.is-dragging { z-index: 1000; box-shadow: 0 8px 25px rgba(0,0,0,0.6); }
+.tarot-card.is-dragging { z-index: 1000; box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.6); }
 .card-slot .tarot-card { width: 100%; height: 100%; cursor: default; position: relative; box-shadow: none; display: block; left: auto; top: auto; transform-style: preserve-3d; }
-.card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: inherit; background-size: cover; background-position: center; border: 1px solid var(--card-border); }
+.card-inner {
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+}
+.card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: inherit; background-size: cover; background-position: center; border: 0.06rem solid var(--card-border); }
 .card-back { background: var(--card-back-bg); }
 .card-front { transform: rotateY(180deg); }
 
-/* --- АДАПТИВНОСТЬ --- */
-@media (max-width: 768px) and (orientation: portrait) { #spread-slots-sidebar { bottom: 20px; left: 50%; transform: translateX(-50%); flex-direction: row; padding: 15px; } }
-@media (max-width: 900px) and (orientation: landscape) { #spread-slots-sidebar { right: 20px; top: 50%; transform: translateY(-50%); flex-direction: column; padding: 15px; } .card-slot { width: 60px; height: 96px; font-size: 0.7rem; } :root { --card-width: 60px; --card-height: 96px; } }
-@media (min-width: 769px) { #spread-slots-sidebar { right: 30px; top: 50%; transform: translateY(-50%); flex-direction: column; padding: 20px; } }
-@media (min-width: 1025px) { .card-slot { width: 100px; height: 160px; } #spread-slots-sidebar { right: 40px; } :root { --card-width: 100px; --card-height: 160px; } }
+/* --- АДАПТИВНОСТЬ СЛОТОВ --- */
+@media (orientation: portrait) {
+    #spread-slots-sidebar {
+        bottom: 1.25rem;
+        left: 50%;
+        transform: translateX(-50%);
+        flex-direction: row;
+        padding: 1rem;
+    }
+}
+@media (orientation: landscape) {
+    #spread-slots-sidebar {
+        right: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        flex-direction: column;
+        padding: 1rem;
+    }
+}
 
 #instruction-text {
     position: absolute;
@@ -94,9 +124,9 @@ body {
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
-    max-width: 600px;
+    max-width: 37.5rem;
     line-height: 1.8;
     transition: opacity 0.5s;
-    font-size: clamp(1.1rem, 3vw, 1.4rem);
+    font-size: 1.2rem;
     pointer-events: none;
 }

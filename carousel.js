@@ -6,6 +6,8 @@ class TarotCarousel {
         this.aiResponseText = null;
         this.isInitialized = false;
         this.seenCardIndexes = new Set();
+        this.isDragging = false;
+        this.startX = 0;
 
         this.cardThemes = {
             0: { name: 'challenge', color: 'var(--challenge-color)' },
@@ -21,9 +23,11 @@ class TarotCarousel {
             image: 'images/oracul.png'
         };
 
-        // ИСПРАВЛЕНО: Привязываем контекст 'this' к методам в конструкторе
         this.handleKeyboard = this.handleKeyboard.bind(this);
-        this.close = this.close.bind(this); // <-- Вот это исправление
+        this.close = this.close.bind(this);
+        this.handleDragStart = this.handleDragStart.bind(this);
+        this.handleDragMove = this.handleDragMove.bind(this);
+        this.handleDragEnd = this.handleDragEnd.bind(this);
     }
 
     showOrUpdate(cards, currentStep, onCloseCallback) {
@@ -63,16 +67,23 @@ class TarotCarousel {
         overlay.className = 'tarot-carousel-overlay';
         overlay.innerHTML = `
             <button class="carousel-close-button">&times;</button>
-            <main class="carousel-main"><div class="card-stage"></div></main>
+            <main class="carousel-main">
+                <div class="card-stage-container">
+                    <div class="card-glow-container"></div>
+                    <div class="card-stage"></div>
+                </div>
+            </main>
             <section class="carousel-panel"></section>`;
         document.body.appendChild(overlay);
         this.overlay = overlay;
     }
 
     attachEventListeners() {
-        // Теперь мы можем передавать this.close напрямую, так как он привязан в конструкторе
         this.overlay.querySelector('.carousel-close-button').addEventListener('click', this.close);
         document.addEventListener('keydown', this.handleKeyboard);
+        const stage = this.overlay.querySelector('.card-stage');
+        stage.addEventListener('mousedown', this.handleDragStart);
+        stage.addEventListener('touchstart', this.handleDragStart, { passive: true });
     }
 
     updateCards(isInitialLoad = false) {
@@ -88,7 +99,7 @@ class TarotCarousel {
         this.updateDetailsPanel();
 
         if (!this.seenCardIndexes.has(this.currentCardIndex)) {
-            setTimeout(() => this.flipCard(this.currentCardIndex), 200);
+            setTimeout(() => this.flipCard(this.currentCardIndex), 300);
         }
     }
     
@@ -101,7 +112,6 @@ class TarotCarousel {
                 <div class="card-face card-back"></div>
                 <div class="card-face card-front" style="background-image: url('${card.image}')"></div>
             </div>`;
-        cardDiv.addEventListener('click', () => this.goToCard(index));
         
         if (this.seenCardIndexes.has(index)) {
             cardDiv.querySelector('.card-inner').classList.add('flipped');
@@ -125,22 +135,22 @@ class TarotCarousel {
         const cardData = this.allCarouselCards[this.currentCardIndex];
         const theme = this.cardThemes[this.currentCardIndex];
 
-        const stage = this.overlay.querySelector('.card-stage');
-        stage.className = 'card-stage';
+        const glowContainer = this.overlay.querySelector('.card-glow-container');
+        glowContainer.className = 'card-glow-container';
         panel.className = 'carousel-panel';
         if (theme) {
-            stage.classList.add(`${theme.name}-glow`);
+            glowContainer.classList.add(`${theme.name}-glow`);
             panel.classList.add(`${theme.name}-border`);
         }
 
         let panelHTML = '';
 
         if (cardData.id === 'ai') {
-            const buttonText = this.aiResponseText ? "Посмотреть предсказание" : "Спросить Оракула";
+            const buttonText = this.aiResponseText ? uiTexts.carousel.viewPrediction : uiTexts.carousel.askOracle;
             panelHTML = `
                 <div class="card-details-content">
                     <div class="card-name" style="color:${theme.color};">${cardData.name}</div>
-                    <div class="card-keyword" style="background-color:${theme.color};">${cardData.keyword}</div>
+                    <div class="card-keyword" style="background-color:${theme.color}; color: #fff;">${cardData.keyword}</div>
                     <button class="ask-oracle-button">${buttonText}</button>
                 </div>`;
         } else {
@@ -158,6 +168,12 @@ class TarotCarousel {
             duration: 0.2,
             onComplete: () => {
                 panel.innerHTML = panelHTML;
+                const content = panel.querySelector('.card-details-content');
+                if (content && !this.seenCardIndexes.has(this.currentCardIndex)) {
+                    gsap.from(content.children, {
+                        opacity: 0, y: 10, duration: 0.4, stagger: 0.1, delay: 0.6
+                    });
+                }
                 if (cardData.id === 'ai') {
                     panel.querySelector('.ask-oracle-button').addEventListener('click', () => this.showAIModal());
                 }
@@ -169,14 +185,22 @@ class TarotCarousel {
     flipCard(index) {
         const card = this.overlay.querySelector(`.card-3d[data-index="${index}"] .card-inner`);
         if (card && !card.classList.contains('flipped')) {
-            card.classList.add('flipped');
-            this.seenCardIndexes.add(index);
+            gsap.to(card, {
+                rotationY: 180,
+                duration: 0.8,
+                ease: 'power2.inOut',
+                onComplete: () => {
+                    card.classList.add('flipped');
+                    this.seenCardIndexes.add(index);
+                }
+            });
         }
     }
     
     goToCard(index) {
-        if (index < 0 || index >= this.allCarouselCards.length || index === this.currentCardIndex) return;
+        if (this.isAnimating || index < 0 || index >= this.allCarouselCards.length || index === this.currentCardIndex) return;
         
+        this.isAnimating = true;
         this.currentCardIndex = index;
         this.positionCards();
         this.updateDetailsPanel();
@@ -184,6 +208,8 @@ class TarotCarousel {
         if (!this.seenCardIndexes.has(index)) {
             setTimeout(() => this.flipCard(this.currentCardIndex), 300);
         }
+        
+        setTimeout(() => this.isAnimating = false, 600);
     }
     
     handleKeyboard(e) {
@@ -191,6 +217,54 @@ class TarotCarousel {
         if (e.key === 'ArrowLeft') this.goToCard(this.currentCardIndex - 1);
         if (e.key === 'ArrowRight') this.goToCard(this.currentCardIndex + 1);
         if (e.key === 'Escape') this.close();
+    }
+
+    handleDragStart(e) {
+        if (this.isAnimating) return;
+        this.isDragging = true;
+        this.startX = e.touches ? e.touches[0].clientX : e.clientX;
+        
+        document.addEventListener('mousemove', this.handleDragMove);
+        document.addEventListener('mouseup', this.handleDragEnd, { once: true });
+        document.addEventListener('touchmove', this.handleDragMove, { passive: false });
+        document.addEventListener('touchend', this.handleDragEnd, { once: true });
+    }
+
+    handleDragMove(e) {
+        if (!this.isDragging) return;
+        e.preventDefault();
+        const currentX = e.touches ? e.touches[0].clientX : e.clientX;
+        const diff = currentX - this.startX;
+        const activeCard = this.overlay.querySelector('.card-3d.active');
+        if (activeCard) {
+            gsap.to(activeCard, {
+                x: diff,
+                rotation: diff / 40,
+                duration: 0.3
+            });
+        }
+    }
+
+    handleDragEnd(e) {
+        if (!this.isDragging) return;
+        this.isDragging = false;
+        
+        document.removeEventListener('mousemove', this.handleDragMove);
+        document.removeEventListener('touchmove', this.handleDragMove);
+
+        const currentX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+        const diff = currentX - this.startX;
+
+        const activeCard = this.overlay.querySelector('.card-3d.active');
+        gsap.to(activeCard, { x: 0, rotation: 0, duration: 0.4, ease: 'power2.out' });
+
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) {
+                this.goToCard(this.currentCardIndex - 1);
+            } else {
+                this.goToCard(this.currentCardIndex + 1);
+            }
+        }
     }
 
     showAIModal() {
@@ -204,14 +278,14 @@ class TarotCarousel {
             contentHTML = `<div class="ai-response">${this.aiResponseText}</div>`;
         } else {
             contentHTML = `
-                <textarea class="ai-input" placeholder="Например: какие риски в проекте?"></textarea>
-                <button class="ai-button">Получить предсказание</button>
+                <textarea class="ai-input" placeholder="${uiTexts.aiModal.placeholder}"></textarea>
+                <button class="ai-button">${uiTexts.aiModal.button}</button>
                 <div class="ai-response" style="display:none;"></div>`;
         }
 
         modal.innerHTML = `
             <div class="ai-modal-panel">
-                <div class="ai-title">🤖 Персональный анализ</div>
+                <div class="ai-title">${uiTexts.aiModal.title}</div>
                 ${contentHTML}
             </div>`;
         
@@ -248,32 +322,42 @@ class TarotCarousel {
         if (!input.value.trim()) return;
 
         button.disabled = true;
-        button.textContent = 'Анализ...';
+        button.textContent = uiTexts.aiModal.loading;
         responseEl.style.display = 'block';
-        responseEl.innerHTML = `🔮 Соединяюсь с цифровым потоком...`;
+        responseEl.innerHTML = uiTexts.aiModal.connecting;
 
-        const prompt = `Ты - цифровой оракул... (ваш промпт)`;
+        const prompt = uiTexts.geminiPrompt
+            .replace('{card1}', this.chosenCards[0].name)
+            .replace('{card2}', this.chosenCards[1].name)
+            .replace('{card3}', this.chosenCards[2].name)
+            .replace('{question}', input.value);
+
         try {
-            // ... (ваш код запроса к PHP-серверу)
+            const response = await fetch('gemini-proxy.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error?.message || `HTTP Error: ${response.status}`);
             
-            // Mock response for demonstration
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            const text = `Ваш вопрос "${input.value}" раскрывает глубокий смысл. **Вызов** (${this.chosenCards[0].name}) говорит о скрытых технических долгах. **Путь** (${this.chosenCards[1].name}) лежит через рефакторинг и командную работу. **Исход** (${this.chosenCards[2].name}) обещает стабильный релиз и признание.`;
-
-            this.aiResponseText = text;
+            const text = data.candidates[0].content.parts[0].text;
+            this.aiResponseText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
             responseEl.innerHTML = this.aiResponseText;
 
             input.style.display = 'none';
             button.style.display = 'none';
 
         } catch (error) {
-            responseEl.innerHTML = `<span style="color: #ff8a80;">Упс! Ошибка соединения.</span>`;
+            console.error("Ошибка запроса к прокси-серверу:", error);
+            responseEl.innerHTML = `<span style="color: #ff8a80;">${uiTexts.aiModal.error}</span>`;
             button.disabled = false;
-            button.textContent = 'Получить предсказание';
+            button.textContent = uiTexts.aiModal.button;
         }
     }
 
     close() {
+        const lastStep = this.currentCardIndex;
         gsap.to(this.overlay, {
             opacity: 0,
             duration: 0.4,
@@ -283,7 +367,7 @@ class TarotCarousel {
                 document.removeEventListener('keydown', this.handleKeyboard);
                 
                 if (this.chosenCards.length < 3) {
-                    if (this.onCloseCallback) this.onCloseCallback();
+                    if (this.onCloseCallback) this.onCloseCallback(lastStep);
                 } else {
                     this.seenCardIndexes.clear();
                     if (window.Navigation && typeof window.Navigation.switchScreen === 'function') {

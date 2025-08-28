@@ -1,28 +1,16 @@
-/* --- Стили карусели, адаптированные под тему "Газпром" --- */
+/* --- Стили карусели, адаптированные под тему и fluid-масштабирование --- */
 
 :root {
-    /* Цвета из вашего style.css для полной интеграции */
-    --carousel-bg: var(--bg-color, #011d3a);
-    --panel-bg: rgba(0, 47, 92, 0.7); /* Полупрозрачный синий */
+    --panel-bg: rgba(0, 47, 92, 0.7);
     --panel-border: var(--primary-color, #0078d7);
-    --text-primary: var(--secondary-color, #ffffff);
-    --text-secondary: var(--text-color, #e0f7ff);
-    --card-back-bg: var(--card-back-bg, linear-gradient(145deg, #002f5c, #004b8f));
-    --card-border: var(--card-border, #00aaff);
-
-    /* Цвета для типов карт */
-    --challenge-color: #ff6b35;
-    --path-color: #f7b801;
-    --outcome-color: #00d084;
-    --ai-color: #7c3aed;
 }
 
 /* --- ОСНОВНОЙ КОНТЕЙНЕР КАРУСЕЛИ --- */
 .tarot-carousel-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(1, 29, 58, 0.85); /* Используем --bg-color с прозрачностью */
-    backdrop-filter: blur(12px) saturate(1.2);
+    background: rgba(1, 29, 58, 0.85);
+    backdrop-filter: blur(1rem) saturate(1.2);
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
@@ -42,22 +30,22 @@
     position: absolute;
     top: 1.5rem;
     right: 1.5rem;
-    width: 44px;
-    height: 44px;
-    border: 1px solid var(--panel-border);
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0.06rem solid var(--panel-border);
     background: var(--panel-bg);
     border-radius: 50%;
     color: var(--text-primary);
     font-size: 1.75rem;
-    line-height: 44px;
+    line-height: 2.75rem;
     text-align: center;
     cursor: pointer;
     z-index: 20;
-    transition: transform 0.3s ease, background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.3s ease;
 }
 .carousel-close-button:hover {
-    transform: rotate(90deg) scale(1.1);
     background-color: rgba(255, 0, 0, 0.3);
+    transform: scale(1.1);
 }
 
 /* --- ОБЛАСТЬ ОТОБРАЖЕНИЯ КАРТ --- */
@@ -66,26 +54,39 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    perspective: 1200px;
-    position: relative;
     min-height: 0;
+    width: 100%; /* Добавьте это */
+}
+
+.card-stage-container {
+    position: relative;
+    height: 85vh; /* Используем высоту viewport вместо % */
+    max-height: 80vh; /* Увеличиваем максимальную высоту */
+    width: auto; /* Ширина адаптируется автоматически */
+    aspect-ratio: 5/8;
+}
+
+.card-stage, .card-glow-container {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+}
+
+.card-glow-container {
+    transition: box-shadow 0.6s ease;
+    border-radius: 1rem;
+    z-index: 0;
 }
 
 .card-stage {
-    width: 90%;
-    max-width: 320px;
-    aspect-ratio: 5 / 8;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: box-shadow 0.6s ease; /* Для плавного появления свечения */
-    border-radius: 1rem; /* ИСПРАВЛЕНО: Добавляем скругление углов для свечения */
+    z-index: 1;
 }
 
-/* Цветовое свечение для активной карты */
-.card-stage.challenge-glow { box-shadow: 0 0 45px -5px var(--challenge-color); }
-.card-stage.path-glow { box-shadow: 0 0 45px -5px var(--path-color); }
-.card-stage.outcome-glow { box-shadow: 0 0 45px -5px var(--outcome-color); }
-.card-stage.ai-glow { box-shadow: 0 0 45px -5px var(--ai-color); }
+/* Цветовое свечение */
+.challenge-glow { box-shadow: 0 0 2.8rem -0.3rem var(--challenge-color); }
+.path-glow { box-shadow: 0 0 2.8rem -0.3rem var(--path-color); }
+.outcome-glow { box-shadow: 0 0 2.8rem -0.3rem var(--outcome-color); }
+.ai-glow { box-shadow: 0 0 2.8rem -0.3rem var(--ai-color); }
 
 .card-3d {
     position: absolute;
@@ -94,11 +95,12 @@
     transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s;
 }
 
-/* Позиционирование карт в карусели */
+/* Позиционирование карт */
 .card-3d.active { transform: translateZ(0) scale(1); z-index: 2; opacity: 1; }
 .card-3d.prev { transform: translateX(-40%) scale(0.8); z-index: 1; opacity: 0.4; }
-.card-3d.next { transform: translateX(40%) scale(0.8); z-index: 1; opacity: 0.4; }
+.card-3d.next { transform: translateX(40%) scale(0.8) translateZ(-5rem); z-index: 1; opacity: 0.4; }
 .card-3d.hidden { transform: scale(0.5); opacity: 0; pointer-events: none; }
+
 
 .card-inner {
     width: 100%;
@@ -109,7 +111,6 @@
 .card-inner.flipped {
     transform: rotateY(180deg);
 }
-
 .card-face {
     position: absolute;
     width: 100%;
@@ -132,7 +133,7 @@
 .carousel-panel {
     flex-shrink: 0;
     background: var(--panel-bg);
-    border: 1px solid var(--panel-border);
+    border: 0.06rem solid var(--panel-border);
     border-radius: 1.5rem;
     padding: 1.5rem;
     max-height: 40vh;
@@ -141,37 +142,15 @@
     transition: border-color 0.6s ease;
 }
 
-/* Цветовые рамки для панели */
 .carousel-panel.challenge-border { border-color: var(--challenge-color); }
 .carousel-panel.path-border { border-color: var(--path-color); }
 .carousel-panel.outcome-border { border-color: var(--outcome-color); }
 .carousel-panel.ai-border { border-color: var(--ai-color); }
 
-.card-name {
-    font-family: var(--font-display);
-    font-size: 1.6rem;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-}
-.card-keyword {
-    font-family: var(--font-body);
-    display: inline-block;
-    padding: 0.25rem 0.8rem;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-    font-weight: 700;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    color: #000;
-}
-.card-prophecy {
-    font-style: italic;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    font-size: 1rem;
-}
+.card-name { font-family: var(--font-display); font-size: 1.6rem; margin-bottom: 0.5rem; color: var(--text-primary); }
+.card-keyword { font-family: var(--font-body); display: inline-block; padding: 0.25rem 0.8rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; color: #000; }
+.card-prophecy { font-style: italic; color: var(--text-secondary); line-height: 1.6; font-size: 1rem; }
 
-/* Кнопка "Спросить Оракула" */
 .ask-oracle-button {
     width: 100%;
     padding: 1rem;
@@ -186,7 +165,7 @@
 }
 .ask-oracle-button:hover {
     background-color: #985eff;
-    transform: translateY(-2px);
+    transform: translateY(-0.125rem);
 }
 
 /* --- МОДАЛЬНОЕ ОКНО AI --- */
@@ -194,7 +173,7 @@
     position: fixed;
     inset: 0;
     background: rgba(1, 29, 58, 0.9);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(1.25rem);
     z-index: 1100;
     display: flex;
     align-items: center;
@@ -210,11 +189,11 @@
 }
 .ai-modal-panel {
     background: var(--panel-bg);
-    border: 1px solid var(--ai-color);
+    border: 0.06rem solid var(--ai-color);
     border-radius: 1.5rem;
     padding: 2rem;
     width: 100%;
-    max-width: 600px;
+    max-width: 37.5rem;
     max-height: 90vh;
     overflow-y: auto;
     color: var(--text-secondary);
@@ -224,57 +203,34 @@
 .ai-modal-overlay.active .ai-modal-panel {
     transform: scale(1);
 }
+.ai-modal-panel .ai-title { font-family: var(--font-display); font-size: 1.8rem; color: var(--ai-color); text-align: center; margin-bottom: 1.5rem; }
+.ai-input, .ai-response { width: 100%; background: rgba(0,0,0,0.3); border: 0.06rem solid var(--panel-border); border-radius: 0.75rem; padding: 1rem; color: var(--text-primary); font-family: var(--font-body); font-size: 1rem; }
+.ai-input { resize: vertical; min-height: 6.25rem; margin-bottom: 1rem; }
+.ai-response { line-height: 1.7; min-height: 9.375rem; }
+.ai-button { width: 100%; padding: 1rem; background: var(--ai-color); border: none; color: var(--text-primary); font-family: var(--font-display); font-size: 1.1rem; border-radius: 0.75rem; cursor: pointer; }
+.ai-button:disabled { background: #555; cursor: not-allowed; }
 
-.ai-modal-panel .ai-title {
-    font-family: var(--font-display);
-    font-size: 1.8rem;
-    color: var(--ai-color);
-    text-align: center;
-    margin-bottom: 1.5rem;
-}
-.ai-input, .ai-response {
-    width: 100%;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--panel-border);
-    border-radius: 0.75rem;
-    padding: 1rem;
-    color: var(--text-primary);
-    font-family: var(--font-body);
-    font-size: 1rem;
-}
-.ai-input {
-    resize: vertical;
-    min-height: 100px;
-    margin-bottom: 1rem;
-}
-.ai-response {
-    line-height: 1.7;
-    min-height: 150px;
-}
-.ai-button {
-    width: 100%;
-    padding: 1rem;
-    background: var(--ai-color);
-    border: none;
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    border-radius: 0.75rem;
-    cursor: pointer;
-}
-.ai-button:disabled {
-    background: #555;
-    cursor: not-allowed;
-}
-
-/* --- АДАПТИВНОСТЬ --- */
-@media (min-width: 768px) and (orientation: landscape) {
+/* --- АДАПТИВНОСТЬ ДЛЯ ГОРИЗОНТАЛЬНОГО РЕЖИМА --- */
+@media (orientation: landscape) and (max-height: 700px) {
     .tarot-carousel-overlay {
         flex-direction: row;
-        padding: 1.5rem;
+        align-items: center;
         gap: 1.5rem;
     }
-    .carousel-main { width: 50%; }
-    .card-stage { max-width: 350px; }
-    .carousel-panel { width: 50%; max-height: 90vh; }
+    .carousel-main {
+        flex-basis: 45%;
+        height: 100%;
+    }
+    .card-stage-container {
+        height: 80vh;
+        max-height: 80vh;
+        width: auto;
+    }
+    .carousel-panel {
+        flex-basis: 55%;
+        max-height: 90%;
+        padding: 1.25rem;
+    }
+    .card-name { font-size: 1.4rem; }
+    .card-prophecy { font-size: 0.9rem; }
 }

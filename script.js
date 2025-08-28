@@ -1,106 +1,65 @@
-// Определяем ResultScreen в глобальной области видимости (window),
-// чтобы HTML-атрибут onclick мог найти его функции.
-window.ResultScreen = {};
-
 document.addEventListener('DOMContentLoaded', () => {
-    const CONSTANTS = { CARD_SPACING: 20, ANIMATION_DURATION: 700, TOAST_DURATION: 2500, MIN_CARD_DISTANCE: 100, CONFETTI_COUNT: 50 };
+    const CONSTANTS = { ANIMATION_DURATION: 700, MIN_CARD_DISTANCE: 100 };
     const UI = {
         screens: { start: document.getElementById('start-screen'), focus: document.getElementById('focus-screen'), choice: document.getElementById('choice-screen') },
         buttons: { start: document.getElementById('start-btn') },
         containers: { cardSlots: document.querySelectorAll('.card-slot'), cardArea: document.getElementById('card-selection-area'), app: document.querySelector('.app-container') },
-        devPanel: {
-            toggle: document.getElementById('dev-panel-toggle'), content: document.getElementById('dev-panel-content'),
-            elements: { themeSelect: document.getElementById('theme-select'), soundToggle: document.getElementById('sound-effects-toggle'), restartBtn: document.getElementById('restart-app-btn'), imageRatioSlider: document.getElementById('image-ratio-slider'), imageRatioValue: document.getElementById('image-ratio-value') }
-        }
+        instructionText: document.getElementById('instruction-text'),
+        revealOverlay: document.getElementById('reveal-overlay'),
+        finalPrompt: document.getElementById('final-prompt'),
+        focusScreenElements: { title: document.getElementById('focus-title'), subtitle: document.getElementById('focus-subtitle') }
     };
-    let appState = { chosenCards: new Array(3).fill(null), draggedCard: null, dragOffset: { x: 0, y: 0 }, audioContext: null, sounds: {}, confettiCanvas: null, confettiContext: null, confettiParticles: [] };
-    // Упрощенные эффекты: звук и размер карты настраиваются, остальное включено по умолчанию
-    let effects = { 
-        sounds: { enabled: true }, 
-        imageRatio: { value: '60%' } 
-    };
-
-    const Settings = {
-        load() { const saved = localStorage.getItem('tarot-effects-v2'); if (saved) { try { effects = { ...effects, ...JSON.parse(saved) }; } catch (e) { console.error('Ошибка загрузки настроек:', e); } } },
-        save() { localStorage.setItem('tarot-effects-v2', JSON.stringify(effects)); },
-        applyToUI() { 
-            if (UI.devPanel.elements.soundToggle) { UI.devPanel.elements.soundToggle.checked = effects.sounds.enabled; }
-            if (UI.devPanel.elements.imageRatioSlider) { 
-                const ratioValue = parseInt(effects.imageRatio.value);
-                UI.devPanel.elements.imageRatioSlider.value = ratioValue;
-                UI.devPanel.elements.imageRatioValue.textContent = `${ratioValue}%`;
-                document.documentElement.style.setProperty('--card-image-height-ratio', effects.imageRatio.value);
-            }
-        }
-    };
-
-    const Audio = {
-        init() { if (!appState.audioContext) { try { const AudioContext = window.AudioContext || window.webkitAudioContext; appState.audioContext = new AudioContext(); this.createSounds(); } catch (e) { console.warn('Audio not supported:', e); effects.sounds.enabled = false; } } },
-        createSounds() { const createTone = (frequency, duration, volume, type = 'sine') => () => { if (!appState.audioContext || !effects.sounds.enabled) return; try { const oscillator = appState.audioContext.createOscillator(); const gainNode = appState.audioContext.createGain(); oscillator.connect(gainNode); gainNode.connect(appState.audioContext.destination); oscillator.type = type; oscillator.frequency.setValueAtTime(frequency, appState.audioContext.currentTime); gainNode.gain.setValueAtTime(0, appState.audioContext.currentTime); gainNode.gain.linearRampToValueAtTime(volume, appState.audioContext.currentTime + 0.01); gainNode.gain.exponentialRampToValueAtTime(0.001, appState.audioContext.currentTime + duration); oscillator.start(appState.audioContext.currentTime); oscillator.stop(appState.audioContext.currentTime + duration); } catch (e) { console.warn('Ошибка воспроизведения звука:', e); } }; appState.sounds = { cardClick: createTone(659, 0.5, 0.15), cardDrop: createTone(523, 0.8, 0.2), cardFlip: createTone(784, 0.6, 0.12), complete: () => { createTone(523, 0.5, 0.1)(); setTimeout(() => createTone(659, 0.5, 0.1)(), 100); setTimeout(() => createTone(784, 0.5, 0.1)(), 200); } }; },
-        play(soundName) { if (appState.sounds[soundName]) { appState.sounds[soundName](); } }
+    let appState = { 
+        chosenCards: new Array(3).fill(null), 
+        currentStep: 0, 
+        draggedCard: null, 
+        dragOffset: { x: 0, y: 0 },
+        focusTimeout: null,
+        instructionTimeout: null
     };
 
     const Vibration = { trigger(pattern) { if ('vibrate' in navigator) { try { navigator.vibrate(pattern); } catch (e) { console.warn('Vibration failed:', e); } } } };
-    const Effects = {
-        createRipple(x, y, element) { const ripple = document.createElement('div'); ripple.className = 'ripple-v1'; const size = 100; Object.assign(ripple.style, { width: `${size}px`, height: `${size}px`, left: `${x - size / 2}px`, top: `${y - size / 2}px` }); element.appendChild(ripple); setTimeout(() => ripple.remove(), 600); },
-        updateBreathingCards() { document.querySelectorAll('.tarot-card:not(.is-dropped)').forEach(card => card.classList.toggle('breathing-glow', true)); },
-        updateMagneticSlots() { UI.containers.cardSlots.forEach(slot => slot.classList.toggle('magnetic-pulse', true)); },
-        updateDeckBreathing() { const deck = document.getElementById('initial-deck'); if (deck) { deck.classList.toggle('deck-breathing-mystic', true); } }
-    };
-
+    
     const Navigation = { switchScreen(screenName) { Object.values(UI.screens).forEach(screen => screen.classList.remove('active')); if (UI.screens[screenName]) { UI.screens[screenName].classList.add('active'); } } };
     const Particles = { init() { if (!window.particlesJS) return; const theme = document.body.className || 'theme-gazprom-classic'; const colors = { 'theme-gazprom-classic': { p: "#00aaff", l: "#0078d7" }, 'theme-gazprom-dark': { p: "#3399ff", l: "#005f9e" }, 'theme-gazprom-light': { p: "#0078d7", l: "#005a9e" } }; const color = colors[theme] || colors['theme-gazprom-classic']; particlesJS('particles-js', { particles: { number: { value: 60 }, color: { value: color.p }, size: { value: 3, random: true }, move: { enable: true, speed: 2 }, line_linked: { color: color.l, distance: 150 } }, interactivity: { events: { onhover: { enable: true, mode: "repulse" } } } }); } };
-    const Confetti = { init() { appState.confettiCanvas = document.getElementById('confetti-canvas'); appState.confettiContext = appState.confettiCanvas.getContext('2d'); const resize = () => { appState.confettiCanvas.width = window.innerWidth; appState.confettiCanvas.height = window.innerHeight; }; window.addEventListener('resize', resize); resize(); }, create() { if (!appState.confettiContext) return; const colors = ['#00aaff', '#0078d7', '#ffffff']; for (let i = 0; i < CONSTANTS.CONFETTI_COUNT; i++) { appState.confettiParticles.push({ x: Math.random() * appState.confettiCanvas.width, y: -20, vx: Math.random() * 10 - 5, vy: Math.random() * 5 + 5, color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 8 + 4 }); } if (appState.confettiParticles.length > 0) { this.animate(); } }, animate() { if (!appState.confettiContext) return; appState.confettiContext.clearRect(0, 0, appState.confettiCanvas.width, appState.confettiCanvas.height); for (let i = appState.confettiParticles.length - 1; i >= 0; i--) { const particle = appState.confettiParticles[i]; particle.x += particle.vx; particle.y += particle.vy; particle.vy += 0.2; appState.confettiContext.fillStyle = particle.color; appState.confettiContext.fillRect(particle.x, particle.y, particle.size, particle.size); if (particle.y > appState.confettiCanvas.height + 20) { appState.confettiParticles.splice(i, 1); } } if (appState.confettiParticles.length > 0) { requestAnimationFrame(() => this.animate()); } } };
     
-    const CardDealing = {
-        calculateSafeArea() {
-            const areaRect = UI.containers.cardArea.getBoundingClientRect();
-            const slots = Array.from(UI.containers.cardSlots);
-            const slotBounds = slots.reduce((bounds, slot) => { const rect = slot.getBoundingClientRect(); return { minX: Math.min(bounds.minX, rect.left - areaRect.left), maxX: Math.max(bounds.maxX, rect.right - areaRect.left), minY: Math.min(bounds.minY, rect.top - areaRect.top), maxY: Math.max(bounds.maxY, rect.bottom - areaRect.top) }; }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
-            const isPortrait = window.innerHeight > window.innerWidth;
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile && !isPortrait) return { x: CONSTANTS.CARD_SPACING, y: CONSTANTS.CARD_SPACING, width: Math.max(200, slotBounds.minX - CONSTANTS.CARD_SPACING * 3), height: areaRect.height - CONSTANTS.CARD_SPACING * 2 };
-            if (isMobile && isPortrait) return { x: CONSTANTS.CARD_SPACING, y: CONSTANTS.CARD_SPACING, width: areaRect.width - CONSTANTS.CARD_SPACING * 2, height: Math.max(200, slotBounds.minY - CONSTANTS.CARD_SPACING * 3) };
-            return { x: CONSTANTS.CARD_SPACING, y: CONSTANTS.CARD_SPACING, width: Math.max(300, slotBounds.minX - CONSTANTS.CARD_SPACING * 3), height: areaRect.height - CONSTANTS.CARD_SPACING * 2 };
-        },
-        generateCardPositions(cardCount, cardWidth, cardHeight) {
-            const safeArea = this.calculateSafeArea();
-            const positions = [];
-            for (let i = 0; i < cardCount; i++) {
-                let position, attempts = 0;
-                do { position = { x: safeArea.x + Math.random() * (safeArea.width - cardWidth), y: safeArea.y + Math.random() * (safeArea.height - cardHeight), rotation: Math.random() * 40 - 20 }; attempts++; } while (this.checkCollision(position, positions) && attempts < 50);
-                positions.push(position);
-            }
-            return positions;
-        },
-        checkCollision(newPos, existingPositions) { return existingPositions.some(pos => Math.hypot(newPos.x - pos.x, newPos.y - pos.y) < CONSTANTS.MIN_CARD_DISTANCE); }
-    };
-
     const GameLogic = {
         setupChoiceScreen() {
             Navigation.switchScreen('choice');
-            const explanation = document.getElementById('slot-explanation');
-            if (explanation) explanation.style.opacity = '1';
             appState.chosenCards.fill(null);
-            UI.containers.cardSlots.forEach((slot, index) => { slot.innerHTML = `<span class="slot-label">${["Вызов", "Путь", "Исход"][index]}</span>`; slot.classList.remove('filled'); });
+            appState.currentStep = 0;
+            UI.containers.cardSlots.forEach((slot, index) => { 
+                const labels = ["Вызов", "Путь", "Исход"];
+                slot.innerHTML = `<span class="slot-label">${labels[index]}</span>`; 
+                slot.classList.remove('filled', 'slot-active', 'challenge-theme', 'path-theme', 'outcome-theme'); 
+            });
             UI.containers.cardArea.innerHTML = '';
+            UI.instructionText.innerHTML = "Коснитесь колоды, чтобы явить судьбу.";
+            UI.instructionText.classList.add('shining-text');
+            gsap.fromTo(UI.instructionText, {opacity: 0}, {opacity: 1, duration: 1});
+
             const initialDeck = document.createElement('div');
             initialDeck.id = 'initial-deck';
             for (let i = 0; i < 5; i++) { const card = document.createElement('div'); card.className = 'shuffle-card'; card.style.transform = `translateZ(${i * -2}px)`; initialDeck.appendChild(card); }
             UI.containers.cardArea.appendChild(initialDeck);
-            Effects.updateDeckBreathing();
+            initialDeck.classList.add('deck-breathing-mystic');
             initialDeck.addEventListener('click', this.dealCards.bind(this), { once: true });
         },
+
         dealCards() {
+            UI.containers.app.classList.remove('focus-active');
             const deck = document.getElementById('initial-deck');
             if (!deck) return;
-            gsap.to('#slot-explanation', { opacity: 0, duration: 0.3, pointerEvents: 'none' });
+            gsap.to(UI.instructionText, { opacity: 0, duration: 0.3, onComplete: () => {
+                UI.instructionText.innerHTML = '';
+                UI.instructionText.classList.remove('shining-text');
+            }});
             const shuffledCards = [...tarotCardsData].sort(() => 0.5 - Math.random());
             const deckRect = deck.getBoundingClientRect();
             const areaRect = UI.containers.cardArea.getBoundingClientRect();
             const cardWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--card-width'));
             const cardHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--card-height'));
-            const positions = CardDealing.generateCardPositions(shuffledCards.length, cardWidth, cardHeight);
+            const positions = this.generateCardPositions(shuffledCards.length, cardWidth, cardHeight);
             shuffledCards.forEach((cardData, index) => {
                 const cardElement = document.createElement('div');
                 cardElement.className = 'tarot-card';
@@ -112,244 +71,191 @@ document.addEventListener('DOMContentLoaded', () => {
                 gsap.to(cardElement, { left: position.x, top: position.y, rotation: position.rotation, duration: CONSTANTS.ANIMATION_DURATION / 1000, delay: index * 0.02, ease: 'power2.out' });
             });
             gsap.to(deck, { opacity: 0, duration: 0.5, onComplete: () => deck.remove() });
-            setTimeout(() => { document.querySelectorAll('.tarot-card').forEach(card => { card.addEventListener('mousedown', DragDrop.startDrag); card.addEventListener('touchstart', DragDrop.startDrag, { passive: false }); }); Effects.updateBreathingCards(); Effects.updateMagneticSlots(); }, shuffledCards.length * 20 + CONSTANTS.ANIMATION_DURATION);
+            setTimeout(() => { 
+                DragDrop.enableDragging();
+                this.startNextStep();
+            }, shuffledCards.length * 20 + CONSTANTS.ANIMATION_DURATION);
         },
-        showPlacementToast(slotName, cardName) { const toast = document.createElement('div'); toast.className = 'placement-toast'; toast.innerHTML = `<h4>${slotName}</h4><p>${cardName}</p>`; document.body.appendChild(toast); setTimeout(() => toast.remove(), CONSTANTS.TOAST_DURATION); }
+        
+        startNextStep() {
+            UI.containers.cardSlots.forEach(slot => slot.classList.remove('slot-active', 'challenge-theme', 'path-theme', 'outcome-theme'));
+            
+            const instructions = [
+                "Переместите карту на подсвеченный слот.<br>Ваш <strong>Вызов</strong> — это скрытый баг в системе.",
+                "Ваша вторая карта укажет <strong>Путь</strong> — верный алгоритм для решения.",
+                "Последняя карта предскажет <strong>Исход</strong> — результат вашего деплоя."
+            ];
+            
+            if (appState.currentStep < 3) {
+                const activeSlot = UI.containers.cardSlots[appState.currentStep];
+                const themes = ['challenge-theme', 'path-theme', 'outcome-theme'];
+                if (activeSlot) {
+                    activeSlot.classList.add('slot-active', themes[appState.currentStep]);
+                }
+                UI.instructionText.innerHTML = instructions[appState.currentStep];
+                UI.instructionText.style.top = '50%';
+                gsap.to(UI.instructionText, { opacity: 1, duration: 0.5 });
+
+                clearTimeout(appState.instructionTimeout);
+                appState.instructionTimeout = setTimeout(() => {
+                    gsap.to(UI.instructionText, { opacity: 0, duration: 0.5 });
+                }, 4000);
+
+            } else {
+                Vibration.trigger([100, 50, 100]);
+                gsap.to(UI.instructionText, { opacity: 0, duration: 0.3 });
+                ResultScreen.initialize(appState.chosenCards.filter(c => c));
+            }
+        },
+        
+        generateCardPositions(cardCount, cardWidth, cardHeight) {
+            const areaRect = UI.containers.cardArea.getBoundingClientRect();
+            const slotsContainer = document.getElementById('spread-slots-sidebar');
+            const slotsRect = slotsContainer.getBoundingClientRect();
+            const instructionRect = UI.instructionText.getBoundingClientRect();
+            const safeArea = {
+                x: 10,
+                y: instructionRect.height > 0 ? instructionRect.height + 20 : 50,
+                width: areaRect.width - 20,
+                height: (slotsRect.top > 0 ? slotsRect.top : areaRect.height) - (instructionRect.height > 0 ? instructionRect.height + 40 : 100)
+            };
+            const isLandscape = areaRect.width > areaRect.height;
+            if (isLandscape && slotsRect.left > 0) {
+                safeArea.width = slotsRect.left - 20;
+                safeArea.height = areaRect.height - 20;
+                safeArea.y = 10;
+            }
+            const positions = [];
+            for (let i = 0; i < cardCount; i++) {
+                let position, attempts = 0;
+                do { 
+                    position = { 
+                        x: safeArea.x + Math.random() * (safeArea.width - cardWidth), 
+                        y: safeArea.y + Math.random() * (safeArea.height - cardHeight), 
+                        rotation: Math.random() * 40 - 20 
+                    }; 
+                    attempts++; 
+                } while (this.checkCollision(position, positions) && attempts < 50);
+                positions.push(position);
+            }
+            return positions;
+        },
+        checkCollision(newPos, existingPositions) { return existingPositions.some(pos => Math.hypot(newPos.x - pos.x, newPos.y - pos.y) < CONSTANTS.MIN_CARD_DISTANCE); }
     };
 
     const DragDrop = {
-        startDrag(e) { e.preventDefault(); const card = e.target.closest('.tarot-card'); if (card.classList.contains('is-dropped')) return; appState.draggedCard = card; Audio.init(); Audio.play('cardClick'); Vibration.trigger(50); const rect = card.getBoundingClientRect(); const clientX = e.clientX || e.touches[0].clientX; const clientY = e.clientY || e.touches[0].clientY; appState.dragOffset = { x: clientX - rect.left, y: clientY - rect.top }; card.classList.add('is-dragging'); gsap.to(card, { scale: 1.1, duration: 0.2 }); Effects.createRipple(clientX - rect.left, clientY - rect.top, card); document.addEventListener('mousemove', DragDrop.handleDrag); document.addEventListener('mouseup', DragDrop.endDrag); document.addEventListener('touchmove', DragDrop.handleDrag, { passive: false }); document.addEventListener('touchend', DragDrop.endDrag); },
-        handleDrag(e) { if (!appState.draggedCard) return; e.preventDefault(); const clientX = e.clientX || e.touches[0].clientX; const clientY = e.clientY || e.touches[0].clientY; const parentRect = UI.containers.cardArea.getBoundingClientRect(); const newX = clientX - parentRect.left - appState.dragOffset.x; const newY = clientY - parentRect.top - appState.dragOffset.y; Object.assign(appState.draggedCard.style, { left: `${newX}px`, top: `${newY}px` }); DragDrop.checkSlotProximity(); },
-        checkSlotProximity() { const cardRect = appState.draggedCard.getBoundingClientRect(); const cardCenterX = cardRect.left + cardRect.width / 2; const cardCenterY = cardRect.top + cardRect.height / 2; let closestSlot = null, minDistance = Infinity; UI.containers.cardSlots.forEach(slot => { if (slot.classList.contains('filled')) return; const slotRect = slot.getBoundingClientRect(); const slotCenterX = slotRect.left + slotRect.width / 2; const slotCenterY = slotRect.top + slotRect.height / 2; const distance = Math.hypot(cardCenterX - slotCenterX, cardCenterY - slotCenterY); if (distance < minDistance) { minDistance = distance; closestSlot = slot; } }); UI.containers.cardSlots.forEach(slot => { const shouldActivate = (slot === closestSlot && minDistance < slot.clientWidth); slot.classList.toggle('drag-over', shouldActivate); slot.classList.toggle('attracting', true); }); },
-        endDrag() { if (!appState.draggedCard) return; document.removeEventListener('mousemove', DragDrop.handleDrag); document.removeEventListener('mouseup', DragDrop.endDrag); document.removeEventListener('touchmove', DragDrop.handleDrag); document.removeEventListener('touchend', DragDrop.endDrag); appState.draggedCard.classList.remove('is-dragging'); const droppedSlot = document.querySelector('.card-slot.drag-over'); if (droppedSlot) { DragDrop.handleDrop(appState.draggedCard, droppedSlot); } else { gsap.to(appState.draggedCard, { scale: 1, duration: 0.3, ease: 'back.out' }); } UI.containers.cardSlots.forEach(slot => slot.classList.remove('drag-over', 'attracting')); appState.draggedCard = null; },
-        handleDrop(cardElement, slot) { const cardData = tarotCardsData.find(c => c.id == cardElement.dataset.id); const slotId = parseInt(slot.dataset.slotId); const labels = ["Ваш Вызов", "Ваш Путь", "Ваш Исход"]; appState.chosenCards[slotId] = cardData; Audio.play('cardDrop'); Vibration.trigger(100); cardElement.style.pointerEvents = 'none'; cardElement.classList.add('is-dropped'); slot.classList.add('filled'); const slotRect = slot.getBoundingClientRect(); const areaRect = UI.containers.cardArea.getBoundingClientRect(); gsap.to(cardElement, { left: slotRect.left - areaRect.left, top: slotRect.top - areaRect.top, scale: 1, rotation: 0, duration: 0.4, ease: 'power2.inOut', onComplete: () => { cardElement.removeAttribute('style'); slot.innerHTML = ''; slot.appendChild(cardElement); cardElement.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>`; gsap.to(cardElement, { rotationY: 180, duration: 0.7, ease: 'power2.inOut' }); GameLogic.showPlacementToast(labels[slotId], cardData.name); Audio.play('cardFlip'); if (appState.chosenCards.filter(c => c).length === 3) { Audio.play('complete'); Vibration.trigger([100, 50, 100]); Confetti.create(); setTimeout(() => ResultScreen.initialize(appState.chosenCards), CONSTANTS.TOAST_DURATION); } } }); }
-    };
+        enableDragging() {
+            document.querySelectorAll('.tarot-card:not(.is-dropped)').forEach(card => { 
+                card.addEventListener('mousedown', DragDrop.startDrag); 
+                card.addEventListener('touchstart', DragDrop.startDrag, { passive: false }); 
+            }); 
+        },
 
-    const DevPanel = {
-        setup() {
-            UI.devPanel.toggle.addEventListener('click', () => UI.devPanel.content.classList.toggle('active'));
-            UI.devPanel.elements.themeSelect.addEventListener('change', (e) => { document.body.className = e.target.value; Particles.init(); });
-            UI.devPanel.elements.soundToggle.addEventListener('change', (e) => { 
-                effects.sounds.enabled = e.target.checked;
-                if(effects.sounds.enabled) { Audio.init(); }
-                Settings.save(); 
-            });
-            UI.devPanel.elements.imageRatioSlider.addEventListener('input', (e) => {
-                const value = `${e.target.value}%`;
-                effects.imageRatio.value = value;
-                UI.devPanel.elements.imageRatioValue.textContent = value;
-                document.documentElement.style.setProperty('--card-image-height-ratio', value);
-                Settings.save();
-            });
-            UI.devPanel.elements.restartBtn.addEventListener('click', () => { Settings.save(); location.reload(); });
+        startDrag(e) { 
+            e.preventDefault(); 
+            const card = e.target.closest('.tarot-card'); 
+            if (card.classList.contains('is-dropped')) return; 
+
+            clearTimeout(appState.instructionTimeout);
+            gsap.to(UI.instructionText, { opacity: 0, duration: 0.3 });
+
+            appState.draggedCard = card; 
+            Vibration.trigger(50); 
+            const rect = card.getBoundingClientRect(); 
+            const clientX = e.clientX || e.touches[0].clientX; 
+            const clientY = e.clientY || e.touches[0].clientY; 
+            appState.dragOffset = { x: clientX - rect.left, y: clientY - rect.top }; 
+            card.classList.add('is-dragging'); 
+            gsap.to(card, { scale: 1.1, duration: 0.2 }); 
+            document.addEventListener('mousemove', DragDrop.handleDrag); 
+            document.addEventListener('mouseup', DragDrop.endDrag); 
+            document.addEventListener('touchmove', DragDrop.handleDrag, { passive: false }); 
+            document.addEventListener('touchend', DragDrop.endDrag); 
+        },
+        handleDrag(e) { if (!appState.draggedCard) return; e.preventDefault(); const clientX = e.clientX || e.touches[0].clientX; const clientY = e.clientY || e.touches[0].clientY; const parentRect = UI.containers.cardArea.getBoundingClientRect(); const newX = clientX - parentRect.left - appState.dragOffset.x; const newY = clientY - parentRect.top - appState.dragOffset.y; Object.assign(appState.draggedCard.style, { left: `${newX}px`, top: `${newY}px` }); DragDrop.checkSlotProximity(); },
+        checkSlotProximity() {
+            if (!appState.draggedCard) return;
+            const activeSlot = UI.containers.cardSlots[appState.currentStep];
+            if (!activeSlot) return;
+            UI.containers.cardSlots.forEach(s => s.classList.remove('drag-over'));
+            const cardRect = appState.draggedCard.getBoundingClientRect();
+            const slotRect = activeSlot.getBoundingClientRect();
+            const cardCenterX = cardRect.left + cardRect.width / 2;
+            const cardCenterY = cardRect.top + cardRect.height / 2;
+            const slotCenterX = slotRect.left + slotRect.width / 2;
+            const slotCenterY = slotRect.top + slotRect.height / 2;
+            const distance = Math.hypot(cardCenterX - slotCenterX, cardCenterY - slotCenterY);
+            if (distance < slotRect.width * 1.5) activeSlot.classList.add('drag-over');
+        },
+        endDrag() { if (!appState.draggedCard) return; document.removeEventListener('mousemove', DragDrop.handleDrag); document.removeEventListener('mouseup', DragDrop.endDrag); document.removeEventListener('touchmove', DragDrop.handleDrag); document.removeEventListener('touchend', DragDrop.endDrag); appState.draggedCard.classList.remove('is-dragging'); const droppedSlot = document.querySelector('.card-slot.drag-over'); if (droppedSlot && parseInt(droppedSlot.dataset.slotId) === appState.currentStep) { DragDrop.handleDrop(appState.draggedCard, droppedSlot); } else { gsap.to(appState.draggedCard, { scale: 1, duration: 0.3, ease: 'back.out' }); } UI.containers.cardSlots.forEach(slot => slot.classList.remove('drag-over')); appState.draggedCard = null; },
+        handleDrop(cardElement, slot) {
+            const cardId = parseInt(cardElement.dataset.id);
+            const cardData = tarotCardsData.find(c => c.id === cardId);
+            if (!cardData) { console.error("Card data not found for ID:", cardId); return; }
+            const slotId = parseInt(slot.dataset.slotId);
+            appState.chosenCards[slotId] = cardData;
+            Vibration.trigger(100);
+            cardElement.style.pointerEvents = 'none';
+            cardElement.classList.add('is-dropped');
+            slot.classList.add('filled');
+            const slotRect = slot.getBoundingClientRect();
+            const areaRect = UI.containers.cardArea.getBoundingClientRect();
+            gsap.to(cardElement, { 
+                left: slotRect.left - areaRect.left, top: slotRect.top - areaRect.top, scale: 1, rotation: 0, duration: 0.4, ease: 'power2.inOut', 
+                onComplete: () => { 
+                    cardElement.removeAttribute('style'); 
+                    slot.innerHTML = ''; slot.appendChild(cardElement); 
+                    cardElement.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>`;
+                    gsap.to(cardElement, { rotationY: 180, duration: 0.8, ease: 'power2.inOut' });
+                    document.querySelectorAll('.tarot-card:not(.is-dropped)').forEach(c => c.style.display = 'none');
+                    gsap.to(UI.instructionText, { opacity: 0, duration: 0.3 });
+                    ResultScreen.show(appState.chosenCards, appState.currentStep, () => {
+                        document.getElementById('reveal-overlay').classList.remove('active');
+                        document.querySelectorAll('.tarot-card:not(.is-dropped)').forEach(c => c.style.display = 'block');
+                        DragDrop.enableDragging(); // Re-enable dragging for remaining cards
+                        appState.currentStep++;
+                        GameLogic.startNextStep();
+                    });
+                } 
+            }); 
         }
     };
-    
+
     function init() {
-        try { Settings.load(); Settings.applyToUI(); Particles.init(); Confetti.init(); DevPanel.setup(); UI.buttons.start.addEventListener('click', () => { Navigation.switchScreen('focus'); UI.containers.app.classList.add('focus-active'); }); UI.screens.focus.addEventListener('click', () => { UI.containers.app.classList.remove('focus-active'); GameLogic.setupChoiceScreen(); }); Navigation.switchScreen('start'); } catch (error) { console.error('Ошибка инициализации приложения:', error); }
-    }
-    init();
+        try { 
+            const assetsToPreload = tarotCardsData.map(card => card.image);
+            assetsToPreload.push('images/oracul.png');
+            preloadAssets(assetsToPreload);
+            Particles.init(); 
 
-    window.ResultScreen = {
-        currentCard: 0,
-        cardData: [],
-        touchStartX: 0,
+            UI.buttons.start.addEventListener('click', () => { 
+                Navigation.switchScreen('focus'); 
+                UI.containers.app.classList.add('focus-active');
+                gsap.to([UI.focusScreenElements.title, UI.focusScreenElements.subtitle], { opacity: 1, duration: 1, delay: 0.5 });
+                
+                appState.focusTimeout = setTimeout(proceedFromFocus, 5000);
+            }); 
 
-        initialize(chosenCards) {
-            this.currentCard = 0;
-            const aspects = ["Вызов", "Путь", "Исход"];
-            const themes = ["challenge", "path", "outcome"];
-            this.cardData = chosenCards.map((card, index) => ({ ...card, aspect: aspects[index], theme: themes[index] }));
-            this.render();
-            this.update();
-            this.setupEventListeners();
-            document.getElementById('result-modal').classList.add('active');
-        },
-
-        render() {
-            const container = document.getElementById('screens-container');
-            container.innerHTML = ''; 
-
-            this.cardData.forEach((card, index) => {
-                const keywordsHTML = card.keywords.split(',').map(k => `<span class="keyword">${k.trim()}</span>`).join('');
-                const screen = document.createElement('div');
-                screen.className = 'result-screen';
-                screen.dataset.index = index;
-                screen.innerHTML = `
-                    <div class="result-image-section">
-                        <div class="result-image-wrapper" onclick="ResultScreen.openFullscreen('${card.image}')">
-                            <img src="${card.image}" alt="${card.name}" class="result-image">
-                        </div>
-                    </div>
-                    <div class="result-content-section">
-                        <div class="result-title-section">
-                            <div class="result-aspect-label">${card.aspect}</div>
-                            <div class="result-card-name">${card.name}</div>
-                        </div>
-                        <div class="guidance-text">${this.getGuidanceText(card.aspect)}</div>
-                        <div class="content-block"><div class="content-text">${card.general}</div></div>
-                        <div class="content-block" onclick="this.classList.toggle('open')">
-                            <div class="content-block-header"><span>💻</span> Для проекта</div>
-                            <div class="content-block-details"><div class="content-text">${card.project}</div></div>
-                        </div>
-                        <div class="content-block" onclick="this.classList.toggle('open')">
-                            <div class="content-block-header"><span>🚀</span> Для карьеры</div>
-                            <div class="content-block-details"><div class="content-text">${card.career}</div></div>
-                        </div>
-                        <div class="content-block"><div class="keywords">${keywordsHTML}</div></div>
-                    </div>`;
-                container.appendChild(screen);
-            });
-
-            const aiScreen = document.createElement('div');
-            aiScreen.className = 'result-screen';
-            aiScreen.dataset.index = 3;
-            aiScreen.innerHTML = `
-                <div class="result-image-section">
-                    <div class="result-image-wrapper">
-                        <img src="images/oracul.png" alt="AI Oracle" class="result-image">
-                    </div>
-                </div>
-                <div class="result-content-section" style="justify-content: center;">
-                     <div id="ai-screen-content">
-                         <div class="result-aspect-label">Оракул</div>
-                         <h2 class="ai-title">Глубинный Анализ</h2>
-                         <p class="ai-subtitle">Нейросеть может заглянуть глубже. Получите персональную трактовку вашего IT-расклада.</p>
-                         <button class="ai-action-btn" onclick="ResultScreen.showAI()">Раскрыть предсказание</button>
-                    </div>
-                </div>`;
-            container.appendChild(aiScreen);
-        },
-
-        update() {
-            const screens = document.querySelectorAll('.result-screen');
-            const modalContent = document.getElementById('modal-content');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            if (!screens.length) return;
-            
-            const currentTheme = (this.currentCard < 3) ? this.cardData[this.currentCard].theme : 'ai';
-            modalContent.className = `modal-content ${currentTheme}-theme`;
-
-            screens.forEach((screen, index) => {
-                screen.classList.remove('active', 'prev');
-                if (index == this.currentCard) screen.classList.add('active');
-                else if (index < this.currentCard) screen.classList.add('prev');
-            });
-            
-            prevBtn.disabled = this.currentCard === 0;
-            nextBtn.disabled = this.currentCard === screens.length - 1;
-        },
-        
-        setupEventListeners() {
-            document.getElementById('close-modal-btn').onclick = () => {
-                document.getElementById('result-modal').classList.remove('active');
+            const proceedFromFocus = () => {
+                if(!UI.screens.focus.classList.contains('active')) return;
+                clearTimeout(appState.focusTimeout);
+                UI.screens.focus.removeEventListener('click', proceedFromFocus);
+                gsap.to([UI.focusScreenElements.title, UI.focusScreenElements.subtitle], { opacity: 0, duration: 0.3 });
                 GameLogic.setupChoiceScreen(); 
             };
-            document.getElementById('prev-btn').onclick = () => this.prevCard();
-            document.getElementById('next-btn').onclick = () => this.nextCard();
             
-            const container = document.getElementById('result-modal');
-            container.addEventListener('touchstart', (e) => { this.touchStartX = e.touches[0].clientX; }, {passive: true});
-            container.addEventListener('touchend', (e) => {
-                const touchEndX = e.changedTouches[0].clientX;
-                const diff = this.touchStartX - touchEndX;
-                if (Math.abs(diff) > 50) { if (diff > 0) this.nextCard(); else this.prevCard(); }
-            });
+            UI.screens.focus.addEventListener('click', proceedFromFocus); 
             
-            document.addEventListener('keydown', (e) => {
-                if (document.getElementById('ai-overlay').classList.contains('active')) {
-                    if (e.key === 'Escape') this.hideAI();
-                    return;
-                }
-                if (!document.getElementById('result-modal').classList.contains('active')) return;
-                
-                if (e.key === 'ArrowLeft') this.prevCard();
-                if (e.key === 'ArrowRight') this.nextCard();
-                if (e.key === 'Escape') {
-                    if (document.getElementById('fullscreen-overlay').classList.contains('active')) this.closeFullscreen();
-                    else document.getElementById('close-modal-btn').click();
-                }
-            });
-        },
-        
-        nextCard() { if (this.currentCard < 3) { this.currentCard++; this.update(); } },
-        prevCard() { if (this.currentCard > 0) { this.currentCard--; this.update(); } },
+            Navigation.switchScreen('start'); 
+        } catch (error) { console.error('Ошибка инициализации приложения:', error); }
+    }
 
-        getGuidanceText(aspect) {
-            const texts = { 'Вызов': 'Ваше главное испытание. Не враг, а учитель, указывающий путь к росту.', 'Путь': 'Ваша стратегия. Методы и ресурсы для преодоления вызовов.', 'Исход': 'Вероятный результат. Сценарий, который вы можете формировать.' };
-            return texts[aspect] || '';
-        },
+    function preloadAssets(urls) {
+        urls.forEach(url => {
+            const img = new Image();
+            img.src = url;
+        });
+    }
 
-        openFullscreen(src) { document.getElementById('fullscreen-image').src = src; document.getElementById('fullscreen-overlay').classList.add('active'); },
-        closeFullscreen() { document.getElementById('fullscreen-overlay').classList.remove('active'); },
-        showAI() { document.getElementById('ai-overlay').classList.add('active'); },
-        hideAI() { document.getElementById('ai-overlay').classList.remove('active'); },
-        
-        async requestAI() {
-            const apiKey = "AIzaSyCmqT_oPvpqYKgRxU8LItCuFZY0NY3ulu8";
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
-
-            const question = document.getElementById('ai-question').value;
-            const responseEl = document.getElementById('ai-response');
-            const btnText = document.getElementById('ai-btn-text');
-            
-            if (!question.trim()){ alert("Введите ваш вопрос."); return; }
-            
-            btnText.textContent = 'Анализ...';
-            btnText.disabled = true;
-            responseEl.classList.add('visible');
-            responseEl.innerHTML = `<em style="color: var(--ai-light);">🔮 Соединяюсь с цифровым потоком...</em>`;
-
-            const prompt = `
-                Ты - цифровой оракул, IT-таролог. Тебе предоставили расклад из трех карт Таро, адаптированных для IT-специалистов.
-                Твоя задача - дать глубокую, но лаконичную и полезную интерпретацию этого расклада в контексте заданного вопроса.
-
-                Вот данные расклада:
-                1.  **Вызов (Challenge):** Карта "${this.cardData[0].name}". Её основное значение: "${this.cardData[0].general}".
-                2.  **Путь (Path):** Карта "${this.cardData[1].name}". Её основное значение: "${this.cardData[1].general}".
-                3.  **Исход (Outcome):** Карта "${this.cardData[2].name}". Её основное значение: "${this.cardData[2].general}".
-
-                А вот вопрос от пользователя: "${question}"
-
-                Проанализируй синергию этих трех карт и дай ответ на вопрос пользователя, связывая его с каждой картой.
-                Структурируй свой ответ: начни с общего вывода, а затем кратко поясни роль каждой карты в контексте вопроса.
-                Говори как мудрый, но современный IT-пророк.
-            `;
-
-            console.log("ОТПРАВЛЯЕМЫЙ ПРОМПТ В GEMINI:", prompt);
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error("Ошибка от API Gemini:", errorData);
-                    throw new Error(`Ошибка API: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                
-                if (data.candidates && data.candidates.length > 0) {
-                    const text = data.candidates[0].content.parts[0].text;
-                    responseEl.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-                } else {
-                    throw new Error("API не вернуло кандидатов в ответе.");
-                }
-
-            } catch (error) {
-                console.error("Ошибка запроса к Gemini API:", error);
-                responseEl.innerHTML = `<span style="color: #ff8a80;">Упс! Кажется, цифровые духи не в настроении. Ошибка: ${error.message}</span>`;
-            } finally {
-                btnText.textContent = 'Спросить';
-                btnText.disabled = false;
-            }
-        }
-    };
+    init();
 });

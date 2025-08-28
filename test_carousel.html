@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Карусели Таро</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="carousel.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-gazprom-classic">
+
+    <div id="particles-js"></div>
+
+    <div id="reveal-overlay" class="modal-overlay">
+        <button id="close-reveal-btn" class="modal-close-button">&times;</button>
+        <button class="side-nav left" id="prev-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <button class="side-nav right" id="next-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </button>
+        <div id="reveal-container">
+            </div>
+        <div id="final-prompt" class="subtitle shining-text"></div>
+    </div>
+
+    <div class="ai-overlay" id="ai-overlay"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="data.js"></script>
+    <script src="carousel.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Инициализация фона с частицами
+            const theme = document.body.className || 'theme-gazprom-classic';
+            const colors = { 'theme-gazprom-classic': { p: "#00aaff", l: "#0078d7" }, 'theme-gazprom-dark': { p: "#3399ff", l: "#005f9e" }, 'theme-gazprom-light': { p: "#0078d7", l: "#005a9e" } };
+            const color = colors[theme] || colors['theme-gazprom-classic'];
+            particlesJS('particles-js', { particles: { number: { value: 60 }, color: { value: color.p }, size: { value: 3, random: true }, move: { enable: true, speed: 2 }, line_linked: { color: color.l, distance: 150 } }, interactivity: { events: { onhover: { enable: true, mode: "repulse" } } } });
+
+            // Выбираем 3 случайные карты для теста
+            const shuffled = [...tarotCardsData].sort(() => 0.5 - Math.random());
+            const testCards = shuffled.slice(0, 3);
+
+            // Запускаем карусель в финальном режиме
+            ResultScreen.initialize(testCards);
+        });
+    </script>
+</body>
+</html>

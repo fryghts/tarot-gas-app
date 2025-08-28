@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Цифровой Оракул: IT-Таро</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="carousel.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
@@ -12,7 +13,6 @@
 <body class="theme-gazprom-classic">
 
     <div id="particles-js"></div>
-    <canvas id="confetti-canvas"></canvas>
 
     <div class="app-container">
         <div id="start-screen" class="screen active">
@@ -23,8 +23,8 @@
         </div>
 
         <div id="focus-screen" class="screen">
-            <h1 class="title shining-text">Концентрация</h1>
-            <p class="subtitle shining-text">Подумайте о проекте, карьерном пути или технологическом вызове, который вас волнует. Сконцентрируйтесь на нём.</p>
+            <h1 id="focus-title" class="title shining-text">Концентрация</h1>
+            <p id="focus-subtitle" class="subtitle shining-text">Подумайте о проекте, карьерном пути или технологическом вызове, который вас волнует. Сконцентрируйтесь на нём.</p>
         </div>
 
         <div id="choice-screen" class="screen">
@@ -34,30 +34,21 @@
                 <div class="card-slot" data-slot-id="1"><span class="slot-label">Путь</span></div>
                 <div class="card-slot" data-slot-id="2"><span class="slot-label">Исход</span></div>
             </div>
-            <div id="slot-explanation" class="subtitle shining-text">
-                Три карты определят твой путь.<br>
-                Первая укажет на <strong>Вызов</strong>. Вторая откроет <strong>Путь</strong>.<br>
-                Третья предскажет <strong>Исход</strong>.
+            <div id="instruction-text" class="subtitle"></div>
+        </div>
+    </div>
+
+    <div id="reveal-overlay" class="modal-overlay">
+        <button id="close-reveal-btn" class="modal-close-button">&times;</button>
+        <button class="side-nav left" id="prev-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <button class="side-nav right" id="next-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </button>
+        <div id="reveal-container">
             </div>
-        </div>
-    </div>
-
-    <div id="result-modal" class="modal-overlay">
-        <div class="modal-content" id="modal-content">
-            <button id="close-modal-btn" class="modal-close-button">&times;</button>
-            <button class="side-nav left" id="prev-btn">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-            </button>
-            <button class="side-nav right" id="next-btn">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-            </button>
-            <div class="screens-container" id="screens-container">
-                </div>
-        </div>
-    </div>
-
-    <div class="fullscreen-overlay" id="fullscreen-overlay">
-        <img id="fullscreen-image" class="fullscreen-image" src="" alt="">
+        <div id="final-prompt" class="subtitle shining-text"></div>
     </div>
 
     <div class="ai-overlay" id="ai-overlay">
@@ -74,35 +65,11 @@
             </div>
         </div>
     </div>
-
-    <div id="dev-panel">
-        <div id="dev-panel-toggle">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.8293 10.1707C19.9392 10.7839 20 11.3895 20 12C20 12.6105 19.9392 13.2161 19.8293 13.8293L21.8293 15.3293C22.0678 15.513 22.1465 15.8329 22.0415 16.1159L20.0415 19.5819C19.9365 19.8649 19.6429 20.0351 19.3453 19.9707L16.9453 19.0707C16.3216 19.5393 15.6347 19.9234 14.8962 20.2101L14.5 22.7C14.4444 23.0041 14.1843 23.2204 13.8703 23.2204H10.1297C9.81568 23.2204 9.55558 23.0041 9.5 22.7L9.10383 20.2101C8.36531 19.9234 7.67842 19.5393 7.05471 19.0707L4.65471 19.9707C4.35714 20.0351 4.06346 19.8649 3.95848 19.5819L1.95848 16.1159C1.8535 15.8329 1.93221 15.513 2.17073 15.3293L4.17073 13.8293C4.06083 13.2161 4 12.6105 4 12C4 11.3895 4.06083 10.7839 4.17073 10.1707L2.17073 8.67073C1.93221 8.48705 1.8535 8.16712 1.95848 7.8841L3.95848 4.4181C4.06346 4.1351 4.35714 3.96486 4.65471 4.02928L7.05471 4.92928C7.67842 4.46071 8.36531 4.0766 9.10383 3.78988L9.5 1.3C9.55558 0.99593 9.81568 0.77965 10.1297 0.77965H13.8703C14.1843 0.77965 14.4444 0.99593 14.5 1.3L14.8962 3.78988C15.6347 4.0766 16.3216 4.46071 16.9453 4.92928L19.3453 4.02928C19.6429 3.96486 19.9365 4.1351 20.0415 4.4181L22.0415 7.8841C22.1465 8.16712 22.0678 8.48705 21.8293 8.67073L19.8293 10.1707ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"/></svg>
-        </div>
-        <div id="dev-panel-content">
-            <h4>Dev Panel</h4>
-            <div class="dev-group">
-                <label for="theme-select">Тема:</label>
-                <select id="theme-select">
-                    <option value="theme-gazprom-classic">Классический синий</option>
-                    <option value="theme-gazprom-dark">Глубокий космос</option>
-                    <option value="theme-gazprom-light">Полярный день</option>
-                </select>
-            </div>
-            <div class="dev-group">
-                <label>Звуки<input type="checkbox" id="sound-effects-toggle"></label>
-            </div>
-            <div class="dev-group">
-                <label for="image-ratio-slider">Размер карты: <span id="image-ratio-value">60%</span></label>
-                <input type="range" id="image-ratio-slider" min="30" max="80" value="60">
-            </div>
-            <button id="restart-app-btn">Перезапустить</button>
-        </div>
-    </div>
-
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script src="data.js"></script>
+    <script src="carousel.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

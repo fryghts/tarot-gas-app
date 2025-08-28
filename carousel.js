@@ -326,10 +326,15 @@ class TarotCarousel {
         responseEl.style.display = 'block';
         responseEl.innerHTML = uiTexts.aiModal.connecting;
 
+        // ИСПРАВЛЕНО: Формируем детальное описание для каждой карты
+        const card1_details = `Карта "${this.chosenCards[0].name}". Ключевое слово: ${this.chosenCards[0].keyword}. Основное значение в этой позиции: "${this.chosenCards[0].prophecy.challenge}"`;
+        const card2_details = `Карта "${this.chosenCards[1].name}". Ключевое слово: ${this.chosenCards[1].keyword}. Основное значение в этой позиции: "${this.chosenCards[1].prophecy.path}"`;
+        const card3_details = `Карта "${this.chosenCards[2].name}". Ключевое слово: ${this.chosenCards[2].keyword}. Основное значение в этой позиции: "${this.chosenCards[2].prophecy.outcome}"`;
+
         const prompt = uiTexts.geminiPrompt
-            .replace('{card1}', this.chosenCards[0].name)
-            .replace('{card2}', this.chosenCards[1].name)
-            .replace('{card3}', this.chosenCards[2].name)
+            .replace('{card1_details}', card1_details)
+            .replace('{card2_details}', card2_details)
+            .replace('{card3_details}', card3_details)
             .replace('{question}', input.value);
 
         try {
@@ -355,7 +360,6 @@ class TarotCarousel {
             button.textContent = uiTexts.aiModal.button;
         }
     }
-
     close() {
         const lastStep = this.currentCardIndex;
         gsap.to(this.overlay, {

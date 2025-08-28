@@ -1,190 +1,298 @@
-window.ResultScreen = {
-    currentCard: 0,
-    cardData: [],
+class TarotCarousel {
+    constructor() {
+        this.chosenCards = [];
+        this.allCarouselCards = [];
+        this.currentCardIndex = 0;
+        this.aiResponseText = null;
+        this.isInitialized = false;
+        this.seenCardIndexes = new Set();
+
+        this.cardThemes = {
+            0: { name: 'challenge', color: 'var(--challenge-color)' },
+            1: { name: 'path', color: 'var(--path-color)' },
+            2: { name: 'outcome', color: 'var(--outcome-color)' },
+            3: { name: 'ai', color: 'var(--ai-color)' }
+        };
+
+        this.aiCardData = {
+            id: 'ai',
+            name: 'AI Оракул',
+            keyword: 'АНАЛИЗ',
+            image: 'images/oracul.png'
+        };
+
+        // ИСПРАВЛЕНО: Привязываем контекст 'this' к методам в конструкторе
+        this.handleKeyboard = this.handleKeyboard.bind(this);
+        this.close = this.close.bind(this); // <-- Вот это исправление
+    }
+
+    showOrUpdate(cards, currentStep, onCloseCallback) {
+        this.chosenCards = cards.filter(c => c);
+        this.currentCardIndex = currentStep;
+        this.onCloseCallback = onCloseCallback;
+        
+        this.allCarouselCards = [...this.chosenCards];
+        if (this.chosenCards.length === 3) {
+            this.allCarouselCards.push(this.aiCardData);
+        }
+
+        if (!this.isInitialized) {
+            this.initialize();
+        } else {
+            this.updateCards();
+        }
+    }
+
+    initialize() {
+        this.createCarouselHTML();
+        this.attachEventListeners();
+        this.isInitialized = true;
+        
+        gsap.to(this.overlay, {
+            opacity: 1,
+            duration: 0.5,
+            ease: 'power2.out',
+            onStart: () => this.overlay.classList.add('active'),
+            onComplete: () => this.updateCards(true)
+        });
+    }
+
+    createCarouselHTML() {
+        const overlay = document.createElement('div');
+        overlay.id = 'tarot-carousel-simplified';
+        overlay.className = 'tarot-carousel-overlay';
+        overlay.innerHTML = `
+            <button class="carousel-close-button">&times;</button>
+            <main class="carousel-main"><div class="card-stage"></div></main>
+            <section class="carousel-panel"></section>`;
+        document.body.appendChild(overlay);
+        this.overlay = overlay;
+    }
+
+    attachEventListeners() {
+        // Теперь мы можем передавать this.close напрямую, так как он привязан в конструкторе
+        this.overlay.querySelector('.carousel-close-button').addEventListener('click', this.close);
+        document.addEventListener('keydown', this.handleKeyboard);
+    }
+
+    updateCards(isInitialLoad = false) {
+        const stage = this.overlay.querySelector('.card-stage');
+        stage.innerHTML = '';
+
+        this.allCarouselCards.forEach((card, index) => {
+            const cardEl = this.createCardElement(card, index);
+            stage.appendChild(cardEl);
+        });
+
+        this.positionCards();
+        this.updateDetailsPanel();
+
+        if (!this.seenCardIndexes.has(this.currentCardIndex)) {
+            setTimeout(() => this.flipCard(this.currentCardIndex), 200);
+        }
+    }
     
-    show(cards, currentStep, onCompleteCallback) {
-        this.cardData = cards.filter(c => c);
-        this.currentCard = this.cardData.length - 1;
-        this.render(false, currentStep);
-        this.updateControls(false);
+    createCardElement(card, index) {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card-3d';
+        cardDiv.dataset.index = index;
+        cardDiv.innerHTML = `
+            <div class="card-inner">
+                <div class="card-face card-back"></div>
+                <div class="card-face card-front" style="background-image: url('${card.image}')"></div>
+            </div>`;
+        cardDiv.addEventListener('click', () => this.goToCard(index));
         
-        const slide = document.querySelectorAll('.reveal-slide')[this.currentCard];
-        const cardEl = slide.querySelector('.tarot-card');
-        const texts = slide.querySelectorAll('.reveal-text');
+        if (this.seenCardIndexes.has(index)) {
+            cardDiv.querySelector('.card-inner').classList.add('flipped');
+        }
+
+        return cardDiv;
+    }
+
+    positionCards() {
+        this.overlay.querySelectorAll('.card-3d').forEach((cardEl, index) => {
+            cardEl.classList.remove('active', 'prev', 'next', 'hidden');
+            if (index === this.currentCardIndex) cardEl.classList.add('active');
+            else if (index === this.currentCardIndex - 1) cardEl.classList.add('prev');
+            else if (index === this.currentCardIndex + 1) cardEl.classList.add('next');
+            else cardEl.classList.add('hidden');
+        });
+    }
+
+    updateDetailsPanel() {
+        const panel = this.overlay.querySelector('.carousel-panel');
+        const cardData = this.allCarouselCards[this.currentCardIndex];
+        const theme = this.cardThemes[this.currentCardIndex];
+
+        const stage = this.overlay.querySelector('.card-stage');
+        stage.className = 'card-stage';
+        panel.className = 'carousel-panel';
+        if (theme) {
+            stage.classList.add(`${theme.name}-glow`);
+            panel.classList.add(`${theme.name}-border`);
+        }
+
+        let panelHTML = '';
+
+        if (cardData.id === 'ai') {
+            const buttonText = this.aiResponseText ? "Посмотреть предсказание" : "Спросить Оракула";
+            panelHTML = `
+                <div class="card-details-content">
+                    <div class="card-name" style="color:${theme.color};">${cardData.name}</div>
+                    <div class="card-keyword" style="background-color:${theme.color};">${cardData.keyword}</div>
+                    <button class="ask-oracle-button">${buttonText}</button>
+                </div>`;
+        } else {
+            const prophecyKey = this.cardThemes[this.currentCardIndex]?.name || 'challenge';
+            panelHTML = `
+                <div class="card-details-content">
+                    <div class="card-name" style="color:${theme.color};">${cardData.name}</div>
+                    <div class="card-keyword" style="background-color:${theme.color};">${cardData.keyword}</div>
+                    <div class="card-prophecy">${cardData.prophecy[prophecyKey]}</div>
+                </div>`;
+        }
         
-        gsap.fromTo(document.getElementById('reveal-overlay'), { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'power2.out', onStart: () => document.getElementById('reveal-overlay').classList.add('active') });
-        
-        gsap.to(cardEl, {
-            rotationY: 180,
-            duration: 0.8,
-            ease: 'power2.inOut',
+        gsap.to(panel, {
+            opacity: 0,
+            duration: 0.2,
             onComplete: () => {
-                texts.forEach((text, index) => {
-                    gsap.delayedCall(0.2 + index * 0.6, () => text.classList.add('visible'));
-                });
+                panel.innerHTML = panelHTML;
+                if (cardData.id === 'ai') {
+                    panel.querySelector('.ask-oracle-button').addEventListener('click', () => this.showAIModal());
+                }
+                gsap.to(panel, { opacity: 1, duration: 0.2 });
+            }
+        });
+    }
+
+    flipCard(index) {
+        const card = this.overlay.querySelector(`.card-3d[data-index="${index}"] .card-inner`);
+        if (card && !card.classList.contains('flipped')) {
+            card.classList.add('flipped');
+            this.seenCardIndexes.add(index);
+        }
+    }
+    
+    goToCard(index) {
+        if (index < 0 || index >= this.allCarouselCards.length || index === this.currentCardIndex) return;
+        
+        this.currentCardIndex = index;
+        this.positionCards();
+        this.updateDetailsPanel();
+        
+        if (!this.seenCardIndexes.has(index)) {
+            setTimeout(() => this.flipCard(this.currentCardIndex), 300);
+        }
+    }
+    
+    handleKeyboard(e) {
+        if (!this.isInitialized) return;
+        if (e.key === 'ArrowLeft') this.goToCard(this.currentCardIndex - 1);
+        if (e.key === 'ArrowRight') this.goToCard(this.currentCardIndex + 1);
+        if (e.key === 'Escape') this.close();
+    }
+
+    showAIModal() {
+        if (document.querySelector('.ai-modal-overlay')) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'ai-modal-overlay';
+        
+        let contentHTML = '';
+        if (this.aiResponseText) {
+            contentHTML = `<div class="ai-response">${this.aiResponseText}</div>`;
+        } else {
+            contentHTML = `
+                <textarea class="ai-input" placeholder="Например: какие риски в проекте?"></textarea>
+                <button class="ai-button">Получить предсказание</button>
+                <div class="ai-response" style="display:none;"></div>`;
+        }
+
+        modal.innerHTML = `
+            <div class="ai-modal-panel">
+                <div class="ai-title">🤖 Персональный анализ</div>
+                ${contentHTML}
+            </div>`;
+        
+        document.body.appendChild(modal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) this.closeAIModal(); });
+        
+        if (!this.aiResponseText) {
+            modal.querySelector('.ai-button').addEventListener('click', () => this.requestAIAnalysis(modal));
+        }
+
+        gsap.to(modal, { opacity: 1, onStart: () => modal.classList.add('active') });
+    }
+
+    closeAIModal() {
+        const modal = document.querySelector('.ai-modal-overlay');
+        if (modal) {
+            gsap.to(modal, { 
+                opacity: 0, 
+                onComplete: () => {
+                    modal.remove();
+                    if (this.aiResponseText) {
+                        this.updateDetailsPanel();
+                    }
+                }
+            });
+        }
+    }
+
+    async requestAIAnalysis(modal) {
+        const input = modal.querySelector('.ai-input');
+        const responseEl = modal.querySelector('.ai-response');
+        const button = modal.querySelector('.ai-button');
+        
+        if (!input.value.trim()) return;
+
+        button.disabled = true;
+        button.textContent = 'Анализ...';
+        responseEl.style.display = 'block';
+        responseEl.innerHTML = `🔮 Соединяюсь с цифровым потоком...`;
+
+        const prompt = `Ты - цифровой оракул... (ваш промпт)`;
+        try {
+            // ... (ваш код запроса к PHP-серверу)
+            
+            // Mock response for demonstration
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            const text = `Ваш вопрос "${input.value}" раскрывает глубокий смысл. **Вызов** (${this.chosenCards[0].name}) говорит о скрытых технических долгах. **Путь** (${this.chosenCards[1].name}) лежит через рефакторинг и командную работу. **Исход** (${this.chosenCards[2].name}) обещает стабильный релиз и признание.`;
+
+            this.aiResponseText = text;
+            responseEl.innerHTML = this.aiResponseText;
+
+            input.style.display = 'none';
+            button.style.display = 'none';
+
+        } catch (error) {
+            responseEl.innerHTML = `<span style="color: #ff8a80;">Упс! Ошибка соединения.</span>`;
+            button.disabled = false;
+            button.textContent = 'Получить предсказание';
+        }
+    }
+
+    close() {
+        gsap.to(this.overlay, {
+            opacity: 0,
+            duration: 0.4,
+            onComplete: () => {
+                this.overlay.remove();
+                this.isInitialized = false;
+                document.removeEventListener('keydown', this.handleKeyboard);
                 
-                if (currentStep < 2) {
-                    document.getElementById('reveal-overlay').onclick = () => {
-                        document.getElementById('reveal-overlay').onclick = null;
-                        gsap.to(document.getElementById('reveal-overlay'), { scale: 0.9, opacity: 0, duration: 0.4, ease: 'power2.in', onComplete: onCompleteCallback });
-                    };
+                if (this.chosenCards.length < 3) {
+                    if (this.onCloseCallback) this.onCloseCallback();
                 } else {
-                    // Это последняя карта, плавно переходим в финальный режим
-                    onCompleteCallback();
+                    this.seenCardIndexes.clear();
+                    if (window.Navigation && typeof window.Navigation.switchScreen === 'function') {
+                        window.Navigation.switchScreen('start');
+                    }
                 }
             }
         });
-    },
-
-    initialize(chosenCards) {
-        this.cardData = chosenCards;
-        this.currentCard = chosenCards.length - 1; // Начинаем с последней выбранной карты
-        this.render(true);
-        this.updateControls(true);
-
-        if (!document.getElementById('reveal-overlay').classList.contains('active')) {
-             gsap.fromTo(document.getElementById('reveal-overlay'), { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'power2.out', onStart: () => document.getElementById('reveal-overlay').classList.add('active') });
-        }
-        
-        const finalPrompt = document.getElementById('final-prompt');
-        finalPrompt.innerHTML = "Смахните вправо, чтобы услышать Оракула";
-        const promptTimeline = gsap.timeline({delay: 2});
-        promptTimeline.to(finalPrompt, { opacity: 1, duration: 1 })
-                      .to(finalPrompt, { opacity: 0, duration: 1, delay: 3 });
-    },
-
-    render(isFinal = false, currentStep = 0) {
-        const container = document.getElementById('reveal-container');
-        if (!container) return;
-        container.innerHTML = ''; 
-        const themes = ['challenge-theme', 'path-theme', 'outcome-theme'];
-        
-        this.cardData.forEach((card, index) => {
-            if (!card) return; // Добавлена проверка на случай ошибки
-            const prophecyType = themes[index].split('-')[0];
-            const theme = themes[index];
-            const slide = document.createElement('div');
-            slide.className = 'reveal-slide';
-            slide.innerHTML = `
-                <div class="reveal-slide-content ${theme}">
-                    <div class="reveal-image-wrapper">
-                        <div class="tarot-card" style="transform: rotateY(${isFinal || index < currentStep ? '180deg' : '0deg'});">
-                           <div class="card-face card-back"></div>
-                           <div class="card-face card-front" style="background-image: url('${card.image}');"></div>
-                        </div>
-                    </div>
-                    <div class="reveal-text-content">
-                        <h2 class="reveal-name reveal-text ${isFinal || index < currentStep || this.cardData.length-1 === index ? 'visible' : ''}">${card.name}</h2>
-                        <p class="reveal-keyword reveal-text ${isFinal || index < currentStep || this.cardData.length-1 === index ? 'visible' : ''}">${card.keyword}</p>
-                        <p class="reveal-prophecy reveal-text ${isFinal || index < currentStep || this.cardData.length-1 === index ? 'visible' : ''}">${card.prophecy[prophecyType]}</p>
-                    </div>
-                </div>
-            `;
-            container.appendChild(slide);
-        });
-
-        if (isFinal) {
-            const oracleSlide = document.createElement('div');
-            oracleSlide.className = 'reveal-slide';
-            oracleSlide.innerHTML = `
-                <div class="reveal-slide-content ai-theme">
-                    <div class="reveal-image-wrapper">
-                        <img src="images/oracul.png" alt="AI Oracle" style="width:100%; height:100%; border-radius: 15px; object-fit: cover;">
-                    </div>
-                    <div class="oracle-slide-content">
-                         <h2 class="ai-title">Глубинный Анализ</h2>
-                         <p class="ai-subtitle">Нейросеть может заглянуть глубже. Получите персональную трактовку вашего IT-расклада.</p>
-                         <button class="ai-action-btn" onclick="ResultScreen.showAI()">Раскрыть предсказание</button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(oracleSlide);
-        }
-    },
-
-    updateControls(isFinal) {
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const closeBtn = document.getElementById('close-reveal-btn');
-        const container = document.getElementById('reveal-container');
-
-        if (document.getElementById('final-prompt')) document.getElementById('final-prompt').style.opacity = 0;
-
-        prevBtn.style.display = isFinal ? 'block' : 'none';
-        nextBtn.style.display = isFinal ? 'block' : 'none';
-        closeBtn.style.display = isFinal ? 'block' : 'none';
-
-        if (isFinal) {
-            prevBtn.disabled = this.currentCard === 0;
-            nextBtn.disabled = this.currentCard === this.cardData.length;
-        }
-        container.style.transform = `translateX(-${this.currentCard * 100}%)`;
-    },
-    
-    setupEventListeners() {
-        document.getElementById('close-reveal-btn').onclick = () => {
-            gsap.to(document.getElementById('reveal-overlay'), { scale: 0.9, opacity: 0, duration: 0.4, ease: 'power2.in', onComplete: () => {
-                document.getElementById('reveal-overlay').classList.remove('active');
-                if (typeof Navigation !== 'undefined') {
-                    Navigation.switchScreen('start'); 
-                } else {
-                    document.body.innerHTML = '<h1 style="color: white; text-align: center; margin-top: 50px;">Тест завершен. Перезагрузите страницу.</h1>';
-                }
-            }});
-        };
-        document.getElementById('prev-btn').onclick = () => this.prevCard();
-        document.getElementById('next-btn').onclick = () => this.nextCard();
-    },
-    
-    nextCard() { if (this.currentCard < this.cardData.length) { this.currentCard++; this.updateControls(true); } },
-    prevCard() { if (this.currentCard > 0) { this.currentCard--; this.updateControls(true); } },
-
-    showAI() { document.getElementById('ai-overlay').classList.add('active'); },
-    hideAI() { document.getElementById('ai-overlay').classList.remove('active'); },
-    
-    async requestAI() {
-        const apiKey = "AIzaSyCmqT_oPvpqYKgRxU8LItCuFZY0NY3ulu8";
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
-        const question = document.getElementById('ai-question').value;
-        const responseEl = document.getElementById('ai-response');
-        const btn = document.querySelector('#ai-overlay .ai-btn');
-        const btnText = document.getElementById('ai-btn-text');
-        if (!question.trim()){ alert("Введите ваш вопрос."); return; }
-        btn.disabled = true;
-        btnText.textContent = 'Анализ...';
-        responseEl.classList.add('visible');
-        responseEl.innerHTML = `<em style="color: var(--ai-color);">🔮 Соединяюсь с цифровым потоком...</em>`;
-        const cardDataSource = this.cardData;
-        if (!cardDataSource || cardDataSource.length < 3 || cardDataSource.some(c => !c)) {
-             responseEl.innerHTML = `<span style="color: #ff8a80;">Ошибка: данные карт для анализа неполные.</span>`;
-             btn.disabled = false; btnText.textContent = 'Спросить'; return;
-        }
-        const prompt = `
-            Ты - цифровой оракул, IT-таролог. Тебе предоставили расклад из трех карт Таро.
-            Твоя задача - дать глубокую, но лаконичную и полезную интерпретацию этого расклада в контексте заданного вопроса.
-            Вот данные расклада:
-            1.  **Вызов (Challenge):** Карта "${cardDataSource[0].name}".
-            2.  **Путь (Path):** Карта "${cardDataSource[1].name}".
-            3.  **Исход (Outcome):** Карта "${cardDataSource[2].name}".
-            А вот вопрос от пользователя: "${question}"
-            Проанализируй синергию этих трех карт и дай ответ на вопрос пользователя, связывая его с каждой картой.
-            Структурируй свой ответ: начни с общего вывода, а затем кратко поясни роль каждой карты в контексте вопроса.
-            Говори как мудрый, но современный IT-пророк. Не используй описания карт, которые я тебе дал, а только их названия.`;
-        try {
-            const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-            if (!response.ok) { const errorData = await response.json(); throw new Error(`Ошибка API: ${response.status} ${response.statusText}`); }
-            const data = await response.json();
-            if (data.candidates && data.candidates.length > 0 && data.candidates[0].content.parts[0].text) {
-                const text = data.candidates[0].content.parts[0].text;
-                responseEl.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-            } else { throw new Error("API не вернуло валидного ответа."); }
-        } catch (error) {
-            console.error("Ошибка запроса к Gemini API:", error);
-            responseEl.innerHTML = `<span style="color: #ff8a80;">Упс! Кажется, цифровые духи не в настроении. Ошибка: ${error.message}</span>`;
-        } finally {
-            btn.disabled = false; btnText.textContent = 'Спросить';
-        }
     }
-};
+}
 
-ResultScreen.setupEventListeners();
+window.TarotCarousel = new TarotCarousel();

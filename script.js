@@ -10,35 +10,47 @@ document.addEventListener('DOMContentLoaded', () => {
         containers: { cardSlots: document.querySelectorAll('.card-slot'), cardArea: document.getElementById('card-selection-area'), app: document.querySelector('.app-container') },
         devPanel: {
             toggle: document.getElementById('dev-panel-toggle'), content: document.getElementById('dev-panel-content'),
-            elements: { themeSelect: document.getElementById('theme-select'), soundToggle: document.getElementById('sound-effects-toggle'), breathingToggle: document.getElementById('breathing-cards-toggle'), rippleToggle: document.getElementById('ripple-effects-toggle'), magneticToggle: document.getElementById('magnetic-snap-toggle'), confettiToggle: document.getElementById('confetti-toggle'), vibrationToggle: document.getElementById('vibration-toggle'), deckBreathingToggle: document.getElementById('deck-breathing-toggle'), restartBtn: document.getElementById('restart-app-btn') }
+            elements: { themeSelect: document.getElementById('theme-select'), soundToggle: document.getElementById('sound-effects-toggle'), restartBtn: document.getElementById('restart-app-btn'), imageRatioSlider: document.getElementById('image-ratio-slider'), imageRatioValue: document.getElementById('image-ratio-value') }
         }
     };
     let appState = { chosenCards: new Array(3).fill(null), draggedCard: null, dragOffset: { x: 0, y: 0 }, audioContext: null, sounds: {}, confettiCanvas: null, confettiContext: null, confettiParticles: [] };
-    let effects = { sounds: { enabled: true }, breathing: { enabled: true }, ripple: { enabled: true }, magnetic: { enabled: true }, confetti: { enabled: true }, vibration: { enabled: false }, deckBreathing: { enabled: false } };
+    // Упрощенные эффекты: звук и размер карты настраиваются, остальное включено по умолчанию
+    let effects = { 
+        sounds: { enabled: true }, 
+        imageRatio: { value: '60%' } 
+    };
 
     const Settings = {
-        load() { const saved = localStorage.getItem('tarot-effects'); if (saved) { try { effects = { ...effects, ...JSON.parse(saved) }; } catch (e) { console.error('Ошибка загрузки настроек:', e); } } },
-        save() { localStorage.setItem('tarot-effects', JSON.stringify(effects)); },
-        applyToUI() { Object.entries(UI.devPanel.elements).forEach(([key, element]) => { if (element && element.type === 'checkbox') { const effectName = key.replace('Toggle', ''); if (effects[effectName]) { element.checked = effects[effectName].enabled; } } }); }
+        load() { const saved = localStorage.getItem('tarot-effects-v2'); if (saved) { try { effects = { ...effects, ...JSON.parse(saved) }; } catch (e) { console.error('Ошибка загрузки настроек:', e); } } },
+        save() { localStorage.setItem('tarot-effects-v2', JSON.stringify(effects)); },
+        applyToUI() { 
+            if (UI.devPanel.elements.soundToggle) { UI.devPanel.elements.soundToggle.checked = effects.sounds.enabled; }
+            if (UI.devPanel.elements.imageRatioSlider) { 
+                const ratioValue = parseInt(effects.imageRatio.value);
+                UI.devPanel.elements.imageRatioSlider.value = ratioValue;
+                UI.devPanel.elements.imageRatioValue.textContent = `${ratioValue}%`;
+                document.documentElement.style.setProperty('--card-image-height-ratio', effects.imageRatio.value);
+            }
+        }
     };
 
     const Audio = {
-        init() { if (!appState.audioContext && effects.sounds.enabled) { try { const AudioContext = window.AudioContext || window.webkitAudioContext; appState.audioContext = new AudioContext(); this.createSounds(); } catch (e) { console.warn('Audio not supported:', e); effects.sounds.enabled = false; } } },
+        init() { if (!appState.audioContext) { try { const AudioContext = window.AudioContext || window.webkitAudioContext; appState.audioContext = new AudioContext(); this.createSounds(); } catch (e) { console.warn('Audio not supported:', e); effects.sounds.enabled = false; } } },
         createSounds() { const createTone = (frequency, duration, volume, type = 'sine') => () => { if (!appState.audioContext || !effects.sounds.enabled) return; try { const oscillator = appState.audioContext.createOscillator(); const gainNode = appState.audioContext.createGain(); oscillator.connect(gainNode); gainNode.connect(appState.audioContext.destination); oscillator.type = type; oscillator.frequency.setValueAtTime(frequency, appState.audioContext.currentTime); gainNode.gain.setValueAtTime(0, appState.audioContext.currentTime); gainNode.gain.linearRampToValueAtTime(volume, appState.audioContext.currentTime + 0.01); gainNode.gain.exponentialRampToValueAtTime(0.001, appState.audioContext.currentTime + duration); oscillator.start(appState.audioContext.currentTime); oscillator.stop(appState.audioContext.currentTime + duration); } catch (e) { console.warn('Ошибка воспроизведения звука:', e); } }; appState.sounds = { cardClick: createTone(659, 0.5, 0.15), cardDrop: createTone(523, 0.8, 0.2), cardFlip: createTone(784, 0.6, 0.12), complete: () => { createTone(523, 0.5, 0.1)(); setTimeout(() => createTone(659, 0.5, 0.1)(), 100); setTimeout(() => createTone(784, 0.5, 0.1)(), 200); } }; },
         play(soundName) { if (appState.sounds[soundName]) { appState.sounds[soundName](); } }
     };
 
-    const Vibration = { trigger(pattern) { if (effects.vibration.enabled && 'vibrate' in navigator) { try { navigator.vibrate(pattern); } catch (e) { console.warn('Vibration failed:', e); } } } };
+    const Vibration = { trigger(pattern) { if ('vibrate' in navigator) { try { navigator.vibrate(pattern); } catch (e) { console.warn('Vibration failed:', e); } } } };
     const Effects = {
-        createRipple(x, y, element) { if (!effects.ripple.enabled) return; const ripple = document.createElement('div'); ripple.className = 'ripple-v1'; const size = 100; Object.assign(ripple.style, { width: `${size}px`, height: `${size}px`, left: `${x - size / 2}px`, top: `${y - size / 2}px` }); element.appendChild(ripple); setTimeout(() => ripple.remove(), 600); },
-        updateBreathingCards() { document.querySelectorAll('.tarot-card:not(.is-dropped)').forEach(card => card.classList.toggle('breathing-glow', effects.breathing.enabled)); },
-        updateMagneticSlots() { UI.containers.cardSlots.forEach(slot => slot.classList.toggle('magnetic-pulse', effects.magnetic.enabled)); },
-        updateDeckBreathing() { const deck = document.getElementById('initial-deck'); if (deck) { deck.classList.toggle('deck-breathing-mystic', effects.deckBreathing.enabled); } }
+        createRipple(x, y, element) { const ripple = document.createElement('div'); ripple.className = 'ripple-v1'; const size = 100; Object.assign(ripple.style, { width: `${size}px`, height: `${size}px`, left: `${x - size / 2}px`, top: `${y - size / 2}px` }); element.appendChild(ripple); setTimeout(() => ripple.remove(), 600); },
+        updateBreathingCards() { document.querySelectorAll('.tarot-card:not(.is-dropped)').forEach(card => card.classList.toggle('breathing-glow', true)); },
+        updateMagneticSlots() { UI.containers.cardSlots.forEach(slot => slot.classList.toggle('magnetic-pulse', true)); },
+        updateDeckBreathing() { const deck = document.getElementById('initial-deck'); if (deck) { deck.classList.toggle('deck-breathing-mystic', true); } }
     };
 
     const Navigation = { switchScreen(screenName) { Object.values(UI.screens).forEach(screen => screen.classList.remove('active')); if (UI.screens[screenName]) { UI.screens[screenName].classList.add('active'); } } };
     const Particles = { init() { if (!window.particlesJS) return; const theme = document.body.className || 'theme-gazprom-classic'; const colors = { 'theme-gazprom-classic': { p: "#00aaff", l: "#0078d7" }, 'theme-gazprom-dark': { p: "#3399ff", l: "#005f9e" }, 'theme-gazprom-light': { p: "#0078d7", l: "#005a9e" } }; const color = colors[theme] || colors['theme-gazprom-classic']; particlesJS('particles-js', { particles: { number: { value: 60 }, color: { value: color.p }, size: { value: 3, random: true }, move: { enable: true, speed: 2 }, line_linked: { color: color.l, distance: 150 } }, interactivity: { events: { onhover: { enable: true, mode: "repulse" } } } }); } };
-    const Confetti = { init() { appState.confettiCanvas = document.getElementById('confetti-canvas'); appState.confettiContext = appState.confettiCanvas.getContext('2d'); const resize = () => { appState.confettiCanvas.width = window.innerWidth; appState.confettiCanvas.height = window.innerHeight; }; window.addEventListener('resize', resize); resize(); }, create() { if (!effects.confetti.enabled || !appState.confettiContext) return; const colors = ['#00aaff', '#0078d7', '#ffffff']; for (let i = 0; i < CONSTANTS.CONFETTI_COUNT; i++) { appState.confettiParticles.push({ x: Math.random() * appState.confettiCanvas.width, y: -20, vx: Math.random() * 10 - 5, vy: Math.random() * 5 + 5, color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 8 + 4 }); } if (appState.confettiParticles.length > 0) { this.animate(); } }, animate() { if (!appState.confettiContext) return; appState.confettiContext.clearRect(0, 0, appState.confettiCanvas.width, appState.confettiCanvas.height); for (let i = appState.confettiParticles.length - 1; i >= 0; i--) { const particle = appState.confettiParticles[i]; particle.x += particle.vx; particle.y += particle.vy; particle.vy += 0.2; appState.confettiContext.fillStyle = particle.color; appState.confettiContext.fillRect(particle.x, particle.y, particle.size, particle.size); if (particle.y > appState.confettiCanvas.height + 20) { appState.confettiParticles.splice(i, 1); } } if (appState.confettiParticles.length > 0) { requestAnimationFrame(() => this.animate()); } } };
+    const Confetti = { init() { appState.confettiCanvas = document.getElementById('confetti-canvas'); appState.confettiContext = appState.confettiCanvas.getContext('2d'); const resize = () => { appState.confettiCanvas.width = window.innerWidth; appState.confettiCanvas.height = window.innerHeight; }; window.addEventListener('resize', resize); resize(); }, create() { if (!appState.confettiContext) return; const colors = ['#00aaff', '#0078d7', '#ffffff']; for (let i = 0; i < CONSTANTS.CONFETTI_COUNT; i++) { appState.confettiParticles.push({ x: Math.random() * appState.confettiCanvas.width, y: -20, vx: Math.random() * 10 - 5, vy: Math.random() * 5 + 5, color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 8 + 4 }); } if (appState.confettiParticles.length > 0) { this.animate(); } }, animate() { if (!appState.confettiContext) return; appState.confettiContext.clearRect(0, 0, appState.confettiCanvas.width, appState.confettiCanvas.height); for (let i = appState.confettiParticles.length - 1; i >= 0; i--) { const particle = appState.confettiParticles[i]; particle.x += particle.vx; particle.y += particle.vy; particle.vy += 0.2; appState.confettiContext.fillStyle = particle.color; appState.confettiContext.fillRect(particle.x, particle.y, particle.size, particle.size); if (particle.y > appState.confettiCanvas.height + 20) { appState.confettiParticles.splice(i, 1); } } if (appState.confettiParticles.length > 0) { requestAnimationFrame(() => this.animate()); } } };
     
     const CardDealing = {
         calculateSafeArea() {
@@ -108,24 +120,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const DragDrop = {
         startDrag(e) { e.preventDefault(); const card = e.target.closest('.tarot-card'); if (card.classList.contains('is-dropped')) return; appState.draggedCard = card; Audio.init(); Audio.play('cardClick'); Vibration.trigger(50); const rect = card.getBoundingClientRect(); const clientX = e.clientX || e.touches[0].clientX; const clientY = e.clientY || e.touches[0].clientY; appState.dragOffset = { x: clientX - rect.left, y: clientY - rect.top }; card.classList.add('is-dragging'); gsap.to(card, { scale: 1.1, duration: 0.2 }); Effects.createRipple(clientX - rect.left, clientY - rect.top, card); document.addEventListener('mousemove', DragDrop.handleDrag); document.addEventListener('mouseup', DragDrop.endDrag); document.addEventListener('touchmove', DragDrop.handleDrag, { passive: false }); document.addEventListener('touchend', DragDrop.endDrag); },
         handleDrag(e) { if (!appState.draggedCard) return; e.preventDefault(); const clientX = e.clientX || e.touches[0].clientX; const clientY = e.clientY || e.touches[0].clientY; const parentRect = UI.containers.cardArea.getBoundingClientRect(); const newX = clientX - parentRect.left - appState.dragOffset.x; const newY = clientY - parentRect.top - appState.dragOffset.y; Object.assign(appState.draggedCard.style, { left: `${newX}px`, top: `${newY}px` }); DragDrop.checkSlotProximity(); },
-        checkSlotProximity() { const cardRect = appState.draggedCard.getBoundingClientRect(); const cardCenterX = cardRect.left + cardRect.width / 2; const cardCenterY = cardRect.top + cardRect.height / 2; let closestSlot = null, minDistance = Infinity; UI.containers.cardSlots.forEach(slot => { if (slot.classList.contains('filled')) return; const slotRect = slot.getBoundingClientRect(); const slotCenterX = slotRect.left + slotRect.width / 2; const slotCenterY = slotRect.top + slotRect.height / 2; const distance = Math.hypot(cardCenterX - slotCenterX, cardCenterY - slotCenterY); if (distance < minDistance) { minDistance = distance; closestSlot = slot; } }); UI.containers.cardSlots.forEach(slot => { const shouldActivate = (slot === closestSlot && minDistance < slot.clientWidth); slot.classList.toggle('drag-over', shouldActivate); slot.classList.toggle('attracting', shouldActivate && effects.magnetic.enabled); }); },
+        checkSlotProximity() { const cardRect = appState.draggedCard.getBoundingClientRect(); const cardCenterX = cardRect.left + cardRect.width / 2; const cardCenterY = cardRect.top + cardRect.height / 2; let closestSlot = null, minDistance = Infinity; UI.containers.cardSlots.forEach(slot => { if (slot.classList.contains('filled')) return; const slotRect = slot.getBoundingClientRect(); const slotCenterX = slotRect.left + slotRect.width / 2; const slotCenterY = slotRect.top + slotRect.height / 2; const distance = Math.hypot(cardCenterX - slotCenterX, cardCenterY - slotCenterY); if (distance < minDistance) { minDistance = distance; closestSlot = slot; } }); UI.containers.cardSlots.forEach(slot => { const shouldActivate = (slot === closestSlot && minDistance < slot.clientWidth); slot.classList.toggle('drag-over', shouldActivate); slot.classList.toggle('attracting', true); }); },
         endDrag() { if (!appState.draggedCard) return; document.removeEventListener('mousemove', DragDrop.handleDrag); document.removeEventListener('mouseup', DragDrop.endDrag); document.removeEventListener('touchmove', DragDrop.handleDrag); document.removeEventListener('touchend', DragDrop.endDrag); appState.draggedCard.classList.remove('is-dragging'); const droppedSlot = document.querySelector('.card-slot.drag-over'); if (droppedSlot) { DragDrop.handleDrop(appState.draggedCard, droppedSlot); } else { gsap.to(appState.draggedCard, { scale: 1, duration: 0.3, ease: 'back.out' }); } UI.containers.cardSlots.forEach(slot => slot.classList.remove('drag-over', 'attracting')); appState.draggedCard = null; },
-        handleDrop(cardElement, slot) { const cardData = tarotCardsData.find(c => c.id == cardElement.dataset.id); const slotId = parseInt(slot.dataset.slotId); const labels = ["Ваш Вызов", "Ваш Путь", "Ваш Исход"]; appState.chosenCards[slotId] = cardData; Audio.play('cardDrop'); Vibration.trigger(100); cardElement.style.pointerEvents = 'none'; cardElement.classList.add('is-dropped'); slot.classList.add('filled'); const slotRect = slot.getBoundingClientRect(); const areaRect = UI.containers.cardArea.getBoundingClientRect(); gsap.to(cardElement, { left: slotRect.left - areaRect.left, top: slotRect.top - areaRect.top, scale: 1, rotation: 0, duration: 0.4, ease: 'power2.inOut', onComplete: () => { cardElement.removeAttribute('style'); slot.innerHTML = ''; slot.appendChild(cardElement); cardElement.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>`; gsap.to(cardElement, { rotationY: 180, duration: 0.7, ease: 'power2.inOut' }); GameLogic.showPlacementToast(labels[slotId], cardData.name); Audio.play('cardFlip'); if (appState.chosenCards.filter(c => c).length === 3) { Audio.play('complete'); Vibration.trigger([100, 50, 100]); if (effects.confetti.enabled) Confetti.create(); setTimeout(() => ResultScreen.initialize(appState.chosenCards), CONSTANTS.TOAST_DURATION); } } }); }
+        handleDrop(cardElement, slot) { const cardData = tarotCardsData.find(c => c.id == cardElement.dataset.id); const slotId = parseInt(slot.dataset.slotId); const labels = ["Ваш Вызов", "Ваш Путь", "Ваш Исход"]; appState.chosenCards[slotId] = cardData; Audio.play('cardDrop'); Vibration.trigger(100); cardElement.style.pointerEvents = 'none'; cardElement.classList.add('is-dropped'); slot.classList.add('filled'); const slotRect = slot.getBoundingClientRect(); const areaRect = UI.containers.cardArea.getBoundingClientRect(); gsap.to(cardElement, { left: slotRect.left - areaRect.left, top: slotRect.top - areaRect.top, scale: 1, rotation: 0, duration: 0.4, ease: 'power2.inOut', onComplete: () => { cardElement.removeAttribute('style'); slot.innerHTML = ''; slot.appendChild(cardElement); cardElement.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front" style="background-image: url('${cardData.image}')"></div>`; gsap.to(cardElement, { rotationY: 180, duration: 0.7, ease: 'power2.inOut' }); GameLogic.showPlacementToast(labels[slotId], cardData.name); Audio.play('cardFlip'); if (appState.chosenCards.filter(c => c).length === 3) { Audio.play('complete'); Vibration.trigger([100, 50, 100]); Confetti.create(); setTimeout(() => ResultScreen.initialize(appState.chosenCards), CONSTANTS.TOAST_DURATION); } } }); }
     };
 
     const DevPanel = {
         setup() {
             UI.devPanel.toggle.addEventListener('click', () => UI.devPanel.content.classList.toggle('active'));
             UI.devPanel.elements.themeSelect.addEventListener('change', (e) => { document.body.className = e.target.value; Particles.init(); });
-            Object.entries(UI.devPanel.elements).forEach(([key, element]) => { if (element && element.type === 'checkbox') { element.addEventListener('change', (e) => { const effectName = key.replace('Toggle', ''); if (effects[effectName]) { effects[effectName].enabled = e.target.checked; this.updateEffect(effectName); Settings.save(); } }); } });
+            UI.devPanel.elements.soundToggle.addEventListener('change', (e) => { 
+                effects.sounds.enabled = e.target.checked;
+                if(effects.sounds.enabled) { Audio.init(); }
+                Settings.save(); 
+            });
+            UI.devPanel.elements.imageRatioSlider.addEventListener('input', (e) => {
+                const value = `${e.target.value}%`;
+                effects.imageRatio.value = value;
+                UI.devPanel.elements.imageRatioValue.textContent = value;
+                document.documentElement.style.setProperty('--card-image-height-ratio', value);
+                Settings.save();
+            });
             UI.devPanel.elements.restartBtn.addEventListener('click', () => { Settings.save(); location.reload(); });
-        },
-        updateEffect(effectName) {
-            switch (effectName) {
-                case 'breathing': Effects.updateBreathingCards(); break;
-                case 'magnetic': Effects.updateMagneticSlots(); break;
-                case 'deckBreathing': Effects.updateDeckBreathing(); break;
-            }
         }
     };
     
@@ -134,9 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     init();
 
-    // ===================================
-    // === ЛОГИКА ОКНА РЕЗУЛЬТАТОВ (ИНТЕГРАЦИЯ) ===
-    // ===================================
     window.ResultScreen = {
         currentCard: 0,
         cardData: [],
@@ -275,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         async requestAI() {
             const apiKey = "AIzaSyCmqT_oPvpqYKgRxU8LItCuFZY0NY3ulu8";
-            // ИСПРАВЛЕНО: Используем актуальную модель gemini-1.5-flash-latest
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
             const question = document.getElementById('ai-question').value;

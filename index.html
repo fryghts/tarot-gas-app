@@ -89,13 +89,13 @@
                     <option value="theme-gazprom-light">Полярный день</option>
                 </select>
             </div>
-            <div class="dev-group"><label>Звуки<input type="checkbox" id="sound-effects-toggle"></label></div>
-            <div class="dev-group"><label>Свечение карт<input type="checkbox" id="breathing-cards-toggle"></label></div>
-            <div class="dev-group"><label>Ripple эффект<input type="checkbox" id="ripple-effects-toggle"></label></div>
-            <div class="dev-group"><label>Магнитное притяжение<input type="checkbox" id="magnetic-snap-toggle"></label></div>
-            <div class="dev-group"><label>Confetti<input type="checkbox" id="confetti-toggle"></label></div>
-            <div class="dev-group"><label>Вибрация<input type="checkbox" id="vibration-toggle"></label></div>
-            <div class="dev-group"><label>Дыхание колоды<input type="checkbox" id="deck-breathing-toggle"></label></div>
+            <div class="dev-group">
+                <label>Звуки<input type="checkbox" id="sound-effects-toggle"></label>
+            </div>
+            <div class="dev-group">
+                <label for="image-ratio-slider">Размер карты: <span id="image-ratio-value">60%</span></label>
+                <input type="range" id="image-ratio-slider" min="30" max="80" value="60">
+            </div>
             <button id="restart-app-btn">Перезапустить</button>
         </div>
     </div>

@@ -338,7 +338,7 @@ class TarotCarousel {
             .replace('{question}', input.value);
 
         try {
-            const response = await fetch('gemini-proxy.php', {
+            const response = await fetch('index.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: prompt })

@@ -1,0 +1,17 @@
+# app.yaml
+runtime: php82 # Указываем версию PHP
+
+handlers:
+# Обслуживаем статичные файлы (css, js, картинки) напрямую
+- url: /(.*\.(css|js|png|svg))$
+  static_files: \1
+  upload: (.*\.(css|js|png|svg))$
+
+# Перенаправляем запросы к PHP-скрипту
+- url: /index.php
+  script: auto
+
+# Все остальные запросы ведут на index.html
+- url: /.*
+  static_files: index.html
+  upload: index.html

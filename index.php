@@ -27,7 +27,7 @@ if (!isset($data->prompt)) {
 
 // 4. ВАШ СЕКРЕТНЫЙ КЛЮЧ GEMINI API
 // Храните его здесь, на сервере. Никогда не передавайте его на фронтенд.
-$apiKey = 'YOUR_GEMINI_API_KEY'; // <-- ЗАМЕНИТЕ НА ВАШ КЛЮЧ
+$apiKey = 'AIzaSyBHGs5hhQuDaYk8ArzSAY-tUGe3LuC6wD0'; // <-- ЗАМЕНИТЕ НА ВАШ КЛЮЧ
 
 // 5. Формируем тело запроса для Google API
 $postData = [
